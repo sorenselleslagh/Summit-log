@@ -5,8 +5,10 @@ var Over = window.SummitLogOverpass;
 var Col = window.SummitCollections;
 var Partners = window.SummitPartners;
 
-var logs = [];
-var backlog = [];
+var items = [];
+var mineSegment = 'planned';
+var mineKinds = {};
+var donePromptId = '';
 var partnerPosts = [];
 var memberships = [];
 var objectiveCatalog = [];
@@ -62,8 +64,9 @@ function fill(parent, children) {
   }));
 }
 
-function saveLogs() { logs = Store.saveLogs(logs); }
-function saveBacklog() { backlog = Store.saveBacklog(backlog); }
+function saveItems() { items = Store.saveItems(items); }
+function doneItems() { return items.filter(function (item) { return item.status !== 'planned'; }); }
+function plannedItems() { return items.filter(function (item) { return item.status === 'planned'; }); }
 
 function refreshAccountButton() {
   var button = document.getElementById('logout-btn');
@@ -72,8 +75,7 @@ function refreshAccountButton() {
   button.textContent = currentUser ? 'Log out' : 'Sign in';
 }
 
-logs = Store.loadLogs();
-backlog = Store.loadBacklog();
+items = Store.loadItems();
 partnerPosts = Store.loadPosts();
 memberships = Store.loadMemberships();
 currentUser = Store.getDisplayName();
@@ -114,8 +116,7 @@ function showApp() {
   refreshAccountButton();
   updateOfflineBanner();
   initMap();
-  renderLogs();
-  renderBacklog();
+  setMineSegment(plannedItems().length || !doneItems().length ? 'planned' : 'done');
   renderFamous();
   rebuildObjectives();
   loadCollections();
@@ -136,7 +137,7 @@ function showIntro(replay) {
 document.getElementById('start-logging').addEventListener('click', function () {
   Store.dismissIntro();
   showApp();
-  selectTab('log');
+  selectTab('mine');
 });
 
 document.getElementById('intro-back').addEventListener('click', function () {
@@ -216,7 +217,7 @@ function watchChrome() {
 }
 
 function selectTab(name) {
-  if (name !== 'log' && name !== 'backlog' && form) form.classList.add('hidden');
+  if (name !== 'mine' && form) form.classList.add('hidden');
   document.querySelectorAll('#app > nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
   });
@@ -354,46 +355,115 @@ function itemSummary(item) {
   return peak.join(' · ') || 'Peak';
 }
 
-function renderItemCard(item, listName) {
+function seasonLabel(season) {
+  if (season === 'winter') return 'Winter';
+  if (season === 'spring') return 'Spring';
+  if (season === 'summer') return 'Summer';
+  if (season === 'autumn') return 'Autumn';
+  return '';
+}
+
+function prettyDate(iso) {
+  if (!iso) return '';
+  var parts = String(iso).slice(0, 10).split('-');
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var month = months[Number(parts[1]) - 1];
+  if (!month || parts.length < 3) return String(iso).slice(0, 10);
+  return Number(parts[2]) + ' ' + month + ' ' + parts[0];
+}
+
+function historyLine(item) {
+  var added = item.createdAt ? 'Added ' + prettyDate(item.createdAt) : '';
+  var when = '';
+  if (item.status !== 'planned' && item.date) when = (item.kind === 'peak' ? 'Summited ' : 'Done ') + prettyDate(item.date);
+  return [added, when].filter(Boolean).join(' · ');
+}
+
+function matchesMine(item) {
+  var kinds = Object.keys(mineKinds).filter(function (kind) { return mineKinds[kind]; });
+  if (kinds.length && kinds.indexOf(item.kind) < 0) return false;
+  var query = document.getElementById('mine-search');
+  var text = query ? Partners.fold(query.value) : '';
+  if (!text) return true;
+  return Partners.fold(item.name).indexOf(text) >= 0 || Partners.nameKey(item.name).indexOf(text) >= 0;
+}
+
+function renderItemCard(item) {
+  var planned = item.status === 'planned';
   var notes = item.notes ? el('p', { class: 'entry-notes', text: item.notes }) : null;
-  var actions = [
-    el('button', { class: 'secondary', type: 'button', 'data-action': 'edit', 'data-id': item.id, 'data-list': listName, text: 'Edit' }),
-    el('button', { class: 'danger', type: 'button', 'data-action': 'delete', 'data-id': item.id, 'data-list': listName, text: 'Delete' })
-  ];
-  if (listName === 'backlog') {
-    actions.unshift(el('button', { class: 'primary', type: 'button', 'data-action': 'done', 'data-id': item.id, text: 'Done' }));
-    actions.push(el('button', { class: 'secondary', type: 'button', 'data-action': 'partner', 'data-id': item.id, text: 'Find partners' }));
+  var summary = itemSummary(item);
+  if (item.date) {
+    summary = summary.split(' · ').filter(function (part) { return part !== item.date; }).join(' · ');
   }
-  return el('div', { class: 'card' },
+  var meta = [summary, seasonLabel(item.season), historyLine(item)].filter(Boolean).join(' · ');
+  var actions = [
+    el('button', { class: 'secondary', type: 'button', 'data-action': 'edit', 'data-id': item.id, text: 'Edit' }),
+    el('button', { class: 'danger', type: 'button', 'data-action': 'delete', 'data-id': item.id, text: 'Delete' })
+  ];
+  if (planned) {
+    actions.unshift(el('button', { class: 'primary', type: 'button', 'data-action': 'done', 'data-id': item.id, text: 'Mark as done' }));
+    actions.push(el('button', { class: 'secondary', type: 'button', 'data-action': 'partner', 'data-id': item.id, text: 'Find partners' }));
+    actions.unshift(el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'down', 'data-id': item.id, 'aria-label': 'Move down', text: '↓' }));
+    actions.unshift(el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'up', 'data-id': item.id, 'aria-label': 'Move up', text: '↑' }));
+  }
+  var card = el('div', { class: 'card mine-card', draggable: planned ? 'true' : 'false', 'data-id': item.id },
     el('h3', { text: item.name }),
     el('span', { class: 'badge', text: kindLabel(item.kind) }),
-    el('p', { class: 'entry-meta', text: itemSummary(item) }),
+    el('p', { class: 'entry-meta', text: meta }),
     notes,
     el('div', { class: 'log-actions' }, actions)
   );
+  if (planned) {
+    card.addEventListener('dragstart', function (event) {
+      event.dataTransfer.setData('text/plain', item.id);
+      event.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragover', function (event) { event.preventDefault(); });
+    card.addEventListener('drop', function (event) {
+      event.preventDefault();
+      reorderPlannedTo(event.dataTransfer.getData('text/plain'), item.id);
+    });
+  }
+  return card;
 }
 
 function renderResume() {
   var resume = document.getElementById('resume-summary');
-  if (!logs.length) {
+  var recent = Lgc.doneOrder(items).slice(0, 5);
+  if (!recent.length) {
     resume.replaceChildren(el('p', { text: 'No activity logged yet.' }));
     return;
   }
-  var items = logs.slice(-5).reverse().map(function (log) {
-    return el('li', { text: log.name + ' — ' + kindLabel(log.kind) });
-  });
   resume.replaceChildren(
     el('p', { text: 'Recent activity:' }),
-    el('ul', { class: 'resume-list' }, items)
+    el('ul', { class: 'resume-list' }, recent.map(function (log) {
+      return el('li', { text: log.name + ' — ' + kindLabel(log.kind) });
+    }))
   );
 }
 
-function renderLogs() {
-  var list = document.getElementById('log-list');
-  if (!logs.length) list.replaceChildren(el('p', { class: 'muted', text: 'No entries yet.' }));
-  else list.replaceChildren.apply(list, logs.slice().reverse().map(function (item) { return renderItemCard(item, 'log'); }));
+function visibleMine() {
+  var source = mineSegment === 'planned' ? Lgc.plannedOrder(items) : Lgc.doneOrder(items);
+  return source.filter(matchesMine);
+}
 
-  var stats = Lgc.computeStats(logs);
+function renderMine() {
+  var list = document.getElementById('mine-list');
+  var rows = visibleMine();
+  if (!list) return;
+  if (!rows.length) {
+    var empty = mineSegment === 'planned'
+      ? 'Nothing planned. Add a peak, route, or hike you want to do.'
+      : 'Nothing done yet. Log an ascent, or mark a plan as done.';
+    var search = document.getElementById('mine-search');
+    if ((search && search.value.trim()) || Object.keys(mineKinds).some(function (kind) { return mineKinds[kind]; })) {
+      empty = 'Nothing matches.';
+    }
+    list.replaceChildren(el('p', { class: 'muted', text: empty }));
+  } else {
+    list.replaceChildren.apply(list, rows.map(renderItemCard));
+  }
+  var stats = Lgc.computeStats(doneItems());
   document.getElementById('peak-count').textContent = String(stats.peaks);
   document.getElementById('route-count').textContent = String(stats.routes);
   document.getElementById('hike-count').textContent = String(stats.hikes);
@@ -403,12 +473,17 @@ function renderLogs() {
   renderCollections();
 }
 
-function renderBacklog() {
-  var list = document.getElementById('backlog-list');
-  if (!list) return;
-  if (!backlog.length) list.replaceChildren(el('p', { class: 'muted', text: 'Nothing waiting. Add a peak, route, or hike you want to do.' }));
-  else list.replaceChildren.apply(list, backlog.slice().reverse().map(function (item) { return renderItemCard(item, 'backlog'); }));
-  updateMapMarkers();
+function setMineSegment(name) {
+  mineSegment = name === 'done' ? 'done' : 'planned';
+  document.getElementById('seg-planned').classList.toggle('active', mineSegment === 'planned');
+  document.getElementById('seg-done').classList.toggle('active', mineSegment === 'done');
+  document.getElementById('seg-planned').setAttribute('aria-selected', mineSegment === 'planned' ? 'true' : 'false');
+  document.getElementById('seg-done').setAttribute('aria-selected', mineSegment === 'done' ? 'true' : 'false');
+  document.getElementById('done-prompt').classList.add('hidden');
+  donePromptId = '';
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
+  renderMine();
 }
 
 function buttonFromEvent(event) {
@@ -423,16 +498,28 @@ function onItemClick(event) {
   var button = buttonFromEvent(event);
   if (!button) return;
   var id = button.getAttribute('data-id');
-  var listName = button.getAttribute('data-list') || 'log';
   var action = button.getAttribute('data-action');
-  if (action === 'edit') editItem(id, listName);
-  if (action === 'delete') deleteItem(id, listName);
-  if (action === 'done') completeBacklogItem(id);
+  if (action === 'edit') editItem(id);
+  if (action === 'delete') deleteItem(id);
+  if (action === 'done') openDonePrompt(id);
   if (action === 'partner') startPartnerFrom(id);
+  if (action === 'up') movePlanned(id, -1);
+  if (action === 'down') movePlanned(id, 1);
 }
 
-document.getElementById('log-list').addEventListener('click', onItemClick);
-document.getElementById('backlog-list').addEventListener('click', onItemClick);
+document.getElementById('mine-list').addEventListener('click', onItemClick);
+document.getElementById('seg-planned').addEventListener('click', function () { setMineSegment('planned'); });
+document.getElementById('seg-done').addEventListener('click', function () { setMineSegment('done'); });
+document.getElementById('mine-search').addEventListener('input', renderMine);
+document.querySelectorAll('.chip').forEach(function (chip) {
+  chip.addEventListener('click', function () {
+    var kind = chip.getAttribute('data-kind');
+    mineKinds[kind] = !mineKinds[kind];
+    chip.setAttribute('aria-pressed', mineKinds[kind] ? 'true' : 'false');
+    chip.classList.toggle('active', !!mineKinds[kind]);
+    renderMine();
+  });
+});
 
 // ---- Form handling ----
 var form = document.getElementById('add-form');
@@ -465,7 +552,7 @@ function syncKindFields() {
 function renderPeakLinks(selected) {
   var box = document.getElementById('peak-links');
   var chosen = selected || [];
-  var peaks = logs.concat(backlog).filter(function (item) { return item.kind === 'peak' && item.id !== editingId; });
+  var peaks = items.filter(function (item) { return item.kind === 'peak' && item.id !== editingId; });
   if (!peaks.length) {
     box.replaceChildren(el('p', { class: 'muted', text: 'Link peaks after you have added them.' }));
     return;
@@ -482,10 +569,16 @@ function selectedPeakIds() {
   return Array.prototype.map.call(box.querySelectorAll('input:checked'), function (input) { return input.value; });
 }
 
+function syncStatusFields() {
+  var planned = editingList === 'planned';
+  document.getElementById('date').classList.toggle('hidden', planned);
+  document.getElementById('season-fields').classList.toggle('hidden', !planned);
+}
+
 function resetEntryForm(listName) {
   editingId = null;
-  editingList = listName || 'log';
-  document.getElementById('form-title').textContent = editingList === 'backlog' ? 'Add to backlog' : 'Add to log';
+  editingList = listName === 'done' ? 'done' : 'planned';
+  document.getElementById('form-title').textContent = editingList === 'planned' ? 'Plan something' : 'Log a done ascent';
   document.getElementById('item-kind').value = 'peak';
   document.getElementById('name').value = '';
   document.getElementById('grade').value = '';
@@ -496,9 +589,11 @@ function resetEntryForm(listName) {
   document.getElementById('notes').value = '';
   document.getElementById('lat').value = '';
   document.getElementById('lng').value = '';
-  document.getElementById('date').value = editingList === 'log' ? Lgc.todayISO() : '';
+  document.getElementById('date').value = editingList === 'done' ? Lgc.todayISO() : '';
+  document.getElementById('season').value = '';
   fillActivities('sport');
   syncKindFields();
+  syncStatusFields();
   renderPeakLinks([]);
 }
 
@@ -514,8 +609,8 @@ function openEntryForm(listName) {
 
 document.getElementById('item-kind').addEventListener('change', syncKindFields);
 document.getElementById('activity').addEventListener('change', syncKindFields);
-document.getElementById('add-btn').addEventListener('click', function () { openEntryForm('log'); });
-document.getElementById('add-backlog-btn').addEventListener('click', function () { openEntryForm('backlog'); });
+document.getElementById('add-planned-btn').addEventListener('click', function () { setMineSegment('planned'); openEntryForm('planned'); });
+document.getElementById('add-done-btn').addEventListener('click', function () { setMineSegment('done'); openEntryForm('done'); });
 
 document.getElementById('save-btn').addEventListener('click', function () {
   var kind = document.getElementById('item-kind').value;
@@ -523,44 +618,49 @@ document.getElementById('save-btn').addEventListener('click', function () {
   if (coords.error) return alert(coords.error);
   var elevation = Lgc.readElevation(document.getElementById('elevation').value);
   if (kind !== 'route' && elevation.error) return alert(elevation.error);
-  var list = editingList === 'backlog' ? backlog : logs;
-  var previous = editingId ? list.find(function (item) { return item.id === editingId; }) : null;
+  var previous = editingId ? items.find(function (item) { return item.id === editingId; }) : null;
+  var planned = (previous ? previous.status : editingList) === 'planned';
   var fields = {
     kind: kind,
     name: document.getElementById('name').value,
     activity: document.getElementById('activity').value,
     grade: document.getElementById('grade').value,
     crag: document.getElementById('crag').value,
-    date: document.getElementById('date').value,
+    date: planned ? '' : document.getElementById('date').value,
     elevation: kind === 'route' ? (previous ? previous.elevation : null) : elevation.value,
     distance: document.getElementById('distance').value,
     track: document.getElementById('track').value,
     peakIds: selectedPeakIds(),
     notes: document.getElementById('notes').value,
     lat: coords.lat,
-    lng: coords.lng
+    lng: coords.lng,
+    status: planned ? 'planned' : 'done',
+    season: planned ? document.getElementById('season').value : '',
+    priority: previous ? previous.priority : 0
   };
+  if (!previous && planned) {
+    items = items.map(function (item) {
+      if (item.status !== 'planned') return item;
+      return Object.assign({}, item, { priority: (item.priority || 0) + 1 });
+    });
+  }
   var entry = previous ? Lgc.updateLog(previous, fields) : Lgc.createLog(fields);
   if (!entry) return alert('Name is required');
   if (previous) {
-    var index = list.findIndex(function (item) { return item.id === editingId; });
-    if (index >= 0) list[index] = entry;
-  } else if (editingList === 'backlog') backlog.push(entry);
-  else logs.push(entry);
-  saveLogs();
-  saveBacklog();
+    var index = items.findIndex(function (item) { return item.id === editingId; });
+    if (index >= 0) items[index] = entry;
+  } else items.push(entry);
+  saveItems();
   form.classList.add('hidden');
   editingId = null;
-  renderLogs();
-  renderBacklog();
+  renderMine();
 });
 
-function editItem(id, listName) {
-  var list = listName === 'backlog' ? backlog : logs;
-  var item = list.find(function (entry) { return entry.id === id; });
+function editItem(id) {
+  var item = items.find(function (entry) { return entry.id === id; });
   if (!item) return;
   editingId = item.id;
-  editingList = listName;
+  editingList = item.status === 'planned' ? 'planned' : 'done';
   document.getElementById('form-title').textContent = 'Edit';
   document.getElementById('item-kind').value = item.kind;
   document.getElementById('name').value = item.name;
@@ -571,40 +671,81 @@ function editItem(id, listName) {
   document.getElementById('distance').value = Lgc.formatNumberInput(item.distance);
   document.getElementById('track').value = item.track || '';
   document.getElementById('date').value = item.date || '';
+  document.getElementById('season').value = item.season || '';
   document.getElementById('notes').value = item.notes || '';
   document.getElementById('lat').value = Lgc.formatNumberInput(item.lat);
   document.getElementById('lng').value = Lgc.formatNumberInput(item.lng);
   syncKindFields();
+  syncStatusFields();
   renderPeakLinks(item.peakIds || []);
   form.classList.remove('hidden');
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
-function deleteItem(id, listName) {
+function deleteItem(id) {
   if (!confirm('Delete this entry?')) return;
-  if (listName === 'backlog') {
-    backlog = backlog.filter(function (item) { return item.id !== id; });
-    saveBacklog();
-  } else {
-    logs = logs.filter(function (item) { return item.id !== id; });
-    saveLogs();
-  }
-  renderLogs();
-  renderBacklog();
+  items = items.filter(function (item) { return item.id !== id; });
+  saveItems();
+  renderMine();
 }
 
-function completeBacklogItem(id) {
-  var item = backlog.find(function (entry) { return entry.id === id; });
+function openDonePrompt(id) {
+  var item = items.find(function (entry) { return entry.id === id && entry.status === 'planned'; });
   if (!item) return;
-  var result = Lgc.completeItem(item, logs, backlog);
-  logs = result.logs;
-  backlog = result.backlog;
-  saveLogs();
-  saveBacklog();
-  renderLogs();
-  renderBacklog();
-  selectTab('log');
+  donePromptId = id;
+  document.getElementById('done-prompt-name').textContent = item.name + (item.peakIds && item.peakIds.length ? '. Linked peaks are marked done with the same date.' : '');
+  document.getElementById('done-date').value = item.date || Lgc.todayISO();
+  document.getElementById('done-note').value = item.notes || '';
+  document.getElementById('done-prompt').classList.remove('hidden');
+  document.getElementById('done-prompt').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+function movePlanned(id, delta) {
+  var visible = visibleMine();
+  var index = -1;
+  visible.forEach(function (item, i) { if (item.id === id) index = i; });
+  var next = index + delta;
+  if (index < 0 || next < 0 || next >= visible.length) return;
+  var order = Lgc.plannedOrder(items).map(function (item) { return item.id; });
+  var from = order.indexOf(id);
+  var to = order.indexOf(visible[next].id);
+  if (from < 0 || to < 0) return;
+  order.splice(from, 1);
+  order.splice(to, 0, id);
+  items = Lgc.reorderPlanned(items, order);
+  saveItems();
+  renderMine();
+}
+
+function reorderPlannedTo(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return;
+  var order = Lgc.plannedOrder(items).map(function (item) { return item.id; });
+  var from = order.indexOf(fromId);
+  var to = order.indexOf(toId);
+  if (from < 0 || to < 0) return;
+  order.splice(from, 1);
+  order.splice(to, 0, fromId);
+  items = Lgc.reorderPlanned(items, order);
+  saveItems();
+  renderMine();
+}
+
+document.getElementById('done-cancel').addEventListener('click', function () {
+  donePromptId = '';
+  document.getElementById('done-prompt').classList.add('hidden');
+});
+
+document.getElementById('done-save').addEventListener('click', function () {
+  if (!donePromptId) return;
+  items = Lgc.markDone(items, donePromptId, {
+    date: document.getElementById('done-date').value,
+    notes: document.getElementById('done-note').value
+  });
+  saveItems();
+  donePromptId = '';
+  document.getElementById('done-prompt').classList.add('hidden');
+  setMineSegment('done');
+});
 
 // ---- Map ----
 function setMapNote(text) {
@@ -612,29 +753,35 @@ function setMapNote(text) {
   if (note) note.textContent = text;
 }
 
-function alreadyHave(name) {
+function alreadyPlanned(name) {
   var key = String(name || '').trim().toLowerCase();
-  return logs.concat(backlog).some(function (item) { return item.name.toLowerCase() === key; });
+  return plannedItems().some(function (item) { return item.name.toLowerCase() === key; });
 }
 
 function addCatalogItem(place) {
-  if (alreadyHave(place.name)) {
-    alert(place.name + ' is already in your log or backlog.');
+  if (alreadyPlanned(place.name)) {
+    alert(place.name + ' is already planned.');
     return;
   }
+  items = items.map(function (item) {
+    if (item.status !== 'planned') return item;
+    return Object.assign({}, item, { priority: (item.priority || 0) + 1 });
+  });
   var entry = Lgc.createLog({
     kind: place.kind || 'peak',
     name: place.name,
     lat: place.lat,
     lng: place.lng,
     elevation: place.elevation,
-    notes: place.note || ''
+    notes: place.note || '',
+    status: 'planned',
+    priority: 0
   });
   if (!entry) return;
-  backlog.push(entry);
-  saveBacklog();
-  renderBacklog();
-  setMapNote(place.name + ' added to your backlog.');
+  items.push(entry);
+  saveItems();
+  renderMine();
+  setMapNote(place.name + ' added to Planned.');
 }
 
 function renderFamous() {
@@ -649,7 +796,7 @@ function renderFamous() {
         class: 'secondary',
         type: 'button',
         'data-famous': place.name,
-        text: 'Add to backlog'
+        text: 'Add to planned'
       })
     );
   }));
@@ -693,7 +840,7 @@ function markerPopup(item) {
 }
 
 function placePopup(place) {
-  var button = el('button', { type: 'button', text: 'Add to backlog' });
+  var button = el('button', { type: 'button', text: 'Add to planned' });
   button.addEventListener('click', function () { addCatalogItem(place); });
   return el('div', null,
     el('strong', { text: place.name }),
@@ -713,7 +860,7 @@ function syncAreas() {
     });
   }
   areaLayers.forEach(function (layer) {
-    var done = logs.some(function (log) { return Lgc.loggedInArea(log, layer.area); });
+    var done = doneItems().some(function (log) { return Lgc.loggedInArea(log, layer.area); });
     var color = done ? '#22c55e' : '#3b82f6';
     layer.circle.setStyle({ color: color, fillColor: color, fillOpacity: 0.15, weight: 2 });
     layer.circle.bindPopup(areaPopup(layer.area, done));
@@ -769,15 +916,15 @@ function updateMapMarkers() {
   if (!map) return;
   markers.forEach(function (marker) { map.removeLayer(marker); });
   markers = [];
-  logs.forEach(function (item) {
+  doneItems().forEach(function (item) {
     if (!collectionPeakByName(item)) addCircle(item, '#3b82f6');
   });
-  backlog.forEach(function (item) {
+  plannedItems().forEach(function (item) {
     if (!collectionPeakByName(item)) addCircle(item, '#f59e0b');
   });
   if (collectionData) {
     collectionData.peaks.forEach(function (peak) {
-      addCircle(peak, Col.isSummited(peak, logs) ? '#22c55e' : '#64748b', collectionPopup(peak));
+      addCircle(peak, Col.isSummited(peak, doneItems()) ? '#22c55e' : '#64748b', collectionPopup(peak));
     });
   }
   if (document.getElementById('osm-layer') && document.getElementById('osm-layer').checked) {
@@ -835,8 +982,8 @@ function rebuildObjectives() {
   objectiveCatalog = Partners.buildCatalog({
     peaks: collectionData ? collectionData.peaks : [],
     famous: Lgc.FAMOUS,
-    logs: logs,
-    backlog: backlog,
+    logs: doneItems(),
+    backlog: plannedItems(),
     region: collectionData ? collectionData.region : 'Alps'
   });
 }
@@ -931,7 +1078,7 @@ function openSuggestion(id) {
 
 function yourLevelText() {
   var saved = Store.getLevel();
-  var level = Col.estimateLevel(logs, collectionData ? collectionData.peaks : [], saved);
+  var level = Col.estimateLevel(doneItems(), collectionData ? collectionData.peaks : [], saved);
   var bits = [];
   if (level.grade) bits.push(level.grade);
   if (level.elevation != null) bits.push(level.elevation + ' m');
@@ -954,7 +1101,7 @@ function sharedLogLine(log) {
 function yourSharedLogs(membership) {
   return (membership.attachedIds || []).map(function (id) {
     var item = null;
-    logs.forEach(function (entry) { if (entry.id === id) item = entry; });
+    doneItems().forEach(function (entry) { if (entry.id === id) item = entry; });
     if (!item) return null;
     return { name: item.name, kind: item.kind, detail: itemSummary(item) };
   }).filter(Boolean);
@@ -1008,8 +1155,8 @@ function renderJoinPanel(membership) {
   }
   var selected = {};
   (membership && membership.attachedIds || []).forEach(function (id) { selected[id] = true; });
-  var choices = logs.length
-    ? logs.slice().reverse().map(function (item) {
+  var choices = doneItems().length
+    ? doneItems().slice().reverse().map(function (item) {
       var input = el('input', { type: 'checkbox', value: item.id });
       input.checked = !!selected[item.id];
       return el('label', { class: 'check-row' }, input, el('span', { text: item.name + ' · ' + kindLabel(item.kind) }));
@@ -1165,7 +1312,7 @@ function saveQueuePlace() {
 }
 
 function startPartnerFrom(id) {
-  var item = backlog.find(function (entry) { return entry.id === id; });
+  var item = plannedItems().find(function (entry) { return entry.id === id; });
   if (!item) return;
   rebuildObjectives();
   var objective = Partners.resolveObjective(objectiveCatalog, item);
@@ -1249,7 +1396,15 @@ document.querySelector('#app > nav button[data-tab="partners"]').addEventListene
 
 // ---- Export / Import ----
 document.getElementById('export-btn').addEventListener('click', function () {
-  var data = { logs: logs, backlog: backlog, partnerPosts: partnerPosts, queues: memberships, exported: new Date().toISOString() };
+  var data = {
+    schema: 2,
+    items: items,
+    logs: doneItems(),
+    backlog: plannedItems(),
+    partnerPosts: partnerPosts,
+    queues: memberships,
+    exported: new Date().toISOString()
+  };
   var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   var link = document.createElement('a');
   var url = URL.createObjectURL(blob);
@@ -1300,14 +1455,14 @@ function loadCollections() {
 }
 
 function formatProgress(peaks) {
-  var count = Col.progress(peaks, logs);
+  var count = Col.progress(peaks, doneItems());
   return count.done + '/' + count.total;
 }
 
 function renderCollections() {
   var box = document.getElementById('collections');
   if (!box || !collectionData) return;
-  var total = Col.progress(collectionData.peaks, logs);
+  var total = Col.progress(collectionData.peaks, doneItems());
   var groups = Col.groupCollection(collectionData);
   var details = el('details', { class: 'collection-block', open: 'open' },
     el('summary', null,
@@ -1331,7 +1486,7 @@ function renderCollections() {
       );
       sub.peaks.forEach(function (peak) {
         var input = el('input', { type: 'checkbox', 'aria-label': 'Mark ' + peak.name + ' summited' });
-        input.checked = Col.isSummited(peak, logs);
+        input.checked = Col.isSummited(peak, doneItems());
         input.addEventListener('change', function () {
           if (input.checked) markSummited(peak);
           else clearSummited(peak);
@@ -1361,15 +1516,15 @@ function peakLine(peak) {
 function showPeakDetail(peak) {
   var box = document.getElementById('peak-detail');
   if (!box) return;
-  var level = Col.estimateLevel(logs, collectionData.peaks, Store.getLevel());
+  var level = Col.estimateLevel(doneItems(), collectionData.peaks, Store.getLevel());
   var plan = Col.suggestBuildUp(peak, collectionData.peaks, level);
-  var summited = el('button', { class: 'primary', type: 'button', text: Col.isSummited(peak, logs) ? 'Summited' : 'Mark summited' });
+  var summited = el('button', { class: 'primary', type: 'button', text: Col.isSummited(peak, doneItems()) ? 'Summited' : 'Mark summited' });
   summited.addEventListener('click', function () {
-    if (Col.isSummited(peak, logs)) clearSummited(peak);
+    if (Col.isSummited(peak, doneItems())) clearSummited(peak);
     else markSummited(peak);
     showPeakDetail(peak);
   });
-  var backlogBtn = el('button', { class: 'secondary', type: 'button', text: 'Add to backlog' });
+  var backlogBtn = el('button', { class: 'secondary', type: 'button', text: 'Add to planned' });
   backlogBtn.addEventListener('click', function () {
     addCatalogItem({
       name: peak.name,
@@ -1408,13 +1563,13 @@ function showPeakDetail(peak) {
 function collectionPopup(peak) {
   var details = el('button', { type: 'button', text: 'Details' });
   details.addEventListener('click', function () { showPeakDetail(peak); });
-  var add = el('button', { type: 'button', text: 'Add to backlog' });
+  var add = el('button', { type: 'button', text: 'Add to planned' });
   add.addEventListener('click', function () {
     addCatalogItem({ name: peak.name, kind: 'peak', lat: peak.lat, lng: peak.lng, elevation: peak.elevation, note: peak.normalRoute || '' });
   });
-  var mark = el('button', { type: 'button', text: Col.isSummited(peak, logs) ? 'Summited' : 'Mark summited' });
+  var mark = el('button', { type: 'button', text: Col.isSummited(peak, doneItems()) ? 'Summited' : 'Mark summited' });
   mark.addEventListener('click', function () {
-    if (Col.isSummited(peak, logs)) clearSummited(peak);
+    if (Col.isSummited(peak, doneItems())) clearSummited(peak);
     else markSummited(peak);
   });
   return el('div', null,
@@ -1427,45 +1582,50 @@ function collectionPopup(peak) {
 }
 
 function markSummited(peak) {
-  var existing = Col.matchingLogPeaks(peak, logs)[0];
+  var existing = Col.matchingLogPeaks(peak, doneItems())[0];
   if (existing) {
     if (existing.collectionId !== peak.id) {
-      var updated = Lgc.updateLog(existing, { collectionId: peak.id });
-      var index = logs.findIndex(function (item) { return item.id === existing.id; });
-      if (index >= 0) logs[index] = updated;
-      saveLogs();
+      var updated = Lgc.updateLog(existing, { collectionId: peak.id, status: 'done' });
+      var index = items.findIndex(function (item) { return item.id === existing.id; });
+      if (index >= 0) items[index] = updated;
+      saveItems();
     }
   } else {
-    var created = Lgc.createLog({
-      kind: 'peak',
-      name: peak.name,
-      elevation: peak.elevation,
-      lat: peak.lat,
-      lng: peak.lng,
-      collectionId: peak.id
-    });
-    if (created) {
-      logs.push(created);
-      saveLogs();
+    var planned = Col.matchingLogPeaks(peak, plannedItems())[0];
+    if (planned) {
+      items = Lgc.markDone(items, planned.id, { date: planned.date || Lgc.todayISO(), notes: planned.notes });
+      var plannedIndex = items.findIndex(function (item) { return item.id === planned.id; });
+      if (plannedIndex >= 0) items[plannedIndex] = Lgc.updateLog(items[plannedIndex], { collectionId: peak.id });
+    } else {
+      var created = Lgc.createLog({
+        kind: 'peak',
+        name: peak.name,
+        elevation: peak.elevation,
+        lat: peak.lat,
+        lng: peak.lng,
+        date: Lgc.todayISO(),
+        collectionId: peak.id,
+        status: 'done'
+      });
+      if (created) items.push(created);
     }
+    saveItems();
   }
-  renderLogs();
-  renderCollections();
+  renderMine();
 }
 
 function clearSummited(peak) {
-  var matches = Col.matchingLogPeaks(peak, logs);
+  var matches = Col.matchingLogPeaks(peak, doneItems());
   if (!matches.length) return;
-  if (!confirm('Remove ' + peak.name + ' from your log?')) {
+  if (!confirm('Remove ' + peak.name + ' from your done list?')) {
     renderCollections();
     return;
   }
   var ids = {};
   matches.forEach(function (item) { ids[item.id] = true; });
-  logs = logs.filter(function (item) { return !ids[item.id]; });
-  saveLogs();
-  renderLogs();
-  renderCollections();
+  items = items.filter(function (item) { return !ids[item.id]; });
+  saveItems();
+  renderMine();
   var box = document.getElementById('peak-detail');
   if (box && !box.classList.contains('hidden')) showPeakDetail(peak);
 }
@@ -1486,7 +1646,7 @@ function fillLevelForm() {
     });
   }
   var saved = Store.getLevel();
-  var level = Col.estimateLevel(logs, collectionData ? collectionData.peaks : [], saved);
+  var level = Col.estimateLevel(doneItems(), collectionData ? collectionData.peaks : [], saved);
   if (saved && saved.useManual) {
     grade.value = saved.grade || '';
     document.getElementById('level-elev').value = saved.elevation == null ? '' : String(saved.elevation);

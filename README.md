@@ -48,18 +48,17 @@ The drawing is `illustrations/mountain.svg`. Replace that file to swap in final 
 
 ## Tabs
 
-Bottom bar: **Log**, **Backlog**, **Map**, **Partners**. **Profile** is the header button (résumé, export, install, connections, intro).
+Bottom bar: **Mine**, **Map**, **Partners**. **Profile** is the header button (résumé, export, install, connections, intro).
 
-- **Log** is home. The counts are logged peaks, routes, and hikes. The peak number is your collection.
-- **Backlog** is what you want to do. **Done** moves that item to the log and keeps its fields. A route or hike linked to backlog peaks logs those peaks as well.
-- **Map** draws logged items in blue and backlog items in amber. A toggle shows famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20, and a few peaks) with **Add to backlog**. **Load peaks in this view** calls the OpenStreetMap Overpass API only when you tap it, only when zoomed in, and at most once every few seconds. Results are cached on this device. Offline, the famous list and any saved Overpass answer still work.
-- **Partners** is a search for an objective: the Alpine 4000ers, your log and backlog, and the famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20). Open one to see its queue. **Join the queue** can include rough dates, a short note, and log entries, and nothing is attached until you tick it. **Find partners** on a backlog item opens that objective. Your place is stored on this device (`summitlog_queues`). Other people in a queue are sample profiles with a Demo badge, not real users. Being visible to other people needs an account, which does not exist yet. There is no ranking.
+- **Mine** is home. **Planned** is the wishlist, ordered by you (move up, down, or drag) with an optional season. **Done** is the log, newest date first, with the date, notes, and when the item was added. **Mark as done** asks for that date and a short note. You can also log straight to Done. The same objective can be done more than once. Chips filter Peak, Route, and Hike, and the search box narrows the list. Counts are done items only. The peak number is your collection.
+- **Map** draws done items in blue and planned items in amber. A toggle shows famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20, and a few peaks) with **Add to planned**. **Load peaks in this view** calls the OpenStreetMap Overpass API only when you tap it, only when zoomed in, and at most once every few seconds. Results are cached on this device. Offline, the famous list and any saved Overpass answer still work.
+- **Partners** is a search for an objective: the Alpine 4000ers, your planned and done items, and the famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20). Open one to see its queue. **Join the queue** can include rough dates, a short note, and log entries, and nothing is attached until you tick it. **Find partners** on a planned item opens that objective. Your place is stored on this device (`summitlog_queues`). Other people in a queue are sample profiles with a Demo badge, not real users. Being visible to other people needs an account, which does not exist yet. There is no ranking.
 
 No pace, speed, ranking, or leaderboard is shown. There is no file import.
 
 ## Item model
 
-One log (`summitlogs`) and one backlog (`summitbacklog`). Every item is a peak, a route, or a hike. The form is one short card; the kind changes the hints.
+One list (`summititems`, schema 2). Every item is a peak, a route, or a hike, and it is planned until you mark it done. Older `summitlogs` and `summitbacklog` entries are copied in once, with the same ids and timestamps, and those keys are left on the device. The form is one short card; the kind changes the hints.
 
 - **Peak** — name, summit elevation, map pin.
 - **Route** — name, grade, crag or mountain, activity (sport, trad, bouldering, alpine, ice, mixed, ski). The grade hint follows the activity (Font, French, AD/PD, and so on).

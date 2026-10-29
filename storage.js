@@ -16,6 +16,8 @@
 
   var LOG_KEY = 'summitlogs';
   var BACKLOG_KEY = 'summitbacklog';
+  var ITEM_KEY = 'summititems';
+  var SCHEMA_KEY = 'summitlog_schema';
   var POST_KEY = 'partnerposts';
   var QUEUE_KEY = 'summitlog_queues';
   var CACHE_KEY = 'summitlog_overpass_cache';
@@ -97,6 +99,47 @@
     function saveBacklog(items) {
       var cleaned = logic.migrateLogs(items, context());
       write(BACKLOG_KEY, cleaned);
+      return cleaned;
+    }
+
+    function schemaVersion() {
+      try {
+        var n = Number(storage.getItem(SCHEMA_KEY));
+        return Number.isFinite(n) ? n : 0;
+      } catch (err) {
+        return 0;
+      }
+    }
+
+    function writeSchema() {
+      try { storage.setItem(SCHEMA_KEY, String(logic.SCHEMA_VERSION || 2)); } catch (err) { fail('Could not save on this device. Storage may be full or blocked.'); }
+    }
+
+    // Schema 2 keeps one list. The old log and backlog keys are left in place
+    // so the copy does not destroy what was already stored.
+    function loadItems() {
+      if (schemaVersion() >= 2) {
+        var stored = readArray(ITEM_KEY);
+        if (stored.state !== 'ok') return [];
+        return persistMigration(ITEM_KEY, stored.items, logic.migrateItems(stored.items, context()));
+      }
+      var logRead = readArray(LOG_KEY);
+      var backRead = readArray(BACKLOG_KEY);
+      var logs = logRead.state === 'ok' ? logic.migrateLogs(logRead.items, context()) : [];
+      var backlog = backRead.state === 'ok' ? logic.migrateLogs(backRead.items, context()) : [];
+      if (logRead.state === 'missing' && backRead.state !== 'ok') {
+        logs = logic.migrateLogs(logic.SAMPLE_LOGS, context());
+      }
+      var unified = logic.unifyLists(logs, backlog, context());
+      write(ITEM_KEY, unified);
+      writeSchema();
+      return unified;
+    }
+
+    function saveItems(items) {
+      var cleaned = logic.migrateItems(items, context());
+      write(ITEM_KEY, cleaned);
+      writeSchema();
       return cleaned;
     }
 
@@ -232,6 +275,8 @@
       saveLogs: saveLogs,
       loadBacklog: loadBacklog,
       saveBacklog: saveBacklog,
+      loadItems: loadItems,
+      saveItems: saveItems,
       readCache: readCache,
       writeCache: writeCache,
       loadPosts: loadPosts,

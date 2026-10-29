@@ -125,43 +125,74 @@
           <input type="number" step="any" id="lng" placeholder="Longitude (optional)" inputmode="decimal" aria-label="Longitude">
         </div>
         <input type="date" id="date" aria-label="Date">
+        <div id="season-fields" class="hidden">
+          <label class="field-label" for="season">Season (optional)</label>
+          <select id="season" aria-label="Season">
+            <option value="">Any time</option>
+            <option value="winter">Winter</option>
+            <option value="spring">Spring</option>
+            <option value="summer">Summer</option>
+            <option value="autumn">Autumn</option>
+          </select>
+        </div>
         <div id="peak-links" class="hidden"></div>
         <textarea id="notes" rows="3" maxlength="4000" placeholder="Notes" aria-label="Notes"></textarea>
         <button class="primary" id="save-btn" type="button">Save</button>
       </div>
 
-      <!-- LOG -->
-      <section id="log" class="tab">
+      <!-- MINE: planned wishlist and done log in one list -->
+      <section id="mine" class="tab">
+        <h2>My peaks</h2>
         <div class="stats">
-          <div class="stat" title="Logged peaks">
+          <div class="stat" title="Done peaks">
             <strong id="peak-count">0</strong><span>Peaks</span>
           </div>
-          <div class="stat" title="Logged routes">
+          <div class="stat" title="Done routes">
             <strong id="route-count">0</strong><span>Routes</span>
           </div>
-          <div class="stat" title="Logged hikes">
+          <div class="stat" title="Done hikes">
             <strong id="hike-count">0</strong><span>Hikes</span>
           </div>
         </div>
-        <p class="stat-hint">Peak count is your collection. Finishing a route or hike also logs any peaks linked to it.</p>
-        <button class="primary" id="add-btn" type="button">+ Add to log</button>
-        <div id="log-list" class="list-block"></div>
-      </section>
-
-      <!-- BACKLOG -->
-      <section id="backlog" class="tab hidden">
-        <p class="stat-hint">Things you want to do. Tick one to move it to the log.</p>
-        <button class="primary" id="add-backlog-btn" type="button">+ Add to backlog</button>
-        <div id="backlog-list" class="list-block"></div>
+        <p class="stat-hint">Counts are what you have done. A planned item becomes a log entry when you mark it done.</p>
+        <div class="segments" role="tablist" aria-label="Planned or done">
+          <button class="active" id="seg-planned" type="button" role="tab" aria-selected="true">Planned</button>
+          <button id="seg-done" type="button" role="tab" aria-selected="false">Done</button>
+        </div>
+        <div class="mine-tools">
+          <input type="search" id="mine-search" placeholder="Search" maxlength="80" aria-label="Search your peaks" autocomplete="off">
+          <div class="chips" role="group" aria-label="Filter by kind">
+            <button class="chip" type="button" data-kind="peak" aria-pressed="false">Peak</button>
+            <button class="chip" type="button" data-kind="route" aria-pressed="false">Route</button>
+            <button class="chip" type="button" data-kind="hike" aria-pressed="false">Hike</button>
+          </div>
+        </div>
+        <div class="mine-actions">
+          <button class="primary" id="add-planned-btn" type="button">+ Plan</button>
+          <button class="secondary" id="add-done-btn" type="button">+ Log done</button>
+        </div>
+        <div id="done-prompt" class="card hidden">
+          <h3>Mark as done</h3>
+          <p id="done-prompt-name"></p>
+          <label class="field-label" for="done-date">Date</label>
+          <input type="date" id="done-date" aria-label="Date">
+          <label class="field-label" for="done-note">Short note</label>
+          <textarea id="done-note" rows="3" maxlength="4000" placeholder="Short note" aria-label="Short note"></textarea>
+          <div class="join-actions">
+            <button class="primary" id="done-save" type="button">Save</button>
+            <button class="secondary" id="done-cancel" type="button">Cancel</button>
+          </div>
+        </div>
+        <div id="mine-list" class="list-block"></div>
       </section>
 
       <!-- MAP -->
       <section id="map" class="tab hidden">
         <div id="map-container"></div>
-        <p class="muted map-caption">Blue is logged, amber is backlog. A check mark on a range means you have logged something there.</p>
+        <p class="muted map-caption">Blue is done, amber is planned. A check mark on a range means you have logged something there.</p>
         <div class="legend">
-          <span class="swatch swatch-log"></span> Logged
-          <span class="swatch swatch-backlog"></span> Backlog
+          <span class="swatch swatch-log"></span> Done
+          <span class="swatch swatch-backlog"></span> Planned
           <span class="swatch swatch-osm"></span> OSM
           <span class="swatch swatch-done"></span> Collection, done
           <span class="swatch swatch-todo"></span> Collection, not yet
@@ -193,7 +224,7 @@
             <input type="search" id="objective-query" placeholder="Peak, route, or trek" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="objective-suggestions" aria-label="What's your objective?">
             <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
           </div>
-          <p class="muted partners-intro">Peaks from the Alpine 4000ers, your own log and backlog, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
+          <p class="muted partners-intro">Peaks from the Alpine 4000ers, your planned and done items, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
         </div>
 
         <div id="objective-page" class="hidden">
@@ -261,8 +292,7 @@
     </main>
 
     <nav aria-label="Sections">
-      <button class="active" type="button" data-tab="log">Log</button>
-      <button type="button" data-tab="backlog">Backlog</button>
+      <button class="active" type="button" data-tab="mine">Mine</button>
       <button type="button" data-tab="map">Map</button>
       <button type="button" data-tab="partners">Partners</button>
     </nav>

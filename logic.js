@@ -301,9 +301,34 @@
       lat: coords.lat,
       lng: coords.lng,
       collectionId: cleanCollectionId(raw.collectionId),
+      status: raw.status === 'planned' ? 'planned' : 'done',
+      priority: raw.status === 'planned' ? parsePriority(raw.priority) : null,
+      season: cleanSeason(raw.season),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     };
+  }
+
+  var SEASONS = { winter: true, spring: true, summer: true, autumn: true };
+
+  function cleanSeason(value) {
+    var text = typeof value === 'string' ? value.trim().toLowerCase() : '';
+    return SEASONS[text] ? text : '';
+  }
+
+  function parsePriority(value) {
+    if (value == null || value === '') return null;
+    var n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n) || n < 0 || n > 100000) return null;
+    return Math.round(n);
+  }
+
+  function withStatus(raw, status, priority) {
+    return Object.assign({}, raw, {
+      status: status,
+      priority: status === 'planned' ? priority : null,
+      season: raw && raw.season || ''
+    });
   }
 
   function postFields(raw) {
@@ -405,7 +430,7 @@
   // Move a backlog item onto the log. Linked backlog peaks are logged too.
   function completeItem(item, logs, backlog, context) {
     var ctx = identityContext(context);
-    var done = updateLog(item, { date: item.date || todayISO() }, ctx);
+    var done = updateLog(item, { date: item.date || todayISO(), status: 'done', priority: null }, ctx);
     var nextLogs = (logs || []).slice();
     var nextBacklog = (backlog || []).filter(function (entry) { return entry.id !== item.id; });
     nextLogs.push(done);
@@ -416,9 +441,82 @@
       });
       if (!peak) return;
       nextBacklog = nextBacklog.filter(function (entry) { return entry.id !== peakId; });
-      nextLogs.push(updateLog(peak, { date: peak.date || done.date }, ctx));
+      nextLogs.push(updateLog(peak, { date: peak.date || done.date, status: 'done', priority: null }, ctx));
     });
     return { logs: nextLogs, backlog: nextBacklog };
+  }
+
+  // One list. Planned items keep the order they were stored in; done items stay done.
+  function unifyLists(logs, backlog, context) {
+    var ctx = identityContext(context);
+    var done = (logs || []).map(function (item) {
+      return normalizeLog(withStatus(item, 'done', null), ctx);
+    }).filter(Boolean);
+    var planned = (backlog || []).map(function (item, index, arr) {
+      var priority = parsePriority(item.priority);
+      if (priority == null) priority = arr.length - 1 - index;
+      return normalizeLog(withStatus(item, 'planned', priority), ctx);
+    }).filter(Boolean);
+    return uniqueIds(done.concat(planned), ctx);
+  }
+
+  function migrateItems(items, context) {
+    var ctx = identityContext(context);
+    var list = Array.isArray(items) ? items : [];
+    return uniqueIds(list.map(function (raw) { return normalizeLog(raw, ctx); }).filter(Boolean), ctx);
+  }
+
+  function plannedOrder(items) {
+    return (items || []).filter(function (item) { return item && item.status === 'planned'; }).slice().sort(function (a, b) {
+      var priority = (a.priority == null ? 100000 : a.priority) - (b.priority == null ? 100000 : b.priority);
+      if (priority) return priority;
+      return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+    });
+  }
+
+  function doneOrder(items) {
+    return (items || []).filter(function (item) { return item && item.status !== 'planned'; }).slice().sort(function (a, b) {
+      var byDate = String(b.date || '').localeCompare(String(a.date || ''));
+      if (byDate) return byDate;
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    });
+  }
+
+  function markDone(items, id, fields, context) {
+    var ctx = identityContext(context);
+    var list = (items || []).slice();
+    var index = -1;
+    list.forEach(function (item, i) { if (item && item.id === id) index = i; });
+    if (index < 0) return list;
+    var item = list[index];
+    var note = fields && Object.prototype.hasOwnProperty.call(fields, 'notes') ? fields.notes : item.notes;
+    var done = updateLog(item, {
+      status: 'done',
+      priority: null,
+      date: (fields && fields.date) || item.date || todayISO(),
+      notes: note
+    }, ctx);
+    list[index] = done;
+    (item.peakIds || []).forEach(function (peakId) {
+      var peakIndex = -1;
+      list.forEach(function (entry, i) {
+        if (entry && entry.id === peakId && entry.status === 'planned' && entry.kind === 'peak') peakIndex = i;
+      });
+      if (peakIndex < 0) return;
+      list[peakIndex] = updateLog(list[peakIndex], { status: 'done', priority: null, date: done.date }, ctx);
+    });
+    return list;
+  }
+
+  function reorderPlanned(items, orderedIds, context) {
+    var ctx = identityContext(context);
+    var rank = {};
+    (orderedIds || []).forEach(function (id, index) { rank[id] = index; });
+    return (items || []).map(function (item) {
+      if (!item || !Object.prototype.hasOwnProperty.call(rank, item.id)) return item;
+      if (item.priority === rank[item.id]) return item;
+      return Object.assign({}, item, { priority: rank[item.id], updatedAt: ctx.now });
+    });
   }
 
   function prepareImport(data, context) {
@@ -523,6 +621,13 @@
     createPost: createPost,
     migrateLogs: migrateLogs,
     migratePosts: migratePosts,
+    SCHEMA_VERSION: 2,
+    unifyLists: unifyLists,
+    migrateItems: migrateItems,
+    plannedOrder: plannedOrder,
+    doneOrder: doneOrder,
+    markDone: markDone,
+    reorderPlanned: reorderPlanned,
     uniqueIds: uniqueIds,
     isPeak: isPeak,
     gradeHint: gradeHint,

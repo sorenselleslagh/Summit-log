@@ -310,8 +310,8 @@
       });
     }
 
-    (source.logs || []).forEach(function (item) { addItem(item, 'Your log'); });
-    (source.backlog || []).forEach(function (item) { addItem(item, 'Your backlog'); });
+    (source.logs || []).forEach(function (item) { addItem(item, 'Done'); });
+    (source.backlog || []).forEach(function (item) { addItem(item, 'Planned'); });
     return list;
   }
 
