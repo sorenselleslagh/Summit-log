@@ -43,7 +43,7 @@ The drawing is `illustrations/mountain.svg`. Replace that file to swap in final 
 ## Install and offline
 
 - `manifest.webmanifest` and the icons in `icons/` let the browser install SummitLog. On iPhone, use Share → Add to Home Screen. Paths are relative, so install works from `/Summit-log/` as well as from a local server root.
-- `sw.js` caches the app shell (HTML, CSS, JS, icons, the intro drawing, and Leaflet) after the first online load. Logging, the backlog, and partner posts then work with the network off.
+- `sw.js` caches the app shell (HTML, CSS, JS, icons, the intro drawing, and Leaflet) after the first online load. Logging, the backlog, and your place in a partner queue then work with the network off.
 - Map tiles are saved only after you view them. Offline, those tiles still appear. Tiles you have not opened are replaced with an “Offline” placeholder. Coming back online redraws the map.
 
 ## Tabs
@@ -53,7 +53,7 @@ Bottom bar: **Log**, **Backlog**, **Map**, **Partners**. **Profile** is the head
 - **Log** is home. The counts are logged peaks, routes, and hikes. The peak number is your collection.
 - **Backlog** is what you want to do. **Done** moves that item to the log and keeps its fields. A route or hike linked to backlog peaks logs those peaks as well.
 - **Map** draws logged items in blue and backlog items in amber. A toggle shows famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20, and a few peaks) with **Add to backlog**. **Load peaks in this view** calls the OpenStreetMap Overpass API only when you tap it, only when zoomed in, and at most once every few seconds. Results are cached on this device. Offline, the famous list and any saved Overpass answer still work.
-- **Partners** stay on this device. **Find a partner** on a backlog item starts a post for that objective. Log entries are attached only if you tick them.
+- **Partners** is a search for an objective: the Alpine 4000ers, your log and backlog, and the famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20). Open one to see its queue. **Join the queue** can include rough dates, a short note, and log entries, and nothing is attached until you tick it. **Find partners** on a backlog item opens that objective. Your place is stored on this device (`summitlog_queues`). Other people in a queue are sample profiles with a Demo badge, not real users. Being visible to other people needs an account, which does not exist yet. There is no ranking.
 
 No pace, speed, ranking, or leaderboard is shown. There is no file import.
 
@@ -91,7 +91,7 @@ On a peak, **Build up to this peak** suggests a few lower summits in the same ar
 
 Not built yet:
 
-- **Accounts and sync.** Signing up should attach this log and backlog to the account without dropping or rewriting ids. A sync layer would replace `storage.js` and use `updatedAt` when two devices both have changes.
+- **Accounts and sync.** Signing up should attach this log, backlog, and queue places to the account without dropping or rewriting ids. A sync layer would replace `storage.js` and use `updatedAt` when two devices both have changes. Joining a partner queue for real needs that account. Until then, sample people stay marked Demo and your own place stays on this device.
 - **Connections.** Profile lists Strava, Garmin Connect, and COROS as coming soon. They need an account.
 - **Camptocamp** is the likely source for alpine route detail later. It is not connected. Famous hikes here are a short built-in list; extra peaks come from Overpass when you ask.
 
@@ -101,8 +101,9 @@ Not built yet:
 - `style.css` — layout, with the four tabs on the bottom
 - `app.js` — interface
 - `logic.js` — item model, stats, validation, ids, and timestamps
+- `partners.js` — objective search and queue records, including the sample Demo profiles
 - `overpass.js` — polite OpenStreetMap peak requests
-- `storage.js` — localStorage repository
+- `storage.js` — localStorage repository (`summitlog_queues` holds the places you joined)
 - `sw.js` — offline cache
 - `manifest.webmanifest` — install metadata
 - `illustrations/mountain.svg` — intro artwork
