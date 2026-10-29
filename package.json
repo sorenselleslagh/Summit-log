@@ -4,7 +4,8 @@
   "description": "Digital mountain and climbing log with optional partner finding",
   "main": "index.html",
   "scripts": {
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "test": "node test/data.test.js"
   },
   "private": true
 }

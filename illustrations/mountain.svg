@@ -1,0 +1,14 @@
+<!--
+  SummitLog intro illustration.
+  This is a placeholder. Replace this file with the final artwork
+  (same path: illustrations/mountain.svg). The intro screen inlines it.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 210" fill="none" role="img" aria-labelledby="mountain-art-title">
+  <title id="mountain-art-title">Mountain illustration</title>
+  <rect width="360" height="210" rx="28" fill="#151c2c"/>
+  <circle cx="292" cy="48" r="16" fill="#93c5fd"/>
+  <path d="M18 168 L86 86 L132 126 L176 96 L214 138 L258 72 L332 156 L346 168 Z" fill="#1e3a8a"/>
+  <path d="M28 178 L132 64 L188 124 L236 46 L344 178 Z" fill="#3b82f6"/>
+  <path d="M208 78 L236 46 L264 78 Z" fill="#f8fafc"/>
+  <path d="M24 178 H336" stroke="#2d3a4f" stroke-width="3" stroke-linecap="round"/>
+</svg>
