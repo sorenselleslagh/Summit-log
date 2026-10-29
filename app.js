@@ -98,6 +98,7 @@ function setScreen(mode) {
 
 function showApp() {
   setScreen('app');
+  watchChrome();
   refreshAccountButton();
   updateOfflineBanner();
   initMap();
@@ -178,18 +179,47 @@ document.getElementById('logout-btn').addEventListener('click', function () {
 });
 
 // ---- Tabs ----
+function fitMap() {
+  var section = document.getElementById('map');
+  var box = document.getElementById('map-container');
+  var mainEl = document.querySelector('#app main');
+  if (!section || !box || !mainEl || section.classList.contains('hidden')) return;
+  if (mainEl.clientHeight < 120) return;
+  var mainStyle = getComputedStyle(mainEl);
+  var padTop = parseFloat(mainStyle.paddingTop) || 0;
+  var next = Math.max(180, Math.floor(mainEl.clientHeight - padTop) - 2);
+  if (box.style.height !== next + 'px') box.style.height = next + 'px';
+  if (map) map.invalidateSize();
+}
+
+function watchChrome() {
+  var mainEl = document.querySelector('#app main');
+  if (!mainEl || mainEl.dataset.chromeWatch) return;
+  mainEl.dataset.chromeWatch = '1';
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(function () { fitMap(); }).observe(mainEl);
+  }
+  window.addEventListener('resize', fitMap);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitMap);
+}
+
 function selectTab(name) {
   if (name !== 'log' && name !== 'backlog' && form) form.classList.add('hidden');
-  document.querySelectorAll('nav button').forEach(function (item) {
+  document.querySelectorAll('#app > nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
   });
   document.querySelectorAll('.tab').forEach(function (section) {
     section.classList.toggle('hidden', section.id !== name);
   });
-  if (name === 'map' && map) setTimeout(function () { map.invalidateSize(); }, 100);
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
+  if (name === 'map') {
+    fitMap();
+    setTimeout(fitMap, 100);
+  }
 }
 
-document.querySelectorAll('nav button').forEach(function (btn) {
+document.querySelectorAll('#app > nav button').forEach(function (btn) {
   btn.addEventListener('click', function () { selectTab(btn.dataset.tab); });
 });
 
