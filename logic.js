@@ -198,17 +198,99 @@
     return { lat: lat, lng: lng };
   }
 
+  var KINDS = ['peak', 'route', 'hike'];
+
+  var ACTIVITIES = [
+    { id: 'sport', label: 'Sport', gradeHint: 'French grade, e.g. 6b' },
+    { id: 'trad', label: 'Trad', gradeHint: 'Grade, e.g. 6a or HVS' },
+    { id: 'bouldering', label: 'Bouldering', gradeHint: 'Font grade, e.g. 6B+' },
+    { id: 'alpine', label: 'Alpine', gradeHint: 'Alpine grade, e.g. PD, AD+' },
+    { id: 'ice', label: 'Ice', gradeHint: 'Ice grade, e.g. WI4' },
+    { id: 'mixed', label: 'Mixed', gradeHint: 'Mixed grade, e.g. M6' },
+    { id: 'ski', label: 'Ski', gradeHint: 'Optional, e.g. S3' }
+  ];
+
+  // Offline catalogue. Overpass can add peaks for the current map view.
+  var FAMOUS = [
+    { name: 'Tour du Mont Blanc', kind: 'hike', lat: 45.923, lng: 6.869, area: 'Alps', note: 'UTMB loop around Mont Blanc' },
+    { name: 'Tour du Mont Rose', kind: 'hike', lat: 45.937, lng: 7.868, area: 'Alps', note: 'Tour of Monte Rosa' },
+    { name: 'Haute Randonnée Pyrénéenne', kind: 'hike', lat: 42.7, lng: 0.65, area: 'Pyrenees', note: 'HRP, high route across the Pyrenees' },
+    { name: 'GR5', kind: 'hike', lat: 46.2, lng: 6.9, area: 'Alps', note: 'Long GR through the western Alps' },
+    { name: 'GR20', kind: 'hike', lat: 42.25, lng: 9.05, area: 'Corsica', note: 'High route across Corsica' },
+    { name: 'Mont Blanc', kind: 'peak', lat: 45.8326, lng: 6.8652, elevation: 4808, area: 'Alps', note: 'Highest peak in the Alps' },
+    { name: 'Matterhorn', kind: 'peak', lat: 45.9763, lng: 7.6586, elevation: 4478, area: 'Alps', note: 'Cervino, Pennine Alps' },
+    { name: 'Gran Paradiso', kind: 'peak', lat: 45.518, lng: 7.267, elevation: 4061, area: 'Alps', note: 'Highest peak entirely in Italy' }
+  ];
+
+  function inferKind(raw) {
+    if (raw.kind === 'peak' || raw.kind === 'route' || raw.kind === 'hike') return raw.kind;
+    var type = typeof raw.type === 'string' ? raw.type : '';
+    if (/sport|trad|ice|mixed|boulder/i.test(type)) return 'route';
+    if (/ski/i.test(type)) return 'hike';
+    return 'peak';
+  }
+
+  function inferActivity(raw, kind) {
+    if (kind !== 'route') return '';
+    var known = false;
+    ACTIVITIES.forEach(function (item) { if (item.id === raw.activity) known = true; });
+    if (known) return raw.activity;
+    var type = String(raw.type || '') + ' ' + String(raw.activity || '');
+    if (/boulder/i.test(type)) return 'bouldering';
+    if (/mixed/i.test(type)) return 'mixed';
+    if (/ice/i.test(type)) return 'ice';
+    if (/alpine/i.test(type)) return 'alpine';
+    if (/ski/i.test(type)) return 'ski';
+    if (/trad/i.test(type) && !/sport/i.test(type)) return 'trad';
+    return 'sport';
+  }
+
+  function gradeHint(activity) {
+    var hint = 'Grade';
+    ACTIVITIES.forEach(function (item) {
+      if (item.id === activity) hint = item.gradeHint;
+    });
+    return hint;
+  }
+
+  function parseDistance(value) {
+    if (value == null || typeof value === 'boolean') return null;
+    if (typeof value === 'string' && value.trim() === '') return null;
+    var n = typeof value === 'number' ? value : Number(String(value).trim());
+    if (!Number.isFinite(n) || n < 0 || n > 5000) return null;
+    return Math.round(n * 10) / 10;
+  }
+
+  function parseIdList(value) {
+    if (!Array.isArray(value)) return [];
+    var out = [];
+    value.forEach(function (id) {
+      if (typeof id !== 'string' && typeof id !== 'number') return;
+      var text = String(id).trim().toLowerCase();
+      if (!isUuid(text) || out.indexOf(text) >= 0) return;
+      out.push(text);
+    });
+    return out.slice(0, 12);
+  }
+
   function logFields(raw) {
     if (!isPlainObject(raw)) return null;
     var name = cleanText(raw.name, LIMITS.name);
     if (!name) return null;
     var coords = pairCoords(raw.lat, raw.lng);
+    var kind = inferKind(raw);
     return {
       id: raw.id,
+      kind: kind,
       name: name,
-      type: normalizeType(raw.type),
+      activity: inferActivity(raw, kind),
       date: parseDate(typeof raw.date === 'string' ? raw.date : ''),
       elevation: parseElevation(raw.elevation),
+      distance: kind === 'hike' ? parseDistance(raw.distance) : null,
+      grade: kind === 'route' ? cleanText(raw.grade, 40) : '',
+      crag: kind === 'route' ? cleanText(raw.crag, 120) : '',
+      track: kind === 'hike' ? cleanText(raw.track, 500) : '',
+      peakIds: kind === 'peak' ? [] : parseIdList(raw.peakIds),
       notes: cleanText(raw.notes, LIMITS.notes),
       lat: coords.lat,
       lng: coords.lng,
@@ -221,12 +303,17 @@
     if (!isPlainObject(raw)) return null;
     var objective = cleanText(raw.objective, LIMITS.objective);
     if (!objective) return null;
+    var itemId = typeof raw.itemId === 'string' && isUuid(raw.itemId.trim().toLowerCase())
+      ? raw.itemId.trim().toLowerCase()
+      : '';
     return {
       id: raw.id,
       objective: objective,
       dates: cleanText(raw.dates, LIMITS.dates) || 'Flexible',
       looking: cleanText(raw.looking, LIMITS.looking),
       shared: cleanText(raw.shared, LIMITS.shared),
+      itemId: itemId,
+      attachedIds: parseIdList(raw.attachedIds),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     };
@@ -291,25 +378,40 @@
   }
 
   function isPeak(entry) {
-    return !!entry && PEAK_TYPES[entry.type] === true;
+    return !!entry && entry.kind === 'peak';
   }
 
   function computeStats(logs) {
     var list = Array.isArray(logs) ? logs : [];
-    var dates = {};
-    var trips = 0;
-    var elevation = 0;
     var peaks = 0;
+    var routes = 0;
+    var hikes = 0;
     list.forEach(function (log) {
       if (!log) return;
-      if (isPeak(log)) peaks += 1;
-      if (Number.isFinite(log.elevation)) elevation += log.elevation;
-      if (typeof log.date === 'string' && log.date && !dates[log.date]) {
-        dates[log.date] = true;
-        trips += 1;
-      }
+      if (log.kind === 'peak') peaks += 1;
+      else if (log.kind === 'route') routes += 1;
+      else if (log.kind === 'hike') hikes += 1;
     });
-    return { peaks: peaks, elevation: elevation, trips: trips, entries: list.length };
+    return { peaks: peaks, routes: routes, hikes: hikes, entries: list.length };
+  }
+
+  // Move a backlog item onto the log. Linked backlog peaks are logged too.
+  function completeItem(item, logs, backlog, context) {
+    var ctx = identityContext(context);
+    var done = updateLog(item, { date: item.date || todayISO() }, ctx);
+    var nextLogs = (logs || []).slice();
+    var nextBacklog = (backlog || []).filter(function (entry) { return entry.id !== item.id; });
+    nextLogs.push(done);
+    (item.peakIds || []).forEach(function (peakId) {
+      var peak = null;
+      nextBacklog.forEach(function (entry) {
+        if (entry.id === peakId && entry.kind === 'peak') peak = entry;
+      });
+      if (!peak) return;
+      nextBacklog = nextBacklog.filter(function (entry) { return entry.id !== peakId; });
+      nextLogs.push(updateLog(peak, { date: peak.date || done.date }, ctx));
+    });
+    return { logs: nextLogs, backlog: nextBacklog };
   }
 
   function prepareImport(data, context) {
@@ -393,6 +495,9 @@
     ACTIVITY_TYPES: ACTIVITY_TYPES,
     PEAK_TYPES: PEAK_TYPES,
     SAMPLE_LOGS: SAMPLE_LOGS,
+    KINDS: KINDS,
+    ACTIVITIES: ACTIVITIES,
+    FAMOUS: FAMOUS,
     LIMITS: LIMITS,
     isUuid: isUuid,
     mintId: mintId,
@@ -413,7 +518,9 @@
     migratePosts: migratePosts,
     uniqueIds: uniqueIds,
     isPeak: isPeak,
+    gradeHint: gradeHint,
     computeStats: computeStats,
+    completeItem: completeItem,
     prepareImport: prepareImport,
     summarizeImport: summarizeImport,
     parseStoredArray: parseStoredArray,

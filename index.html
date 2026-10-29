@@ -93,70 +93,86 @@
       <h1>SummitLog</h1>
       <div class="header-tools">
         <span id="user-display" class="muted"></span>
-        <nav aria-label="Sections">
-          <button class="active" type="button" data-tab="log">Log</button>
-          <button type="button" data-tab="map">Map</button>
-          <button type="button" data-tab="partners">Partners</button>
-          <button type="button" data-tab="profile">Profile</button>
-        </nav>
-        <button class="secondary" id="logout-btn" type="button">Log out</button>
+        <button class="secondary" id="profile-btn" type="button">Profile</button>
       </div>
     </header>
 
     <main>
       <p id="offline-banner" class="offline-banner hidden" role="status">You’re offline. Your log still works on this device. Map tiles you’ve already viewed stay available; other areas show a placeholder.</p>
 
+      <div id="add-form" class="card hidden form-card">
+        <h3 id="form-title">New entry</h3>
+        <select id="item-kind" aria-label="Kind">
+          <option value="peak">Peak</option>
+          <option value="route">Route</option>
+          <option value="hike">Hike</option>
+        </select>
+        <input type="text" id="name" placeholder="Name" maxlength="200" aria-label="Name" required>
+        <div id="route-fields" class="hidden">
+          <select id="activity" aria-label="Activity"></select>
+          <input type="text" id="grade" placeholder="Grade" maxlength="40" aria-label="Grade">
+          <input type="text" id="crag" placeholder="Crag or mountain" maxlength="120" aria-label="Crag or mountain">
+        </div>
+        <div id="peak-fields">
+          <input type="number" id="elevation" placeholder="Summit elevation (m)" min="0" max="20000" inputmode="decimal" aria-label="Elevation in metres">
+        </div>
+        <div id="hike-fields" class="hidden">
+          <input type="number" id="distance" placeholder="Distance (km)" min="0" step="0.1" inputmode="decimal" aria-label="Distance in kilometres">
+          <input type="text" id="track" placeholder="Track or trail note (optional)" maxlength="500" aria-label="Track note">
+        </div>
+        <div class="row">
+          <input type="number" step="any" id="lat" placeholder="Latitude (optional)" inputmode="decimal" aria-label="Latitude">
+          <input type="number" step="any" id="lng" placeholder="Longitude (optional)" inputmode="decimal" aria-label="Longitude">
+        </div>
+        <input type="date" id="date" aria-label="Date">
+        <div id="peak-links" class="hidden"></div>
+        <textarea id="notes" rows="3" maxlength="4000" placeholder="Notes" aria-label="Notes"></textarea>
+        <button class="primary" id="save-btn" type="button">Save</button>
+      </div>
+
       <!-- LOG -->
       <section id="log" class="tab">
         <div class="stats">
-          <div class="stat" title="Hiking, alpine, and ski-touring entries">
+          <div class="stat" title="Logged peaks">
             <strong id="peak-count">0</strong><span>Peaks</span>
           </div>
-          <div class="stat" title="Elevation gain from every entry">
-            <strong id="elev-total">0</strong><span>m elev</span>
+          <div class="stat" title="Logged routes">
+            <strong id="route-count">0</strong><span>Routes</span>
           </div>
-          <div class="stat" title="Distinct calendar days with at least one entry">
-            <strong id="trip-count">0</strong><span>Trips</span>
+          <div class="stat" title="Logged hikes">
+            <strong id="hike-count">0</strong><span>Hikes</span>
           </div>
         </div>
-        <p class="stat-hint">Peaks leaves out sport, trad, and ice sessions. Trips are calendar days, so two routes on one day count once.</p>
-
-        <button class="primary" id="add-btn" type="button">+ Log a peak / route</button>
-
-        <div id="add-form" class="card hidden form-card">
-          <h3 id="form-title">New entry</h3>
-          <input type="text" id="name" placeholder="Peak or route name" maxlength="200" aria-label="Peak or route name" required>
-          <select id="type" aria-label="Activity type">
-            <option>Hiking / Peak bagging</option>
-            <option>Alpine / Mountaineering</option>
-            <option>Sport / Trad climbing</option>
-            <option>Ice / Mixed</option>
-            <option>Ski touring</option>
-          </select>
-          <div class="row">
-            <input type="date" id="date" aria-label="Date">
-            <input type="number" id="elevation" placeholder="Elevation gain (m)" min="0" max="20000" inputmode="numeric" aria-label="Elevation gain in metres">
-          </div>
-          <div class="row">
-            <input type="number" step="any" id="lat" placeholder="Latitude (optional)" inputmode="decimal" aria-label="Latitude">
-            <input type="number" step="any" id="lng" placeholder="Longitude (optional)" inputmode="decimal" aria-label="Longitude">
-          </div>
-          <textarea id="notes" rows="3" maxlength="4000" placeholder="Notes, conditions, style..." aria-label="Notes"></textarea>
-          <button class="primary" id="save-btn" type="button">Save</button>
-        </div>
-
+        <p class="stat-hint">Peak count is your collection. Finishing a route or hike also logs any peaks linked to it.</p>
+        <button class="primary" id="add-btn" type="button">+ Add to log</button>
         <div id="log-list" class="list-block"></div>
+      </section>
+
+      <!-- BACKLOG -->
+      <section id="backlog" class="tab hidden">
+        <p class="stat-hint">Things you want to do. Tick one to move it to the log.</p>
+        <button class="primary" id="add-backlog-btn" type="button">+ Add to backlog</button>
+        <div id="backlog-list" class="list-block"></div>
       </section>
 
       <!-- MAP -->
       <section id="map" class="tab hidden">
         <div id="map-container"></div>
-        <p class="muted map-caption">Ranges and areas appear on the map. A check mark means you’ve logged something there. Offline, tiles you’ve already viewed stay visible; others show a placeholder.</p>
-
+        <p class="muted map-caption">Blue is logged, amber is backlog. A check mark on a range means you have logged something there.</p>
+        <div class="legend">
+          <span class="swatch swatch-log"></span> Logged
+          <span class="swatch swatch-backlog"></span> Backlog
+          <span class="swatch swatch-osm"></span> OSM
+        </div>
         <div class="card">
-          <h3>Suggestions</h3>
-          <p class="muted suggestion-intro">Based on the current map area (sample data)</p>
-          <div id="suggestions-list"></div>
+          <h3>Routes and peaks</h3>
+          <label class="check-row">
+            <input type="checkbox" id="osm-layer">
+            <span>Show famous treks and peaks</span>
+          </label>
+          <p id="map-note" class="muted suggestion-intro">Tour du Mont Blanc, HRP, Tour du Mont Rose, and a few GR routes. OpenStreetMap peaks load only when you ask.</p>
+          <button class="secondary" id="load-peaks-btn" type="button">Load peaks in this view</button>
+          <div id="famous-list"></div>
         </div>
       </section>
 
@@ -164,13 +180,14 @@
       <section id="partners" class="tab hidden">
         <div class="card">
           <h2>Find partners</h2>
-          <p class="muted partners-intro">Posts include a short summary of recent logs for context. Not a safety guarantee — verify skills yourself.</p>
+          <p class="muted partners-intro">Start from a backlog item, or write an objective. Tick log entries to attach. Nothing is attached until you do. Not a safety guarantee.</p>
           <button class="primary" id="post-btn" type="button">+ Post an objective</button>
 
           <div id="post-form" class="card hidden form-card">
             <input type="text" id="post-objective" placeholder="Objective (peak / route / area)" maxlength="200" aria-label="Objective">
             <input type="text" id="post-dates" placeholder="Dates (e.g. next weekend, 15–17 Nov)" maxlength="120" aria-label="Dates">
             <textarea id="post-looking" rows="2" maxlength="2000" placeholder="What are you looking for? Experience level, style..." aria-label="What you are looking for"></textarea>
+            <div id="post-context"></div>
             <button class="primary" id="save-post-btn" type="button">Post</button>
           </div>
         </div>
@@ -185,11 +202,17 @@
           <div id="resume-summary" class="resume-block"></div>
           <div class="profile-actions">
             <button class="secondary" id="export-btn" type="button">Export data</button>
-            <button class="secondary" id="import-btn" type="button">Import data</button>
             <button class="secondary hidden" id="install-btn" type="button">Install app</button>
-            <input type="file" id="import-file" accept=".json,application/json" class="hidden">
+            <button class="secondary" id="logout-btn" type="button">Sign in</button>
           </div>
           <p class="muted small install-hint">Install SummitLog from the browser menu so it opens like an app. On iPhone, use Share, then Add to Home Screen. After this page has loaded once, the log keeps working offline.</p>
+        </div>
+        <div class="card" id="connections">
+          <h2>Connections</h2>
+          <p class="muted">Coming soon. These need an account, which SummitLog does not have yet.</p>
+          <div class="connection"><strong>Strava</strong><button class="secondary" type="button" data-connect="Strava">Connect</button></div>
+          <div class="connection"><strong>Garmin Connect</strong><button class="secondary" type="button" data-connect="Garmin Connect">Connect</button></div>
+          <div class="connection"><strong>COROS</strong><button class="secondary" type="button" data-connect="COROS">Connect</button></div>
         </div>
         <div class="card">
           <h2>About</h2>
@@ -200,10 +223,17 @@
     </main>
 
     <footer>SummitLog prototype · Data stored locally in your browser</footer>
+    <nav aria-label="Sections">
+      <button class="active" type="button" data-tab="log">Log</button>
+      <button type="button" data-tab="backlog">Backlog</button>
+      <button type="button" data-tab="map">Map</button>
+      <button type="button" data-tab="partners">Partners</button>
+    </nav>
   </div>
 
   <script src="logic.js"></script>
   <script src="storage.js"></script>
+  <script src="overpass.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>

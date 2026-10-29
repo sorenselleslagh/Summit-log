@@ -1,14 +1,19 @@
 // SummitLog — log, map areas, and optional local display name. Text is rendered as text.
 var Lgc = window.SummitLogLogic;
 var Store = window.SummitLogStorage;
+var Over = window.SummitLogOverpass;
 
 var logs = [];
+var backlog = [];
 var partnerPosts = [];
 var currentUser = '';
 var map;
 var markers = [];
 var areaLayers = [];
+var osmMarkers = [];
 var editingId = null;
+var editingList = 'log';
+var postingItemId = '';
 var deferredInstall = null;
 
 var areas = [
@@ -16,13 +21,6 @@ var areas = [
   { name: 'Matterhorn area', type: 'Mountain range', lat: 45.9763, lng: 7.6586, radius: 12000 },
   { name: 'Fontainebleau', type: 'Bouldering', lat: 48.404, lng: 2.7, radius: 15000 },
   { name: 'Alps (central)', type: 'Mountain range', lat: 46.5, lng: 9.5, radius: 80000 }
-];
-
-var suggestions = [
-  { name: 'Aiguille du Midi', type: 'Alpine', elev: 3842, reason: 'Popular high-altitude start' },
-  { name: 'Gran Paradiso', type: 'Alpine', elev: 4061, reason: 'Classic 4000er, often quieter' },
-  { name: 'Piz Bernina', type: 'Alpine', elev: 4049, reason: 'Technical options nearby' },
-  { name: 'Local sport crag', type: 'Sport', elev: 0, reason: 'Matches recent climbing logs' }
 ];
 
 function el(tag, props) {
@@ -51,6 +49,7 @@ function el(tag, props) {
 }
 
 function saveLogs() { logs = Store.saveLogs(logs); }
+function saveBacklog() { backlog = Store.saveBacklog(backlog); }
 function savePosts() { partnerPosts = Store.savePosts(partnerPosts); }
 
 function refreshAccountButton() {
@@ -61,6 +60,7 @@ function refreshAccountButton() {
 }
 
 logs = Store.loadLogs();
+backlog = Store.loadBacklog();
 partnerPosts = Store.loadPosts();
 currentUser = Store.getDisplayName();
 
@@ -100,8 +100,9 @@ function showApp() {
   updateOfflineBanner();
   initMap();
   renderLogs();
+  renderBacklog();
   renderPosts();
-  updateSuggestions();
+  renderFamous();
 }
 
 function showLogin() {
@@ -152,6 +153,16 @@ document.getElementById('login-password').addEventListener('keydown', function (
   if (event.key === 'Enter') document.getElementById('login-btn').click();
 });
 
+document.getElementById('profile-btn').addEventListener('click', function () {
+  selectTab('profile');
+});
+
+document.getElementById('connections').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('button[data-connect]') : null;
+  if (!button) return;
+  alert(button.getAttribute('data-connect') + ' is coming soon and requires an account.');
+});
+
 document.getElementById('logout-btn').addEventListener('click', function () {
   if (!currentUser) {
     showLogin();
@@ -164,6 +175,7 @@ document.getElementById('logout-btn').addEventListener('click', function () {
 
 // ---- Tabs ----
 function selectTab(name) {
+  if (name !== 'log' && name !== 'backlog' && form) form.classList.add('hidden');
   document.querySelectorAll('nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
   });
@@ -269,19 +281,49 @@ document.getElementById('replay-intro').addEventListener('click', function () {
   showIntro(true);
 });
 
-// ---- Render logs ----
-function renderLogCard(log) {
-  var notes = log.notes ? el('p', { class: 'entry-notes', text: log.notes }) : null;
-  var elevation = log.elevation == null ? 0 : log.elevation;
+// ---- Items ----
+function kindLabel(kind) {
+  if (kind === 'route') return 'Route';
+  if (kind === 'hike') return 'Hike';
+  return 'Peak';
+}
+
+function itemSummary(item) {
+  if (item.kind === 'route') {
+    var bits = [item.activity || 'route'];
+    if (item.grade) bits.push(item.grade);
+    if (item.crag) bits.push(item.crag);
+    return bits.join(' · ');
+  }
+  if (item.kind === 'hike') {
+    var hike = [];
+    if (item.distance != null) hike.push(item.distance + ' km');
+    if (item.elevation != null) hike.push(item.elevation + ' m gain');
+    if (item.track) hike.push(item.track);
+    return hike.join(' · ') || 'Hike';
+  }
+  var peak = [];
+  if (item.elevation != null) peak.push(item.elevation + ' m');
+  if (item.date) peak.push(item.date);
+  return peak.join(' · ') || 'Peak';
+}
+
+function renderItemCard(item, listName) {
+  var notes = item.notes ? el('p', { class: 'entry-notes', text: item.notes }) : null;
+  var actions = [
+    el('button', { class: 'secondary', type: 'button', 'data-action': 'edit', 'data-id': item.id, 'data-list': listName, text: 'Edit' }),
+    el('button', { class: 'danger', type: 'button', 'data-action': 'delete', 'data-id': item.id, 'data-list': listName, text: 'Delete' })
+  ];
+  if (listName === 'backlog') {
+    actions.unshift(el('button', { class: 'primary', type: 'button', 'data-action': 'done', 'data-id': item.id, text: 'Done' }));
+    actions.push(el('button', { class: 'secondary', type: 'button', 'data-action': 'partner', 'data-id': item.id, text: 'Find a partner' }));
+  }
   return el('div', { class: 'card' },
-    el('h3', { text: log.name }),
-    el('span', { class: 'badge', text: log.type }),
-    el('p', { class: 'entry-meta', text: (log.date || 'No date') + ' · ' + elevation + ' m' }),
+    el('h3', { text: item.name }),
+    el('span', { class: 'badge', text: kindLabel(item.kind) }),
+    el('p', { class: 'entry-meta', text: itemSummary(item) }),
     notes,
-    el('div', { class: 'log-actions' },
-      el('button', { class: 'secondary', type: 'button', 'data-action': 'edit', 'data-id': log.id, text: 'Edit' }),
-      el('button', { class: 'danger', type: 'button', 'data-action': 'delete', 'data-id': log.id, text: 'Delete' })
-    )
+    el('div', { class: 'log-actions' }, actions)
   );
 }
 
@@ -292,7 +334,7 @@ function renderResume() {
     return;
   }
   var items = logs.slice(-5).reverse().map(function (log) {
-    return el('li', { text: log.name + ' — ' + log.type });
+    return el('li', { text: log.name + ' — ' + kindLabel(log.kind) });
   });
   resume.replaceChildren(
     el('p', { text: 'Recent activity:' }),
@@ -303,14 +345,22 @@ function renderResume() {
 function renderLogs() {
   var list = document.getElementById('log-list');
   if (!logs.length) list.replaceChildren(el('p', { class: 'muted', text: 'No entries yet.' }));
-  else list.replaceChildren.apply(list, logs.slice().reverse().map(renderLogCard));
+  else list.replaceChildren.apply(list, logs.slice().reverse().map(function (item) { return renderItemCard(item, 'log'); }));
 
   var stats = Lgc.computeStats(logs);
   document.getElementById('peak-count').textContent = String(stats.peaks);
-  document.getElementById('elev-total').textContent = String(stats.elevation);
-  document.getElementById('trip-count').textContent = String(stats.trips);
+  document.getElementById('route-count').textContent = String(stats.routes);
+  document.getElementById('hike-count').textContent = String(stats.hikes);
   renderResume();
   syncAreas();
+  updateMapMarkers();
+}
+
+function renderBacklog() {
+  var list = document.getElementById('backlog-list');
+  if (!list) return;
+  if (!backlog.length) list.replaceChildren(el('p', { class: 'muted', text: 'Nothing waiting. Add a peak, route, or hike you want to do.' }));
+  else list.replaceChildren.apply(list, backlog.slice().reverse().map(function (item) { return renderItemCard(item, 'backlog'); }));
   updateMapMarkers();
 }
 
@@ -322,131 +372,246 @@ function buttonFromEvent(event) {
   return button;
 }
 
-document.getElementById('log-list').addEventListener('click', function (event) {
+function onItemClick(event) {
   var button = buttonFromEvent(event);
   if (!button) return;
   var id = button.getAttribute('data-id');
-  if (button.getAttribute('data-action') === 'edit') editLog(id);
-  if (button.getAttribute('data-action') === 'delete') deleteLog(id);
-});
+  var listName = button.getAttribute('data-list') || 'log';
+  var action = button.getAttribute('data-action');
+  if (action === 'edit') editItem(id, listName);
+  if (action === 'delete') deleteItem(id, listName);
+  if (action === 'done') completeBacklogItem(id);
+  if (action === 'partner') startPartnerFrom(id);
+}
+
+document.getElementById('log-list').addEventListener('click', onItemClick);
+document.getElementById('backlog-list').addEventListener('click', onItemClick);
 
 // ---- Form handling ----
 var form = document.getElementById('add-form');
 
-function selectType(value) {
-  var select = document.getElementById('type');
-  Array.prototype.forEach.call(select.querySelectorAll('option[data-custom]'), function (opt) {
-    opt.remove();
-  });
-  var known = Array.prototype.some.call(select.options, function (opt) { return opt.value === value; });
-  if (value && !known) {
-    var opt = document.createElement('option');
-    opt.value = value;
-    opt.textContent = value;
-    opt.setAttribute('data-custom', '1');
-    select.appendChild(opt);
+function fillActivities(selected) {
+  var select = document.getElementById('activity');
+  if (select.options.length) {
+    select.value = selected || select.value || 'sport';
+    return;
   }
-  select.value = value && (known || value) ? value : select.options[0].value;
+  Lgc.ACTIVITIES.forEach(function (activity) {
+    var option = document.createElement('option');
+    option.value = activity.id;
+    option.textContent = activity.label;
+    select.appendChild(option);
+  });
+  select.value = selected || 'sport';
 }
 
-function resetEntryForm() {
+function syncKindFields() {
+  var kind = document.getElementById('item-kind').value;
+  document.getElementById('route-fields').classList.toggle('hidden', kind !== 'route');
+  document.getElementById('hike-fields').classList.toggle('hidden', kind !== 'hike');
+  document.getElementById('peak-fields').classList.toggle('hidden', kind === 'route');
+  document.getElementById('peak-links').classList.toggle('hidden', kind === 'peak');
+  document.getElementById('elevation').placeholder = kind === 'hike' ? 'Elevation gain (m)' : 'Summit elevation (m)';
+  document.getElementById('grade').placeholder = Lgc.gradeHint(document.getElementById('activity').value);
+}
+
+function renderPeakLinks(selected) {
+  var box = document.getElementById('peak-links');
+  var chosen = selected || [];
+  var peaks = logs.concat(backlog).filter(function (item) { return item.kind === 'peak' && item.id !== editingId; });
+  if (!peaks.length) {
+    box.replaceChildren(el('p', { class: 'muted', text: 'Link peaks after you have added them.' }));
+    return;
+  }
+  box.replaceChildren.apply(box, [el('p', { class: 'muted', text: 'Peaks this also ticks off' })].concat(peaks.map(function (peak) {
+    var input = el('input', { type: 'checkbox', value: peak.id });
+    input.checked = chosen.indexOf(peak.id) >= 0;
+    return el('label', { class: 'check-row' }, input, el('span', { text: peak.name }));
+  })));
+}
+
+function selectedPeakIds() {
+  var box = document.getElementById('peak-links');
+  return Array.prototype.map.call(box.querySelectorAll('input:checked'), function (input) { return input.value; });
+}
+
+function resetEntryForm(listName) {
   editingId = null;
-  document.getElementById('form-title').textContent = 'New entry';
+  editingList = listName || 'log';
+  document.getElementById('form-title').textContent = editingList === 'backlog' ? 'Add to backlog' : 'Add to log';
+  document.getElementById('item-kind').value = 'peak';
   document.getElementById('name').value = '';
-  document.getElementById('notes').value = '';
+  document.getElementById('grade').value = '';
+  document.getElementById('crag').value = '';
   document.getElementById('elevation').value = '';
+  document.getElementById('distance').value = '';
+  document.getElementById('track').value = '';
+  document.getElementById('notes').value = '';
   document.getElementById('lat').value = '';
   document.getElementById('lng').value = '';
-  document.getElementById('date').value = Lgc.todayISO();
-  selectType(Lgc.ACTIVITY_TYPES[0]);
+  document.getElementById('date').value = editingList === 'log' ? Lgc.todayISO() : '';
+  fillActivities('sport');
+  syncKindFields();
+  renderPeakLinks([]);
 }
 
-document.getElementById('add-btn').addEventListener('click', function () {
-  if (!form.classList.contains('hidden') && !editingId) {
+function openEntryForm(listName) {
+  if (!form.classList.contains('hidden') && !editingId && editingList === listName) {
     form.classList.add('hidden');
     return;
   }
-  resetEntryForm();
-  form.classList.remove('hidden');
-});
-
-document.getElementById('save-btn').addEventListener('click', function () {
-  var coords = Lgc.readCoordPair(
-    document.getElementById('lat').value,
-    document.getElementById('lng').value
-  );
-  if (coords.error) return alert(coords.error);
-  var elevation = Lgc.readElevation(document.getElementById('elevation').value);
-  if (elevation.error) return alert(elevation.error);
-
-  var fields = {
-    name: document.getElementById('name').value,
-    type: document.getElementById('type').value,
-    date: document.getElementById('date').value,
-    elevation: elevation.value,
-    notes: document.getElementById('notes').value,
-    lat: coords.lat,
-    lng: coords.lng
-  };
-  var entry;
-  if (editingId) {
-    var previous = logs.find(function (log) { return log.id === editingId; });
-    entry = previous ? Lgc.updateLog(previous, fields) : Lgc.createLog(fields);
-  } else {
-    entry = Lgc.createLog(fields);
-  }
-  if (!entry) return alert('Name is required');
-
-  if (editingId) {
-    var idx = logs.findIndex(function (log) { return log.id === editingId; });
-    if (idx >= 0) logs[idx] = entry;
-    else logs.push(entry);
-  } else {
-    logs.push(entry);
-  }
-
-  saveLogs();
-  form.classList.add('hidden');
-  editingId = null;
-  renderLogs();
-});
-
-function editLog(id) {
-  var log = logs.find(function (item) { return item.id === id; });
-  if (!log) return;
-  editingId = log.id;
-  document.getElementById('form-title').textContent = 'Edit entry';
-  document.getElementById('name').value = log.name;
-  selectType(log.type);
-  document.getElementById('date').value = log.date || '';
-  document.getElementById('elevation').value = Lgc.formatNumberInput(log.elevation);
-  document.getElementById('notes').value = log.notes || '';
-  document.getElementById('lat').value = Lgc.formatNumberInput(log.lat);
-  document.getElementById('lng').value = Lgc.formatNumberInput(log.lng);
+  resetEntryForm(listName);
   form.classList.remove('hidden');
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
-function deleteLog(id) {
-  if (!confirm('Delete this entry?')) return;
-  logs = logs.filter(function (log) { return log.id !== id; });
+document.getElementById('item-kind').addEventListener('change', syncKindFields);
+document.getElementById('activity').addEventListener('change', syncKindFields);
+document.getElementById('add-btn').addEventListener('click', function () { openEntryForm('log'); });
+document.getElementById('add-backlog-btn').addEventListener('click', function () { openEntryForm('backlog'); });
+
+document.getElementById('save-btn').addEventListener('click', function () {
+  var kind = document.getElementById('item-kind').value;
+  var coords = Lgc.readCoordPair(document.getElementById('lat').value, document.getElementById('lng').value);
+  if (coords.error) return alert(coords.error);
+  var elevation = Lgc.readElevation(document.getElementById('elevation').value);
+  if (kind !== 'route' && elevation.error) return alert(elevation.error);
+  var list = editingList === 'backlog' ? backlog : logs;
+  var previous = editingId ? list.find(function (item) { return item.id === editingId; }) : null;
+  var fields = {
+    kind: kind,
+    name: document.getElementById('name').value,
+    activity: document.getElementById('activity').value,
+    grade: document.getElementById('grade').value,
+    crag: document.getElementById('crag').value,
+    date: document.getElementById('date').value,
+    elevation: kind === 'route' ? (previous ? previous.elevation : null) : elevation.value,
+    distance: document.getElementById('distance').value,
+    track: document.getElementById('track').value,
+    peakIds: selectedPeakIds(),
+    notes: document.getElementById('notes').value,
+    lat: coords.lat,
+    lng: coords.lng
+  };
+  var entry = previous ? Lgc.updateLog(previous, fields) : Lgc.createLog(fields);
+  if (!entry) return alert('Name is required');
+  if (previous) {
+    var index = list.findIndex(function (item) { return item.id === editingId; });
+    if (index >= 0) list[index] = entry;
+  } else if (editingList === 'backlog') backlog.push(entry);
+  else logs.push(entry);
   saveLogs();
+  saveBacklog();
+  form.classList.add('hidden');
+  editingId = null;
   renderLogs();
+  renderBacklog();
+});
+
+function editItem(id, listName) {
+  var list = listName === 'backlog' ? backlog : logs;
+  var item = list.find(function (entry) { return entry.id === id; });
+  if (!item) return;
+  editingId = item.id;
+  editingList = listName;
+  document.getElementById('form-title').textContent = 'Edit';
+  document.getElementById('item-kind').value = item.kind;
+  document.getElementById('name').value = item.name;
+  fillActivities(item.activity || 'sport');
+  document.getElementById('grade').value = item.grade || '';
+  document.getElementById('crag').value = item.crag || '';
+  document.getElementById('elevation').value = Lgc.formatNumberInput(item.elevation);
+  document.getElementById('distance').value = Lgc.formatNumberInput(item.distance);
+  document.getElementById('track').value = item.track || '';
+  document.getElementById('date').value = item.date || '';
+  document.getElementById('notes').value = item.notes || '';
+  document.getElementById('lat').value = Lgc.formatNumberInput(item.lat);
+  document.getElementById('lng').value = Lgc.formatNumberInput(item.lng);
+  syncKindFields();
+  renderPeakLinks(item.peakIds || []);
+  form.classList.remove('hidden');
+  form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteItem(id, listName) {
+  if (!confirm('Delete this entry?')) return;
+  if (listName === 'backlog') {
+    backlog = backlog.filter(function (item) { return item.id !== id; });
+    saveBacklog();
+  } else {
+    logs = logs.filter(function (item) { return item.id !== id; });
+    saveLogs();
+  }
+  renderLogs();
+  renderBacklog();
+}
+
+function completeBacklogItem(id) {
+  var item = backlog.find(function (entry) { return entry.id === id; });
+  if (!item) return;
+  var result = Lgc.completeItem(item, logs, backlog);
+  logs = result.logs;
+  backlog = result.backlog;
+  saveLogs();
+  saveBacklog();
+  renderLogs();
+  renderBacklog();
+  selectTab('log');
 }
 
 // ---- Map ----
-function updateSuggestions() {
-  var list = document.getElementById('suggestions-list');
+function setMapNote(text) {
+  var note = document.getElementById('map-note');
+  if (note) note.textContent = text;
+}
+
+function alreadyHave(name) {
+  var key = String(name || '').trim().toLowerCase();
+  return logs.concat(backlog).some(function (item) { return item.name.toLowerCase() === key; });
+}
+
+function addCatalogItem(place) {
+  if (alreadyHave(place.name)) {
+    alert(place.name + ' is already in your log or backlog.');
+    return;
+  }
+  var entry = Lgc.createLog({
+    kind: place.kind || 'peak',
+    name: place.name,
+    lat: place.lat,
+    lng: place.lng,
+    elevation: place.elevation,
+    notes: place.note || ''
+  });
+  if (!entry) return;
+  backlog.push(entry);
+  saveBacklog();
+  renderBacklog();
+  setMapNote(place.name + ' added to your backlog.');
+}
+
+function renderFamous() {
+  var list = document.getElementById('famous-list');
   if (!list) return;
-  list.replaceChildren.apply(list, suggestions.map(function (item) {
-    var detail = item.reason;
-    if (typeof item.elev === 'number' && item.elev > 0) detail = item.elev + ' m · ' + item.reason;
+  list.replaceChildren.apply(list, Lgc.FAMOUS.map(function (place) {
     return el('div', { class: 'suggestion' },
-      el('strong', { text: item.name }),
-      el('span', { class: 'badge', text: item.type }),
-      el('p', { text: detail })
+      el('strong', { text: place.name }),
+      el('span', { class: 'badge', text: kindLabel(place.kind) }),
+      el('p', { text: place.note }),
+      el('button', {
+        class: 'secondary',
+        type: 'button',
+        'data-famous': place.name,
+        text: 'Add to backlog'
+      })
     );
   }));
+}
+
+function famousByName(name) {
+  var found = null;
+  Lgc.FAMOUS.forEach(function (place) { if (place.name === name) found = place; });
+  return found;
 }
 
 function showMapFallback() {
@@ -472,13 +637,23 @@ function areaPopup(area, done) {
   return el('div', null, children);
 }
 
-function markerPopup(log) {
+function markerPopup(item) {
   return el('div', null,
-    el('strong', { text: log.name }),
+    el('strong', { text: item.name }),
     el('br'),
-    document.createTextNode(log.type || ''),
+    document.createTextNode(kindLabel(item.kind) + (item.date ? ' · ' + item.date : ''))
+  );
+}
+
+function placePopup(place) {
+  var button = el('button', { type: 'button', text: 'Add to backlog' });
+  button.addEventListener('click', function () { addCatalogItem(place); });
+  return el('div', null,
+    el('strong', { text: place.name }),
     el('br'),
-    document.createTextNode(log.date || '')
+    document.createTextNode(place.note || 'OpenStreetMap'),
+    el('br'),
+    button
   );
 }
 
@@ -530,15 +705,70 @@ function initMap() {
   }
 }
 
+function addCircle(item, color, popup) {
+  if (!Lgc.hasCoords(item)) return;
+  var marker = L.circleMarker([item.lat, item.lng], {
+    radius: 8,
+    color: color,
+    fillColor: color,
+    fillOpacity: 0.88,
+    weight: 2
+  }).addTo(map);
+  marker.bindPopup(popup || markerPopup(item));
+  markers.push(marker);
+}
+
 function updateMapMarkers() {
   if (!map) return;
   markers.forEach(function (marker) { map.removeLayer(marker); });
   markers = [];
-  logs.forEach(function (log) {
-    if (!Lgc.hasCoords(log)) return;
-    var marker = L.marker([log.lat, log.lng]).addTo(map);
-    marker.bindPopup(markerPopup(log));
-    markers.push(marker);
+  logs.forEach(function (item) { addCircle(item, '#3b82f6'); });
+  backlog.forEach(function (item) { addCircle(item, '#f59e0b'); });
+  if (document.getElementById('osm-layer').checked) {
+    Lgc.FAMOUS.forEach(function (place) { addCircle(place, '#a78bfa', placePopup(place)); });
+    osmMarkers.forEach(function (place) { addCircle(place, '#a78bfa', placePopup(place)); });
+  }
+}
+
+function loadPeaksInView() {
+  if (!map || typeof Over === 'undefined') return;
+  if (!navigator.onLine) {
+    setMapNote('Offline. Famous routes stay available. Peaks in this view need a connection.');
+    return;
+  }
+  var gate = Over.canFetch(map.getZoom(), Date.now());
+  if (!gate.ok) {
+    setMapNote(gate.reason);
+    return;
+  }
+  var bounds = map.getBounds();
+  var box = { south: bounds.getSouth(), west: bounds.getWest(), north: bounds.getNorth(), east: bounds.getEast() };
+  var key = Over.bboxKey(box);
+  var cached = Store.readCache('peaks', key);
+  if (cached) {
+    osmMarkers = cached;
+    document.getElementById('osm-layer').checked = true;
+    updateMapMarkers();
+    setMapNote('Showing saved OpenStreetMap peaks for this area.');
+    return;
+  }
+  Over.noteRequest(Date.now());
+  setMapNote('Asking OpenStreetMap…');
+  fetch('https://overpass-api.de/api/interpreter', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+    body: 'data=' + encodeURIComponent(Over.buildQuery(box))
+  }).then(function (response) {
+    if (!response.ok) throw new Error('Overpass ' + response.status);
+    return response.json();
+  }).then(function (data) {
+    osmMarkers = Over.parseElements(data);
+    Store.writeCache('peaks', key, osmMarkers);
+    document.getElementById('osm-layer').checked = true;
+    updateMapMarkers();
+    setMapNote(osmMarkers.length ? osmMarkers.length + ' peaks from OpenStreetMap.' : 'No named peaks in this view.');
+  }).catch(function () {
+    setMapNote('OpenStreetMap did not answer. Famous routes are still listed below.');
   });
 }
 
@@ -548,7 +778,7 @@ function renderPostCard(post) {
     el('h3', { text: post.objective }),
     el('p', { class: 'post-meta', text: post.dates }),
     el('p', { class: 'post-looking', text: 'Looking for: ' + (post.looking || '') }),
-    el('p', { class: 'post-shared', text: 'Shared context: ' + (post.shared || 'No log summary attached') }),
+    el('p', { class: 'post-shared', text: 'Shared context: ' + (post.shared || 'No log entries attached') }),
     el('button', {
       class: 'danger',
       type: 'button',
@@ -574,25 +804,66 @@ document.getElementById('partner-posts').addEventListener('click', function (eve
   deletePost(button.getAttribute('data-id'));
 });
 
+function renderContextChoices() {
+  var box = document.getElementById('post-context');
+  if (!logs.length) {
+    box.replaceChildren(el('p', { class: 'muted', text: 'No log entries to attach. Nothing is shared until you tick one.' }));
+    return;
+  }
+  var rows = logs.slice().reverse().map(function (item) {
+    var input = el('input', { type: 'checkbox', value: item.id });
+    return el('label', { class: 'check-row' }, input, el('span', { text: item.name + ' · ' + kindLabel(item.kind) }));
+  });
+  box.replaceChildren.apply(box, [el('p', { class: 'muted', text: 'Attach log entries. None are included until you tick them.' })].concat(rows));
+}
+
+function openPostForm(objective, itemId) {
+  postingItemId = itemId || '';
+  document.getElementById('post-objective').value = objective || '';
+  document.getElementById('post-dates').value = '';
+  document.getElementById('post-looking').value = '';
+  renderContextChoices();
+  document.getElementById('post-form').classList.remove('hidden');
+}
+
+function startPartnerFrom(id) {
+  var item = backlog.find(function (entry) { return entry.id === id; });
+  if (!item) return;
+  selectTab('partners');
+  openPostForm(item.name, item.id);
+}
+
 document.getElementById('post-btn').addEventListener('click', function () {
-  document.getElementById('post-form').classList.toggle('hidden');
+  var formOpen = !document.getElementById('post-form').classList.contains('hidden');
+  if (formOpen) {
+    document.getElementById('post-form').classList.add('hidden');
+    return;
+  }
+  openPostForm('', '');
 });
 
 document.getElementById('save-post-btn').addEventListener('click', function () {
-  var recentNames = logs.slice(-3).map(function (log) { return log.name; }).filter(Boolean);
+  var attached = Array.prototype.map.call(
+    document.querySelectorAll('#post-context input:checked'),
+    function (input) { return input.value; }
+  );
+  var names = attached.map(function (id) {
+    var item = logs.find(function (entry) { return entry.id === id; });
+    return item ? item.name + ' (' + kindLabel(item.kind) + ')' : '';
+  }).filter(Boolean);
   var post = Lgc.createPost({
     objective: document.getElementById('post-objective').value,
     dates: document.getElementById('post-dates').value,
     looking: document.getElementById('post-looking').value,
-    shared: recentNames.length ? 'Recent: ' + recentNames.join(', ') : 'Recent: No recent logs'
+    itemId: postingItemId,
+    attachedIds: attached,
+    shared: names.length ? 'Context: ' + names.join(', ') : ''
   });
   if (!post) return alert('Objective required');
   partnerPosts.push(post);
   savePosts();
   document.getElementById('post-form').classList.add('hidden');
-  document.getElementById('post-objective').value = '';
-  document.getElementById('post-dates').value = '';
-  document.getElementById('post-looking').value = '';
+  postingItemId = '';
   renderPosts();
 });
 
@@ -604,7 +875,7 @@ function deletePost(id) {
 
 // ---- Export / Import ----
 document.getElementById('export-btn').addEventListener('click', function () {
-  var data = { logs: logs, partnerPosts: partnerPosts, exported: new Date().toISOString() };
+  var data = { logs: logs, backlog: backlog, partnerPosts: partnerPosts, exported: new Date().toISOString() };
   var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   var link = document.createElement('a');
   var url = URL.createObjectURL(blob);
@@ -614,51 +885,15 @@ document.getElementById('export-btn').addEventListener('click', function () {
   setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
 });
 
-document.getElementById('import-btn').addEventListener('click', function () {
-  document.getElementById('import-file').click();
+document.getElementById('famous-list').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('button[data-famous]') : null;
+  if (!button) return;
+  var place = famousByName(button.getAttribute('data-famous'));
+  if (place) addCatalogItem(place);
 });
 
-document.getElementById('import-file').addEventListener('change', function (event) {
-  var file = event.target.files && event.target.files[0];
-  event.target.value = '';
-  if (!file) return;
-  if (file.size > 2 * 1024 * 1024) {
-    alert('That file is too large to import.');
-    return;
-  }
-  var reader = new FileReader();
-  reader.onerror = function () { alert('Could not read that file.'); };
-  reader.onload = function () {
-    var data;
-    try {
-      data = JSON.parse(String(reader.result));
-    } catch (err) {
-      alert('That file is not valid JSON.');
-      return;
-    }
-    var result;
-    try {
-      result = Lgc.prepareImport(data);
-    } catch (err) {
-      alert(err.message || 'That file could not be imported.');
-      return;
-    }
-    var replacing = (result.replaceLogs && logs.length) || (result.replacePosts && partnerPosts.length);
-    if (replacing && !confirm('Replace the data saved in this browser with this file?')) return;
-    if (result.replaceLogs) {
-      logs = result.logs;
-      saveLogs();
-    }
-    if (result.replacePosts) {
-      partnerPosts = result.partnerPosts;
-      savePosts();
-    }
-    renderLogs();
-    renderPosts();
-    alert(Lgc.summarizeImport(result));
-  };
-  reader.readAsText(file);
-});
+document.getElementById('osm-layer').addEventListener('change', updateMapMarkers);
+document.getElementById('load-peaks-btn').addEventListener('click', loadPeaksInView);
 
 // ---- Install ----
 window.addEventListener('beforeinstallprompt', function (event) {
