@@ -1,0 +1,10 @@
+{
+  "name": "summitlog",
+  "version": "0.1.0",
+  "description": "Digital mountain and climbing log with optional partner finding",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "private": true
+}

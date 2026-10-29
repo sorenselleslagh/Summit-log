@@ -1,0 +1,205 @@
+:root {
+  --bg: #0b1120;
+  --card: #151c2c;
+  --card-hover: #1c2538;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.15);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #2d3a4f;
+  --danger: #ef4444;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  font-size: 15px;
+}
+
+header {
+  padding: 0.85rem 1.25rem;
+  background: rgba(11, 17, 32, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+nav { display: flex; gap: 0.25rem; }
+
+nav button {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+nav button.active,
+nav button:hover {
+  background: var(--accent);
+  color: white;
+}
+
+main {
+  padding: 1.25rem 1rem 2rem;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.15rem;
+  margin-bottom: 0.9rem;
+  border: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.card:hover { background: var(--card-hover); }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+}
+
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 0.85rem 0.5rem;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.55rem;
+  font-weight: 650;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.stat span {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+button.primary,
+button.secondary,
+button.danger {
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.92rem;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+button.primary { background: var(--accent); color: white; }
+button.primary:hover { opacity: 0.92; }
+button.secondary { background: #2d3a4f; color: var(--text); }
+button.danger { background: var(--danger); color: white; }
+button:active { transform: scale(0.98); }
+
+input, select, textarea {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0f1624;
+  color: var(--text);
+  margin-bottom: 0.7rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea { resize: vertical; min-height: 80px; }
+
+.hidden { display: none !important; }
+
+.badge {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  margin-right: 0.35rem;
+}
+
+.log-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.log-actions button { padding: 0.3rem 0.65rem; font-size: 0.8rem; }
+
+#map-container {
+  height: 440px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+}
+
+.leaflet-popup-content { color: #111; font-size: 0.9rem; line-height: 1.4; }
+
+footer {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+
+.row > * { flex: 1; min-width: 140px; margin-bottom: 0; }
+
+h2, h3 { font-weight: 600; letter-spacing: -0.015em; }
+h3 { font-size: 1.05rem; margin-bottom: 0.3rem; }
+
+p { margin: 0.25rem 0; }
+
+@media (max-width: 640px) {
+  .stats { grid-template-columns: 1fr 1fr 1fr; }
+  header { padding: 0.7rem 0.9rem; }
+  nav button { padding: 0.4rem 0.65rem; font-size: 0.85rem; }
+  main { padding: 1rem 0.75rem; }
+}

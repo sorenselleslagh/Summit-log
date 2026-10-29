@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SummitLog — Mountain & Climbing Log</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>SummitLog</h1>
+    <nav>
+      <button class="active" data-tab="log">Log</button>
+      <button data-tab="map">Map</button>
+      <button data-tab="partners">Partners</button>
+      <button data-tab="profile">Profile</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- LOG -->
+    <section id="log" class="tab">
+      <div class="stats">
+        <div class="stat"><strong id="peak-count">0</strong><span>Entries</span></div>
+        <div class="stat"><strong id="elev-total">0</strong><span>m elev</span></div>
+        <div class="stat"><strong id="trip-count">0</strong><span>Trips</span></div>
+      </div>
+
+      <button class="primary" id="add-btn">+ Log a peak / route</button>
+
+      <div id="add-form" class="card hidden" style="margin-top:1rem;">
+        <h3 id="form-title">New entry</h3>
+        <input type="text" id="name" placeholder="Peak or route name" required>
+        <select id="type">
+          <option>Hiking / Peak bagging</option>
+          <option>Alpine / Mountaineering</option>
+          <option>Sport / Trad climbing</option>
+          <option>Ice / Mixed</option>
+          <option>Ski touring</option>
+        </select>
+        <div class="row">
+          <input type="date" id="date">
+          <input type="number" id="elevation" placeholder="Elevation gain (m)">
+        </div>
+        <div class="row">
+          <input type="number" step="any" id="lat" placeholder="Latitude (optional)">
+          <input type="number" step="any" id="lng" placeholder="Longitude (optional)">
+        </div>
+        <textarea id="notes" rows="3" placeholder="Notes, conditions, style..."></textarea>
+        <button class="primary" id="save-btn">Save</button>
+      </div>
+
+      <div id="log-list" style="margin-top:1rem;"></div>
+    </section>
+
+    <!-- MAP -->
+    <section id="map" class="tab hidden">
+      <div id="map-container"></div>
+      <p style="color:var(--muted); font-size:0.9rem;">Peaks with coordinates appear as markers. Add lat/lng when logging to place them.</p>
+    </section>
+
+    <!-- PARTNERS -->
+    <section id="partners" class="tab hidden">
+      <div class="card">
+        <h2>Find partners</h2>
+        <p style="color:var(--muted); margin:0.5rem 0 1rem;">Posts include a short summary of recent logs for context. Not a safety guarantee — verify skills yourself.</p>
+        <button class="primary" id="post-btn">+ Post an objective</button>
+
+        <div id="post-form" class="card hidden" style="margin-top:1rem;">
+          <input type="text" id="post-objective" placeholder="Objective (peak / route / area)">
+          <input type="text" id="post-dates" placeholder="Dates (e.g. next weekend, 15–17 Nov)">
+          <textarea id="post-looking" rows="2" placeholder="What are you looking for? Experience level, style..."></textarea>
+          <button class="primary" id="save-post-btn">Post</button>
+        </div>
+      </div>
+      <div id="partner-posts"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" class="tab hidden">
+      <div class="card">
+        <h2>Your mountain résumé</h2>
+        <p>Private by default. Partner posts only share a short recent-activity summary.</p>
+        <div id="resume-summary" style="margin-top:1rem;"></div>
+        <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="secondary" id="export-btn">Export data</button>
+          <button class="secondary" id="import-btn">Import data</button>
+          <input type="file" id="import-file" accept=".json" class="hidden">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>SummitLog prototype · Data stored locally in your browser</footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
