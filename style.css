@@ -203,3 +203,133 @@ p { margin: 0.25rem 0; }
   nav button { padding: 0.4rem 0.65rem; font-size: 0.85rem; }
   main { padding: 1rem 0.75rem; }
 }
+
+/* Login styles */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 1rem;
+}
+
+.login-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem 1.75rem;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.login-card h1 {
+  margin-bottom: 0.25rem;
+  font-size: 1.6rem;
+}
+
+.login-card .muted {
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+.login-card input {
+  margin-bottom: 0.75rem;
+}
+
+.small { font-size: 0.8rem; }
+
+#user-display {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  header > div { gap: 0.4rem; }
+  nav button { padding: 0.35rem 0.55rem; font-size: 0.8rem; }
+}
+
+/* Intro page */
+.intro-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 1rem;
+}
+
+.intro-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.25rem 1.75rem;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+}
+
+.intro-card h1 {
+  margin-bottom: 0.3rem;
+  font-size: 1.8rem;
+}
+
+.tagline {
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  font-size: 1.05rem;
+}
+
+.intro-text {
+  text-align: left;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.intro-text p {
+  margin-bottom: 0.85rem;
+}
+
+/* Social login buttons */
+.social-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  margin-bottom: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #1a2332;
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.social-btn:hover { background: #243044; }
+
+.social-btn.google { border-color: #4285f4; }
+.social-btn.github { border-color: #6e7681; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.divider span { padding: 0 0.75rem; }
