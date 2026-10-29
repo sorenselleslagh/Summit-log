@@ -140,9 +140,9 @@
         <button class="primary" id="save-btn" type="button">Save</button>
       </div>
 
-      <!-- MINE: planned wishlist and done log in one list -->
+      <!-- Backlog: planned wishlist and done log in one list -->
       <section id="mine" class="tab">
-        <h2>My peaks</h2>
+        <h2>Backlog</h2>
         <div class="stats">
           <div class="stat" title="Done peaks">
             <strong id="peak-count">0</strong><span>Peaks</span>
@@ -160,7 +160,7 @@
           <button id="seg-done" type="button" role="tab" aria-selected="false">Done</button>
         </div>
         <div class="mine-tools">
-          <input type="search" id="mine-search" placeholder="Search" maxlength="80" aria-label="Search your peaks" autocomplete="off">
+          <input type="search" id="mine-search" placeholder="Search" maxlength="80" aria-label="Search your backlog" autocomplete="off">
           <div class="chips" role="group" aria-label="Filter by kind">
             <button class="chip" type="button" data-kind="peak" aria-pressed="false">Peak</button>
             <button class="chip" type="button" data-kind="route" aria-pressed="false">Route</button>
@@ -292,7 +292,7 @@
     </main>
 
     <nav aria-label="Sections">
-      <button class="active" type="button" data-tab="mine">Mine</button>
+      <button class="active" type="button" data-tab="mine">Backlog</button>
       <button type="button" data-tab="map">Map</button>
       <button type="button" data-tab="partners">Partners</button>
     </nav>
