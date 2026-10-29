@@ -1,5 +1,7 @@
 # SummitLog
 
+Live demo: https://sorenselleslagh.github.io/Summit-log/
+
 Working prototype of a digital travel log for mountains and climbing routes, with an optional partner-finding layer that uses activity history for trust context.
 
 ## Features
