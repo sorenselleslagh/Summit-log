@@ -189,8 +189,12 @@
       <!-- MAP -->
       <section id="map" class="tab hidden">
         <div id="map-frame">
-          <div id="map-container"></div>
+          <div id="map-spacer" hidden></div>
+          <div id="map-scaler">
+            <div id="map-container"></div>
+          </div>
           <button class="map-expand" id="map-expand" type="button">Expand map</button>
+          <button class="map-handle" id="map-handle" type="button" aria-label="Drag down to close the map"></button>
           <button class="map-close" id="map-close" type="button" aria-label="Close map">×</button>
           <div class="map-fabs" id="map-fabs">
             <button type="button" id="map-locate">Locate</button>

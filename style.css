@@ -239,6 +239,12 @@ textarea { resize: vertical; min-height: 80px; }
 
 #map-frame { position: relative; }
 
+#map-scaler {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
 #map-container {
   height: calc(100dvh - 8rem);
   min-height: 200px;
@@ -279,38 +285,61 @@ textarea { resize: vertical; min-height: 80px; }
 
 .map-close,
 .map-fabs,
-.map-status { display: none; }
+.map-status,
+.map-handle { display: none; }
+
+#map-spacer { width: 100%; pointer-events: none; }
 
 header,
 #app > nav {
-  transition: transform 0.28s ease;
+  transition: transform 380ms cubic-bezier(0.22, 1.18, 0.36, 1);
 }
 
 html.map-expanded header { transform: translateY(-110%); }
 html.map-expanded #app > nav { transform: translateY(110%); }
 
-html.map-expanded #map-frame,
-html.map-expanded #map-container {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100% !important;
-  max-height: none;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  z-index: 1250;
+html.map-expanded #map-scaler {
+  z-index: 1200;
 }
 
-html.map-expanded .map-gesture,
-html.map-expanded .map-expand,
-html.map-expanded .map-caption { display: none; }
+/* map-cover is applied after the card has grown, so the grow itself is a transform. */
+html.map-cover #map-scaler {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  z-index: 1250;
+  border-radius: 0;
+}
 
-html.map-expanded .map-close {
+html.map-cover #map-container {
+  width: 100% !important;
+  height: 100% !important;
+  border-color: transparent;
+  border-radius: 0;
+}
+
+html.map-resizing .leaflet-fade-anim .leaflet-tile,
+html.map-resizing .leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: none !important;
+}
+
+html.map-cover .map-gesture,
+html.map-cover .map-expand,
+html.map-cover .map-caption { display: none; }
+
+html.map-expanded .map-expand {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+html.map-cover .map-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
+  position: fixed;
   top: calc(0.55rem + env(safe-area-inset-top, 0px));
   left: calc(0.55rem + env(safe-area-inset-left, 0px));
   z-index: 1400;
@@ -320,36 +349,88 @@ html.map-expanded .map-close {
   border-radius: 999px;
   font-size: 1.5rem;
   line-height: 1;
+  opacity: 0;
 }
 
-html.map-expanded .map-fabs {
+html.map-cover .map-fabs {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  position: absolute;
+  position: fixed;
   top: calc(4.4rem + env(safe-area-inset-top, 0px));
   left: calc(0.55rem + env(safe-area-inset-left, 0px));
   z-index: 1400;
+  opacity: 0;
 }
 
-html.map-expanded .map-fabs button {
+html.map-cover .map-fabs button {
   min-width: 44px;
   padding: 0.4rem 0.7rem;
   border-radius: 999px;
 }
 
-html.map-expanded .leaflet-top.leaflet-right {
+html.map-cover .leaflet-control-zoom { opacity: 0; }
+
+html.map-settled .map-close,
+html.map-settled .map-fabs,
+html.map-settled .leaflet-control-zoom {
+  animation: map-control-in 240ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+
+html.map-settled .map-fabs { animation-delay: 70ms; }
+html.map-settled .leaflet-control-zoom { animation-delay: 40ms; }
+
+html.map-cover:not(.map-settled) .map-close,
+html.map-cover:not(.map-settled) .map-fabs,
+html.map-cover:not(.map-settled) .leaflet-control-zoom {
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+@keyframes map-control-in {
+  from { opacity: 0; transform: scale(0.86); }
+  to { opacity: 1; transform: none; }
+}
+
+html.map-settled .map-handle {
+  display: block;
+  position: fixed;
+  top: calc(0.28rem + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  width: 84px;
+  height: 36px;
+  margin: 0 auto;
+  padding: 12px 0 0;
+  border: none;
+  background: transparent;
+  z-index: 1410;
+  touch-action: none;
+}
+
+html.map-settled .map-handle::before {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 5px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+html.map-cover .leaflet-top.leaflet-right {
   top: calc(0.55rem + env(safe-area-inset-top, 0px));
   right: calc(0.55rem + env(safe-area-inset-right, 0px));
 }
 
-html.map-expanded .leaflet-bottom {
+html.map-cover .leaflet-bottom {
   bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px));
 }
 
-html.map-expanded .map-status {
+html.map-cover .map-status {
   display: block;
-  position: absolute;
+  position: fixed;
   top: calc(0.7rem + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
@@ -364,7 +445,7 @@ html.map-expanded .map-status {
   text-align: center;
 }
 
-html.map-expanded .map-status.hidden { display: none; }
+html.map-cover .map-status.hidden { display: none; }
 
 html.map-expanded #peak-detail,
 html.map-expanded #collections-card,
@@ -392,8 +473,13 @@ html.map-expanded.map-show-peak #peak-detail {
 @media (prefers-reduced-motion: reduce) {
   header,
   #app > nav,
-  #map-frame,
-  #map-container { transition: none; }
+  #map-container,
+  .map-close,
+  .map-fabs,
+  .leaflet-control-zoom {
+    transition: opacity 180ms linear !important;
+    animation: none !important;
+  }
 }
 
 .map-fallback {
