@@ -1,0 +1,1596 @@
+{
+  "format": 1,
+  "collections": [
+    {
+      "id": "uiaa-alps-4000",
+      "name": "UIAA Alpine 4000ers",
+      "region": "Alps",
+      "listSource": "International Climbing and Mountaineering Federation (UIAA), The 4000ers of the Alps, 1994. Tabulated in Wikipedia, “List of mountains of the Alps over 4000 metres” (accessed 29 Oct 2026).",
+      "listLicence": "Wikipedia article text and table are CC BY-SA 4.0. Elevations, countries, sub-ranges and normal-route notes are copied from that table. Coordinates are Wikidata P625 (CC0).",
+      "peaks": [
+        {
+          "id": "uiaa-4000-001",
+          "name": "Mont Blanc",
+          "elevation": 4809,
+          "lat": 45.83278,
+          "lng": 6.865,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "PD-",
+          "normalRoute": "Par les Grands Mulets - Itinéraire classique",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q583",
+          "sourceUrl": "https://www.camptocamp.org/routes/45967",
+          "sourceNote": "Wikipedia's list also gives the Goûter Route as PD- to PD+. Camptocamp's easiest classic route, the Grands Mulets, is PD-."
+        },
+        {
+          "id": "uiaa-4000-002",
+          "name": "Mont Blanc de Courmayeur",
+          "elevation": 4748,
+          "lat": 45.82838,
+          "lng": 6.86967,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "PD+",
+          "normalRoute": "Goûter Route, continued from the summit of Mont Blanc",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30395",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_mountains_of_the_Alps_over_4000_metres",
+          "sourceNote": "Wikipedia lists this normal continuation as PD- to PD+. Recorded as PD+, the harder end. Camptocamp does not catalogue that short ridge separately; its routes from this summit start at AD+."
+        },
+        {
+          "id": "uiaa-4000-003",
+          "name": "Dufourspitze",
+          "elevation": 4634,
+          "lat": 45.93692,
+          "lng": 7.86676,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "AD",
+          "normalRoute": "Arête W (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q3403",
+          "sourceUrl": "https://www.camptocamp.org/routes/46102",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-004",
+          "name": "Nordend",
+          "elevation": 4608,
+          "lat": 45.94199,
+          "lng": 7.86993,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "PD",
+          "normalRoute": "Arête S (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30397",
+          "sourceUrl": "https://www.camptocamp.org/routes/45516",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-005",
+          "name": "Zumsteinspitze",
+          "elevation": 4563,
+          "lat": 45.93194,
+          "lng": 7.87139,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "PD",
+          "normalRoute": "Arête SE (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30400",
+          "sourceUrl": "https://www.camptocamp.org/routes/55889",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-006",
+          "name": "Signalkuppe",
+          "elevation": 4554,
+          "lat": 45.92722,
+          "lng": 7.87694,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "F",
+          "normalRoute": "Par les glaciers de Lys et de Grenz (voie normale)",
+          "terrain": [
+            "glacier"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30405",
+          "sourceUrl": "https://www.camptocamp.org/routes/49175",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-007",
+          "name": "Dom",
+          "elevation": 4546,
+          "lat": 46.09444,
+          "lng": 7.85667,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "PD",
+          "normalRoute": "Voie normale",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15117",
+          "sourceUrl": "https://www.camptocamp.org/routes/45290",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-008",
+          "name": "Lyskamm (Eastern Summit)",
+          "elevation": 4532,
+          "lat": 45.9225,
+          "lng": 7.83556,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "PD+",
+          "normalRoute": "Arête SW (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15120",
+          "sourceUrl": "https://www.camptocamp.org/routes/56702",
+          "sourceNote": "The Wikipedia list's normal-route cell gives AD."
+        },
+        {
+          "id": "uiaa-4000-009",
+          "name": "Weisshorn",
+          "elevation": 4505,
+          "lat": 46.10167,
+          "lng": 7.71611,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Arête E",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15122",
+          "sourceUrl": "https://www.camptocamp.org/routes/55334",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-010",
+          "name": "Täschhorn",
+          "elevation": 4491,
+          "lat": 46.08361,
+          "lng": 7.85722,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "AD",
+          "normalRoute": "Arête S (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30408",
+          "sourceUrl": "https://www.camptocamp.org/routes/54586",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-011",
+          "name": "Lyskamm (Western Summit)",
+          "elevation": 4479,
+          "lat": 45.9225,
+          "lng": 7.83556,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "PD+",
+          "normalRoute": "Arête SW (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15120",
+          "sourceUrl": "https://www.camptocamp.org/routes/56702",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
+        },
+        {
+          "id": "uiaa-4000-012",
+          "name": "Matterhorn",
+          "elevation": 4478,
+          "lat": 45.97639,
+          "lng": 7.65861,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Arête du Lion",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q1374",
+          "sourceUrl": "https://www.camptocamp.org/routes/57744",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-013",
+          "name": "Picco Luigi Amedeo",
+          "elevation": 4469,
+          "lat": 45.81667,
+          "lng": 6.86667,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "Sortie depuis le sommet du Pilier Rouge du Brouillard",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30411",
+          "sourceUrl": "https://www.camptocamp.org/routes/796500",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-014",
+          "name": "Mont Maudit",
+          "elevation": 4465,
+          "lat": 45.84778,
+          "lng": 6.87583,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "PD+",
+          "normalRoute": "N face, standard ascent (+ E ridge)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30415",
+          "sourceUrl": "https://www.camptocamp.org/routes/54990",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-015",
+          "name": "Parrotspitze",
+          "elevation": 4434,
+          "lat": 45.91972,
+          "lng": 7.87139,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "PD",
+          "normalRoute": "Arête W (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30418",
+          "sourceUrl": "https://www.camptocamp.org/routes/53047",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-016",
+          "name": "Dent Blanche",
+          "elevation": 4357,
+          "lat": 46.03417,
+          "lng": 7.61194,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Arête S ou Wandfluegrat (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15125",
+          "sourceUrl": "https://www.camptocamp.org/routes/54153",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-017",
+          "name": "Ludwigshöhe",
+          "elevation": 4341,
+          "lat": 45.91667,
+          "lng": 7.86389,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "F",
+          "normalRoute": "Versant S (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30423",
+          "sourceUrl": "https://www.camptocamp.org/routes/51948",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-018",
+          "name": "Nadelhorn",
+          "elevation": 4327,
+          "lat": 46.10875,
+          "lng": 7.86417,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "PD",
+          "normalRoute": "Arête NE depuis la Mischabelhütte (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30426",
+          "sourceUrl": "https://www.camptocamp.org/routes/55241",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-019",
+          "name": "Schwarzhorn (Corno Nero)",
+          "elevation": 4321,
+          "lat": 45.9149,
+          "lng": 7.862,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "PD+",
+          "normalRoute": "Versant N (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30429",
+          "sourceUrl": "https://www.camptocamp.org/routes/176760",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-020",
+          "name": "Combin de Grafeneire",
+          "elevation": 4309,
+          "lat": 45.9375,
+          "lng": 7.29917,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Grand Combin",
+          "grade": "AD",
+          "normalRoute": "Versant NW (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15126",
+          "sourceUrl": "https://www.camptocamp.org/routes/55346",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-021",
+          "name": "Dôme du Goûter",
+          "elevation": 4304,
+          "lat": 45.84167,
+          "lng": 6.84333,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "PD",
+          "normalRoute": "Par l'Aiguille du Goûter",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30434",
+          "sourceUrl": "https://www.camptocamp.org/routes/56732",
+          "sourceNote": "Camptocamp also rates the Italian normal (Via del Papa) PD+. The Goûter route, the usual normal, is PD."
+        },
+        {
+          "id": "uiaa-4000-022",
+          "name": "Lenzspitze",
+          "elevation": 4293,
+          "lat": 46.10464,
+          "lng": 7.86844,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "AD-",
+          "normalRoute": "Arête S",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30436",
+          "sourceUrl": "https://www.camptocamp.org/routes/459504",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-023",
+          "name": "Finsteraarhorn",
+          "elevation": 4274,
+          "lat": 46.53736,
+          "lng": 8.12609,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD",
+          "normalRoute": "Versant SW",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15127",
+          "sourceUrl": "https://www.camptocamp.org/routes/48211",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-024",
+          "name": "Mont Blanc du Tacul",
+          "elevation": 4248,
+          "lat": 45.85639,
+          "lng": 6.88778,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "PD",
+          "normalRoute": "Face N (Voie Normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30438",
+          "sourceUrl": "https://www.camptocamp.org/routes/53896",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-025",
+          "name": "Grand Pilier d’Angle",
+          "elevation": 4243,
+          "lat": 45.82808,
+          "lng": 6.88019,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D",
+          "normalRoute": "Arête de Peuterey depuis bivouac Eccles",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30441",
+          "sourceUrl": "https://www.camptocamp.org/routes/365967",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-026",
+          "name": "Stecknadelhorn",
+          "elevation": 4240,
+          "lat": 46.11153,
+          "lng": 7.85967,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "AD",
+          "normalRoute": "Nadelgrat bajando por el Galenjoch",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30444",
+          "sourceUrl": "https://www.camptocamp.org/routes/229568",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-027",
+          "name": "Castor",
+          "elevation": 4225,
+          "lat": 45.92086,
+          "lng": 7.79333,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "PD-",
+          "normalRoute": "Cresta SE - Via normale, dal rif. Quintino Sella",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30446",
+          "sourceUrl": "https://www.camptocamp.org/routes/56031",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-028",
+          "name": "Zinalrothorn",
+          "elevation": 4221,
+          "lat": 46.06472,
+          "lng": 7.69,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Arête SE puis SW par la Gabel (voie normale depuis la Rothornhütte)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15128",
+          "sourceUrl": "https://www.camptocamp.org/routes/55292",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-029",
+          "name": "Hohberghorn",
+          "elevation": 4218,
+          "lat": 46.11269,
+          "lng": 7.85386,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "PD+",
+          "normalRoute": "por la Dirrugat y la vertiente NW",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30448",
+          "sourceUrl": "https://www.camptocamp.org/routes/452101",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-030",
+          "name": "Vincent Pyramid",
+          "elevation": 4215,
+          "lat": 45.9077,
+          "lng": 7.86209,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "F",
+          "normalRoute": "Versant NW (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30450",
+          "sourceUrl": "https://www.camptocamp.org/routes/196523",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-031",
+          "name": "Grandes Jorasses (Pointe Walker)",
+          "elevation": 4208,
+          "lat": 45.86808,
+          "lng": 6.98892,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": " Standard ascent",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30453",
+          "sourceUrl": "https://www.camptocamp.org/routes/53890",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-032",
+          "name": "Alphubel",
+          "elevation": 4206,
+          "lat": 46.06294,
+          "lng": 7.86391,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "PD",
+          "normalRoute": "Versant E depuis Langfluh",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15130",
+          "sourceUrl": "https://www.camptocamp.org/routes/45559",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-033",
+          "name": "Rimpfischhorn",
+          "elevation": 4199,
+          "lat": 46.02306,
+          "lng": 7.88389,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "PD",
+          "normalRoute": "Voie normale par la Berghaus Flue",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30455",
+          "sourceUrl": "https://www.camptocamp.org/routes/56178",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-034",
+          "name": "Aletschhorn",
+          "elevation": 4194,
+          "lat": 46.46528,
+          "lng": 7.99361,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD",
+          "normalRoute": "Arête NE",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15293",
+          "sourceUrl": "https://www.camptocamp.org/routes/56751",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-035",
+          "name": "Strahlhorn",
+          "elevation": 4190,
+          "lat": 46.01322,
+          "lng": 7.90175,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "F",
+          "normalRoute": "Arête WNW (Voie Normale) de Britanniahütte",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30457",
+          "sourceUrl": "https://www.camptocamp.org/routes/45512",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-036",
+          "name": "Combin de Valsorey",
+          "elevation": 4184,
+          "lat": 45.93806,
+          "lng": 7.29056,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Grand Combin",
+          "grade": "AD-",
+          "normalRoute": "Traversée du refuge Chiarella à Fionnay par les sommets du Grand Combin",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q651715",
+          "sourceUrl": "https://www.camptocamp.org/routes/530039",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-037",
+          "name": "Grandes Jorasses (Pointe Whymper)",
+          "elevation": 4184,
+          "lat": 45.8667,
+          "lng": 6.98333,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": " Standard ascent",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q3816904",
+          "sourceUrl": "https://www.camptocamp.org/routes/53890",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-038",
+          "name": "Dent d’Hérens",
+          "elevation": 4173,
+          "lat": 45.97006,
+          "lng": 7.60508,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD-",
+          "normalRoute": "arista SW",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30459",
+          "sourceUrl": "https://www.camptocamp.org/routes/46073",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-039",
+          "name": "Breithorn (Western Summit)",
+          "elevation": 4160,
+          "lat": 45.94111,
+          "lng": 7.74722,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "F",
+          "normalRoute": "Versant S (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q16540",
+          "sourceUrl": "https://www.camptocamp.org/routes/53816",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-040",
+          "name": "Jungfrau",
+          "elevation": 4158,
+          "lat": 46.53694,
+          "lng": 7.9625,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD+",
+          "normalRoute": "Arête SE par le Rottalsattel (Voie Normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15312",
+          "sourceUrl": "https://www.camptocamp.org/routes/45560",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-041",
+          "name": "Breithorn (Central Summit)",
+          "elevation": 4154,
+          "lat": 45.93889,
+          "lng": 7.75639,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "F",
+          "normalRoute": "Versant SW (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q2629296",
+          "sourceUrl": "https://www.camptocamp.org/routes/187953",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-042",
+          "name": "Bishorn",
+          "elevation": 4151,
+          "lat": 46.11794,
+          "lng": 7.71506,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "F",
+          "normalRoute": "Versant NW (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30464",
+          "sourceUrl": "https://www.camptocamp.org/routes/45969",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-043",
+          "name": "Eastern Breithorn (Eastern Summit/ western Twin Peak)",
+          "elevation": 4138,
+          "lat": 45.93722,
+          "lng": 7.76722,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Traversée W → E",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q25247930",
+          "sourceUrl": "https://www.camptocamp.org/routes/187191",
+          "sourceNote": "Easiest graded Camptocamp route on Breithorn E (4,139 m), the eastern summit."
+        },
+        {
+          "id": "uiaa-4000-044",
+          "name": "Combin de la Tsessette",
+          "elevation": 4132,
+          "lat": 45.94278,
+          "lng": 7.31083,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Grand Combin",
+          "grade": "PD+",
+          "normalRoute": "A dos de Mulets",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q2714286",
+          "sourceUrl": "https://www.camptocamp.org/routes/1545622",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-045",
+          "name": "Aiguille Verte",
+          "elevation": 4122,
+          "lat": 45.93472,
+          "lng": 6.97,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "Greben Moine",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30466",
+          "sourceUrl": "https://www.camptocamp.org/routes/56802",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-046",
+          "name": "Aiguilles du Diable (L’Isolée)",
+          "elevation": 4114,
+          "lat": 45.85457,
+          "lng": 6.89097,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q16569708",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-047",
+          "name": "Aiguille Blanche de Peuterey",
+          "elevation": 4112,
+          "lat": 45.82444,
+          "lng": 6.88278,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "N ridge from Eccles hut",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30472",
+          "sourceUrl": "https://www.camptocamp.org/routes/664017",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-048",
+          "name": "Mönch",
+          "elevation": 4110,
+          "lat": 46.55833,
+          "lng": 7.99722,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD+",
+          "normalRoute": "Arête SE",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q16525",
+          "sourceUrl": "https://www.camptocamp.org/routes/54703",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-049",
+          "name": "Grandes Jorasses (Pointe Croz)",
+          "elevation": 4110,
+          "lat": 45.86919,
+          "lng": 6.98228,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": "Traversée Grandes Jorasses → Rochefort",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q1995374",
+          "sourceUrl": "https://www.camptocamp.org/routes/195437",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-050",
+          "name": "Aiguilles du Diable (Pointe Carmen)",
+          "elevation": 4109,
+          "lat": 45.85455,
+          "lng": 6.89178,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q16593000",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-051",
+          "name": "Breithorn (Gendarm/ eastern Twin Peak)",
+          "elevation": 4106,
+          "lat": 45.93583,
+          "lng": 7.77056,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Traversée W → E",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q2629309",
+          "sourceUrl": "https://www.camptocamp.org/routes/187191",
+          "sourceNote": "Easiest graded Camptocamp route on Breithorn Pointe 4106 (Gemello del Breithorn)."
+        },
+        {
+          "id": "uiaa-4000-052",
+          "name": "Grande Rocheuse",
+          "elevation": 4102,
+          "lat": 45.93444,
+          "lng": 6.97278,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "Pilier S",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30476",
+          "sourceUrl": "https://www.camptocamp.org/routes/132284",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-053",
+          "name": "Barre des Écrins",
+          "elevation": 4102,
+          "lat": 44.92216,
+          "lng": 6.35955,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Pelvoux",
+          "grade": "F+",
+          "normalRoute": "Versant N (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30480",
+          "sourceUrl": "https://www.camptocamp.org/routes/53811",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-054",
+          "name": "Aiguilles du Diable (Pointe Médiane)",
+          "elevation": 4097,
+          "lat": 45.8545,
+          "lng": 6.89215,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q18006050",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-055",
+          "name": "Pollux",
+          "elevation": 4089,
+          "lat": 45.93333,
+          "lng": 7.78333,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "PD+",
+          "normalRoute": "Arête SW (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30485",
+          "sourceUrl": "https://www.camptocamp.org/routes/54631",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-056",
+          "name": "Schreckhorn",
+          "elevation": 4078,
+          "lat": 46.58993,
+          "lng": 8.11816,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "AD+",
+          "normalRoute": "Traversée Lauteraarhorn - Schreckhorn",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q16539",
+          "sourceUrl": "https://www.camptocamp.org/routes/137805",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-057",
+          "name": "Breithorn (Roccia Nera)",
+          "elevation": 4075,
+          "lat": 45.9325,
+          "lng": 7.77528,
+          "countries": [
+            "Italy",
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "F",
+          "normalRoute": "Versant SW",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q2620095",
+          "sourceUrl": "https://www.camptocamp.org/routes/55195",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-058",
+          "name": "Aiguilles du Diable (Pointe Chaubert)",
+          "elevation": 4074,
+          "lat": 45.85442,
+          "lng": 6.89272,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q11943908",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-059",
+          "name": "Mont Brouillard",
+          "elevation": 4069,
+          "lat": 45.8175,
+          "lng": 6.865,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "Arête du Brouillard",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30488",
+          "sourceUrl": "https://www.camptocamp.org/routes/175866",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-060",
+          "name": "Grandes Jorasses (Pointe Marguerite)",
+          "elevation": 4065,
+          "lat": 45.8689,
+          "lng": 6.98944,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": "Traversée Grandes Jorasses → Rochefort",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q3925690",
+          "sourceUrl": "https://www.camptocamp.org/routes/195437",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-061",
+          "name": "Aiguilles du Diable (Corne du Diable)",
+          "elevation": 4064,
+          "lat": 45.85436,
+          "lng": 6.89317,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q11915635",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-062",
+          "name": "Ober Gabelhorn",
+          "elevation": 4063,
+          "lat": 46.03833,
+          "lng": 7.66778,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "AD",
+          "normalRoute": "Arête WSW (Arbengrat)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30490",
+          "sourceUrl": "https://www.camptocamp.org/routes/176641",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-063",
+          "name": "Gran Paradiso",
+          "elevation": 4061,
+          "lat": 45.53333,
+          "lng": 7.26667,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Graian Alps",
+          "grade": "F+",
+          "normalRoute": "Par le Glacier du Grand Paradis (voie normale)",
+          "terrain": [
+            "glacier"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q1372",
+          "sourceUrl": "https://www.camptocamp.org/routes/53835",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-064",
+          "name": "Aiguille de Bionnassay",
+          "elevation": 4052,
+          "lat": 45.83583,
+          "lng": 6.81806,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": "Arête S",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30493",
+          "sourceUrl": "https://www.camptocamp.org/routes/696380",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-065",
+          "name": "Gross Fiescherhorn",
+          "elevation": 4049,
+          "lat": 46.55139,
+          "lng": 8.06111,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD-",
+          "normalRoute": "Versant SW par le Fieschersattel",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30495",
+          "sourceUrl": "https://www.camptocamp.org/routes/128778",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-066",
+          "name": "Piz Bernina",
+          "elevation": 4048,
+          "lat": 46.38239,
+          "lng": 9.90811,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernina Group",
+          "grade": "PD+",
+          "normalRoute": "Arête S ou Spallagrat",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q15132",
+          "sourceUrl": "https://www.camptocamp.org/routes/56670",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
+        },
+        {
+          "id": "uiaa-4000-067",
+          "name": "Vincent Pyramid (Punta Giordani/Giordanispetz)",
+          "elevation": 4046,
+          "lat": 45.9077,
+          "lng": 7.86209,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Monte Rosa Massif",
+          "grade": "PD-",
+          "normalRoute": "Par le glacier d'Indren (voie normale)",
+          "terrain": [
+            "glacier"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30450",
+          "sourceUrl": "https://www.camptocamp.org/routes/50967",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-068",
+          "name": "Grandes Jorasses (Pointe Elena)",
+          "elevation": 4045,
+          "lat": 45.86878,
+          "lng": 6.98036,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": "Traversée Grandes Jorasses → Rochefort",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q3925668",
+          "sourceUrl": "https://www.camptocamp.org/routes/195437",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-069",
+          "name": "Grünhorn",
+          "elevation": 4043,
+          "lat": 46.532,
+          "lng": 8.07772,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD",
+          "normalRoute": "Traversée E → W, de Münster à Faflerlalp",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30496",
+          "sourceUrl": "https://www.camptocamp.org/routes/1107218",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-070",
+          "name": "Lauteraarhorn",
+          "elevation": 4042,
+          "lat": 46.58339,
+          "lng": 8.12842,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "AD",
+          "normalRoute": "Couloir S et arête SE",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30499",
+          "sourceUrl": "https://www.camptocamp.org/routes/55881",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-071",
+          "name": "Aiguille du Jardin",
+          "elevation": 4035,
+          "lat": 45.93389,
+          "lng": 6.97583,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D-",
+          "normalRoute": "Greben Jardin",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30502",
+          "sourceUrl": "https://www.camptocamp.org/routes/55897",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-072",
+          "name": "Dürrenhorn",
+          "elevation": 4035,
+          "lat": 46.11972,
+          "lng": 7.84806,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "AD",
+          "normalRoute": "Par la cabane Bordier (Voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30511",
+          "sourceUrl": "https://www.camptocamp.org/routes/443666",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-073",
+          "name": "Allalinhorn",
+          "elevation": 4027,
+          "lat": 46.04614,
+          "lng": 7.89481,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Mischabel Group",
+          "grade": "F",
+          "normalRoute": "Dalla Langfluh per il Feejoch",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30525",
+          "sourceUrl": "https://www.camptocamp.org/routes/45520",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-074",
+          "name": "Hinter Fiescherhorn",
+          "elevation": 4025,
+          "lat": 46.54639,
+          "lng": 8.06778,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "grade": "PD-",
+          "normalRoute": "Versant SW par le Fieschersattel",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30527",
+          "sourceUrl": "https://www.camptocamp.org/routes/128778",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-075",
+          "name": "Dôme de Rochefort",
+          "elevation": 4015,
+          "lat": 45.86433,
+          "lng": 6.96764,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": "Par l'Arête de Rochefort",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30533",
+          "sourceUrl": "https://www.camptocamp.org/routes/56128",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-076",
+          "name": "Barre des Écrins (Dôme de Neige)",
+          "elevation": 4015,
+          "lat": 44.9244,
+          "lng": 6.35389,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Pelvoux",
+          "grade": "F+",
+          "normalRoute": "Versant N (voie normale)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q2551474",
+          "sourceUrl": "https://www.camptocamp.org/routes/53811",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-077",
+          "name": "Weissmies",
+          "elevation": 4013,
+          "lat": 46.12778,
+          "lng": 8.01194,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "PD-",
+          "normalRoute": "Voie Normale (versant NW)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30529",
+          "sourceUrl": "https://www.camptocamp.org/routes/45557",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
+        },
+        {
+          "id": "uiaa-4000-078",
+          "name": "Dent du Géant",
+          "elevation": 4013,
+          "lat": 45.86194,
+          "lng": 6.95167,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "D-",
+          "normalRoute": "SW Face by the Burgener Slabs",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30541",
+          "sourceUrl": "https://www.camptocamp.org/routes/54431",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-079",
+          "name": "Punta Baretti",
+          "elevation": 4013,
+          "lat": 45.81444,
+          "lng": 6.86361,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "Arête du Brouillard",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30546",
+          "sourceUrl": "https://www.camptocamp.org/routes/175866",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-080",
+          "name": "Lagginhorn",
+          "elevation": 4010,
+          "lat": 46.15722,
+          "lng": 8.00306,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Wallis Alps",
+          "grade": "PD-",
+          "normalRoute": "Arête WSW (Voie Normale)",
+          "terrain": [
+            "ridge"
+          ],
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q16650",
+          "sourceUrl": "https://www.camptocamp.org/routes/53794",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
+        },
+        {
+          "id": "uiaa-4000-081",
+          "name": "Aiguille de Rochefort",
+          "elevation": 4001,
+          "lat": 45.86194,
+          "lng": 6.95944,
+          "countries": [
+            "France",
+            "Italy"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD",
+          "normalRoute": "Couloir Eccles ",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q404672",
+          "sourceUrl": "https://www.camptocamp.org/routes/1494350",
+          "sourceNote": null
+        },
+        {
+          "id": "uiaa-4000-082",
+          "name": "Les Droites",
+          "elevation": 4000,
+          "lat": 45.93306,
+          "lng": 6.98917,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "grade": "AD+",
+          "normalRoute": "Vzhodni steber (normalka)",
+          "terrain": null,
+          "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
+          "wikidata": "Q30549",
+          "sourceUrl": "https://www.camptocamp.org/routes/54257",
+          "sourceNote": null
+        }
+      ]
+    }
+  ]
+}

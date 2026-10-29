@@ -311,6 +311,41 @@ p { margin: 0.25rem 0; }
 .swatch-log { background: #3b82f6; }
 .swatch-backlog { background: #f59e0b; }
 .swatch-osm { background: #a78bfa; }
+.swatch-done { background: #22c55e; }
+.swatch-todo { background: #64748b; }
+
+.collection-block, .subrange-block { margin: 0.35rem 0; }
+.collection-block > summary, .subrange-block > summary {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+.progress-count { color: var(--accent); font-variant-numeric: tabular-nums; }
+.peak-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border);
+}
+.peak-row input { width: auto; min-height: 44px; margin: 0; }
+.peak-row button.linkish {
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  padding: 0;
+  min-height: 44px;
+  font: inherit;
+  cursor: pointer;
+}
+.field-label { display: block; color: var(--muted); font-size: 0.85rem; margin-bottom: 0.25rem; }
+#peak-detail, #collections-card { scroll-margin-top: 4.5rem; }
+.build-step { padding: 0.45rem 0; border-top: 1px solid var(--border); }
 
 .check-row {
   display: flex;
