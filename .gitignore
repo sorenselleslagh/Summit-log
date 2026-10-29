@@ -10,3 +10,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Dependencies
+node_modules/

@@ -2,23 +2,65 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="application-name" content="SummitLog">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SummitLog">
   <title>SummitLog — Mountain & Climbing Log</title>
+  <script>
+    /* First paint only. storage.js owns writes to this key. */
+    try {
+      document.documentElement.classList.add(
+        localStorage.getItem('summitlog_intro_seen') === '1' ? 'boot-app' : 'show-intro'
+      );
+    } catch (err) {
+      document.documentElement.classList.add('show-intro');
+    }
+  </script>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- INTRO PAGE -->
+  <!-- INTRO PAGE. Artwork lives in illustrations/mountain.svg. -->
   <div id="intro-screen" class="intro-container">
-    <div class="intro-card">
-      <h1>SummitLog</h1>
-      <p class="tagline">Your mountain and climbing log</p>
-      <div class="intro-text">
-        <p>Track the peaks and routes you’ve done. Keep notes, photos, and stats in one place.</p>
-        <p>Optionally share a short summary of your log when looking for partners — useful context, not a safety guarantee.</p>
-        <p>Everything stays private by default and on your device.</p>
+    <div class="intro-layout">
+      <button class="secondary intro-back hidden" id="intro-back" type="button">Back</button>
+      <p class="intro-brand">SummitLog</p>
+      <div id="intro-art" class="intro-art" data-src="illustrations/mountain.svg"></div>
+      <h1 class="intro-line">Your climbs, your log, your partners</h1>
+      <div class="intro-carousel">
+        <div id="intro-cards" class="intro-cards" tabindex="0" aria-roledescription="carousel" aria-label="About SummitLog">
+          <article class="intro-slide" id="intro-slide-0">
+            <h2>Private log</h2>
+            <p>Your climbs, notes, and stats stay on this device.</p>
+          </article>
+          <article class="intro-slide" id="intro-slide-1">
+            <h2>Backlog</h2>
+            <p>Keep the climbs you want to do beside the ones you’ve already logged.</p>
+          </article>
+          <article class="intro-slide" id="intro-slide-2">
+            <h2>You choose what you share</h2>
+            <p>A partner post adds only a short summary. Context, not a safety guarantee.</p>
+          </article>
+        </div>
+        <div class="intro-nav">
+          <button class="secondary intro-arrow" id="intro-prev" type="button" aria-label="Previous card">‹</button>
+          <div class="intro-dots" role="tablist" aria-label="Intro cards">
+            <button class="intro-dot active" type="button" role="tab" aria-selected="true" aria-label="Private log" data-slide="0"></button>
+            <button class="intro-dot" type="button" role="tab" aria-selected="false" aria-label="Backlog" data-slide="1"></button>
+            <button class="intro-dot" type="button" role="tab" aria-selected="false" aria-label="You choose what you share" data-slide="2"></button>
+          </div>
+          <button class="secondary intro-arrow" id="intro-next" type="button" aria-label="Next card">›</button>
+        </div>
       </div>
-      <button class="primary" id="intro-continue" style="width:100%; margin-top:1.5rem;">Get started</button>
+      <button class="primary btn-block intro-start" id="start-logging" type="button">Start logging</button>
     </div>
   </div>
 
@@ -28,19 +70,20 @@
       <h1>SummitLog</h1>
       <p class="muted">Sign in to your mountain log</p>
 
-      <button class="social-btn google" id="google-login">
+      <button class="social-btn google" id="google-login" type="button">
         <span>Continue with Google</span>
       </button>
-      <button class="social-btn github" id="github-login">
+      <button class="social-btn github" id="github-login" type="button">
         <span>Continue with GitHub</span>
       </button>
 
       <div class="divider"><span>or</span></div>
 
-      <input type="text" id="login-username" placeholder="Username" autocomplete="username">
-      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password">
-      <button class="primary" id="login-btn" style="width:100%;">Sign in</button>
-      <p class="muted small" style="margin-top:1rem;">Demo mode. Social login coming soon. Data stays on this device.</p>
+      <input type="text" id="login-username" placeholder="Username" autocomplete="username" maxlength="80" aria-label="Username">
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" aria-label="Password">
+      <button class="primary btn-block" id="login-btn" type="button">Sign in</button>
+      <button class="secondary btn-block btn-follow" id="login-back" type="button">Back</button>
+      <p class="muted small login-note">Demo mode. Social login coming soon. Data stays on this device.</p>
     </div>
   </div>
 
@@ -48,33 +91,42 @@
   <div id="app" class="hidden">
     <header>
       <h1>SummitLog</h1>
-      <div style="display:flex; align-items:center; gap:0.75rem;">
-        <span id="user-display" class="muted" style="font-size:0.9rem;"></span>
-        <nav>
-          <button class="active" data-tab="log">Log</button>
-          <button data-tab="map">Map</button>
-          <button data-tab="partners">Partners</button>
-          <button data-tab="profile">Profile</button>
+      <div class="header-tools">
+        <span id="user-display" class="muted"></span>
+        <nav aria-label="Sections">
+          <button class="active" type="button" data-tab="log">Log</button>
+          <button type="button" data-tab="map">Map</button>
+          <button type="button" data-tab="partners">Partners</button>
+          <button type="button" data-tab="profile">Profile</button>
         </nav>
-        <button class="secondary" id="logout-btn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">Log out</button>
+        <button class="secondary" id="logout-btn" type="button">Log out</button>
       </div>
     </header>
 
     <main>
+      <p id="offline-banner" class="offline-banner hidden" role="status">You’re offline. Your log still works on this device. Map tiles you’ve already viewed stay available; other areas show a placeholder.</p>
+
       <!-- LOG -->
       <section id="log" class="tab">
         <div class="stats">
-          <div class="stat"><strong id="peak-count">0</strong><span>Entries</span></div>
-          <div class="stat"><strong id="elev-total">0</strong><span>m elev</span></div>
-          <div class="stat"><strong id="trip-count">0</strong><span>Trips</span></div>
+          <div class="stat" title="Hiking, alpine, and ski-touring entries">
+            <strong id="peak-count">0</strong><span>Peaks</span>
+          </div>
+          <div class="stat" title="Elevation gain from every entry">
+            <strong id="elev-total">0</strong><span>m elev</span>
+          </div>
+          <div class="stat" title="Distinct calendar days with at least one entry">
+            <strong id="trip-count">0</strong><span>Trips</span>
+          </div>
         </div>
+        <p class="stat-hint">Peaks leaves out sport, trad, and ice sessions. Trips are calendar days, so two routes on one day count once.</p>
 
-        <button class="primary" id="add-btn">+ Log a peak / route</button>
+        <button class="primary" id="add-btn" type="button">+ Log a peak / route</button>
 
-        <div id="add-form" class="card hidden" style="margin-top:1rem;">
+        <div id="add-form" class="card hidden form-card">
           <h3 id="form-title">New entry</h3>
-          <input type="text" id="name" placeholder="Peak or route name" required>
-          <select id="type">
+          <input type="text" id="name" placeholder="Peak or route name" maxlength="200" aria-label="Peak or route name" required>
+          <select id="type" aria-label="Activity type">
             <option>Hiking / Peak bagging</option>
             <option>Alpine / Mountaineering</option>
             <option>Sport / Trad climbing</option>
@@ -82,28 +134,28 @@
             <option>Ski touring</option>
           </select>
           <div class="row">
-            <input type="date" id="date">
-            <input type="number" id="elevation" placeholder="Elevation gain (m)">
+            <input type="date" id="date" aria-label="Date">
+            <input type="number" id="elevation" placeholder="Elevation gain (m)" min="0" max="20000" inputmode="numeric" aria-label="Elevation gain in metres">
           </div>
           <div class="row">
-            <input type="number" step="any" id="lat" placeholder="Latitude (optional)">
-            <input type="number" step="any" id="lng" placeholder="Longitude (optional)">
+            <input type="number" step="any" id="lat" placeholder="Latitude (optional)" inputmode="decimal" aria-label="Latitude">
+            <input type="number" step="any" id="lng" placeholder="Longitude (optional)" inputmode="decimal" aria-label="Longitude">
           </div>
-          <textarea id="notes" rows="3" placeholder="Notes, conditions, style..."></textarea>
-          <button class="primary" id="save-btn">Save</button>
+          <textarea id="notes" rows="3" maxlength="4000" placeholder="Notes, conditions, style..." aria-label="Notes"></textarea>
+          <button class="primary" id="save-btn" type="button">Save</button>
         </div>
 
-        <div id="log-list" style="margin-top:1rem;"></div>
+        <div id="log-list" class="list-block"></div>
       </section>
 
       <!-- MAP -->
       <section id="map" class="tab hidden">
         <div id="map-container"></div>
-        <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;">Ranges and areas appear on the map. Check mark = you’ve logged something there.</p>
+        <p class="muted map-caption">Ranges and areas appear on the map. A check mark means you’ve logged something there. Offline, tiles you’ve already viewed stay visible; others show a placeholder.</p>
 
         <div class="card">
           <h3>Suggestions</h3>
-          <p style="color:var(--muted); font-size:0.9rem; margin-bottom:0.75rem;">Based on the current map area (sample data)</p>
+          <p class="muted suggestion-intro">Based on the current map area (sample data)</p>
           <div id="suggestions-list"></div>
         </div>
       </section>
@@ -112,14 +164,14 @@
       <section id="partners" class="tab hidden">
         <div class="card">
           <h2>Find partners</h2>
-          <p style="color:var(--muted); margin:0.5rem 0 1rem;">Posts include a short summary of recent logs for context. Not a safety guarantee — verify skills yourself.</p>
-          <button class="primary" id="post-btn">+ Post an objective</button>
+          <p class="muted partners-intro">Posts include a short summary of recent logs for context. Not a safety guarantee — verify skills yourself.</p>
+          <button class="primary" id="post-btn" type="button">+ Post an objective</button>
 
-          <div id="post-form" class="card hidden" style="margin-top:1rem;">
-            <input type="text" id="post-objective" placeholder="Objective (peak / route / area)">
-            <input type="text" id="post-dates" placeholder="Dates (e.g. next weekend, 15–17 Nov)">
-            <textarea id="post-looking" rows="2" placeholder="What are you looking for? Experience level, style..."></textarea>
-            <button class="primary" id="save-post-btn">Post</button>
+          <div id="post-form" class="card hidden form-card">
+            <input type="text" id="post-objective" placeholder="Objective (peak / route / area)" maxlength="200" aria-label="Objective">
+            <input type="text" id="post-dates" placeholder="Dates (e.g. next weekend, 15–17 Nov)" maxlength="120" aria-label="Dates">
+            <textarea id="post-looking" rows="2" maxlength="2000" placeholder="What are you looking for? Experience level, style..." aria-label="What you are looking for"></textarea>
+            <button class="primary" id="save-post-btn" type="button">Post</button>
           </div>
         </div>
         <div id="partner-posts"></div>
@@ -130,12 +182,19 @@
         <div class="card">
           <h2>Your mountain résumé</h2>
           <p>Private by default. Partner posts only share a short recent-activity summary.</p>
-          <div id="resume-summary" style="margin-top:1rem;"></div>
-          <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-            <button class="secondary" id="export-btn">Export data</button>
-            <button class="secondary" id="import-btn">Import data</button>
-            <input type="file" id="import-file" accept=".json" class="hidden">
+          <div id="resume-summary" class="resume-block"></div>
+          <div class="profile-actions">
+            <button class="secondary" id="export-btn" type="button">Export data</button>
+            <button class="secondary" id="import-btn" type="button">Import data</button>
+            <button class="secondary hidden" id="install-btn" type="button">Install app</button>
+            <input type="file" id="import-file" accept=".json,application/json" class="hidden">
           </div>
+          <p class="muted small install-hint">Install SummitLog from the browser menu so it opens like an app. On iPhone, use Share, then Add to Home Screen. After this page has loaded once, the log keeps working offline.</p>
+        </div>
+        <div class="card">
+          <h2>About</h2>
+          <p class="muted">Your climbs, your log, your partners.</p>
+          <button class="secondary" id="replay-intro" type="button">View intro</button>
         </div>
       </section>
     </main>
@@ -143,6 +202,8 @@
     <footer>SummitLog prototype · Data stored locally in your browser</footer>
   </div>
 
+  <script src="logic.js"></script>
+  <script src="storage.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
