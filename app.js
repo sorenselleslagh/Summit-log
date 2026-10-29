@@ -197,6 +197,11 @@ function fitMap() {
   var box = document.getElementById('map-container');
   var mainEl = document.querySelector('#app main');
   if (!section || !box || !mainEl || section.classList.contains('hidden')) return;
+  if (document.documentElement.classList.contains('map-expanded')) {
+    box.style.height = '';
+    if (map) map.invalidateSize();
+    return;
+  }
   if (mainEl.clientHeight < 120) return;
   var mainStyle = getComputedStyle(mainEl);
   var padTop = parseFloat(mainStyle.paddingTop) || 0;
@@ -217,6 +222,7 @@ function watchChrome() {
 }
 
 function selectTab(name) {
+  if (name !== 'map' && document.documentElement.classList.contains('map-expanded')) collapseMap(false);
   if (name !== 'mine' && form) form.classList.add('hidden');
   document.querySelectorAll('#app > nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
@@ -877,6 +883,72 @@ function configureMarkerIcons() {
   });
 }
 
+var mapExpanded = false;
+var mapHistoryPushed = false;
+
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function motionDelay() {
+  return prefersReducedMotion() ? 0 : 280;
+}
+
+function showMapStatus(text) {
+  var status = document.getElementById('map-status');
+  if (!status) return;
+  status.textContent = text;
+  status.classList.remove('hidden');
+  setTimeout(function () { status.classList.add('hidden'); }, 3200);
+}
+
+function showMapSheet(name) {
+  var root = document.documentElement;
+  ['layers', 'collections', 'peak'].forEach(function (sheet) {
+    root.classList.toggle('map-show-' + sheet, sheet === name);
+  });
+}
+
+function setMapGestures(enabled) {
+  if (!map) return;
+  var names = ['dragging', 'touchZoom', 'scrollWheelZoom', 'doubleClickZoom', 'boxZoom', 'keyboard'];
+  names.forEach(function (name) {
+    if (!map[name]) return;
+    if (enabled) map[name].enable();
+    else map[name].disable();
+  });
+}
+
+function expandMap() {
+  if (mapExpanded) return;
+  mapExpanded = true;
+  document.documentElement.classList.add('map-expanded');
+  setMapGestures(true);
+  try {
+    history.pushState({ summitlogMap: true }, '');
+    mapHistoryPushed = true;
+  } catch (err) {
+    mapHistoryPushed = false;
+  }
+  setTimeout(function () { if (map) map.invalidateSize(); }, motionDelay());
+}
+
+function collapseMap(fromPop) {
+  if (!mapExpanded) return;
+  mapExpanded = false;
+  var root = document.documentElement;
+  root.classList.remove('map-expanded', 'map-show-layers', 'map-show-collections', 'map-show-peak');
+  setMapGestures(false);
+  fitMap();
+  setTimeout(function () { fitMap(); }, motionDelay());
+  if (!fromPop && mapHistoryPushed) {
+    mapHistoryPushed = false;
+    history.back();
+  } else {
+    mapHistoryPushed = false;
+  }
+}
+
 function initMap() {
   if (typeof L === 'undefined') {
     showMapFallback();
@@ -885,11 +957,23 @@ function initMap() {
   try {
     if (!map) {
       configureMarkerIcons();
-      map = L.map('map-container').setView([46.5, 8.5], 6);
+      map = L.map('map-container', {
+        zoomControl: false,
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false
+      }).setView([46.5, 8.5], 6);
+      L.control.zoom({ position: 'topright' }).addTo(map);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
         errorTileUrl: 'icons/tile-offline.svg'
       }).addTo(map);
+      map.on('locationerror', function () {
+        showMapStatus('Location is unavailable on this device.');
+      });
       syncAreas();
     }
     updateMapMarkers();
@@ -1424,6 +1508,35 @@ document.getElementById('famous-list').addEventListener('click', function (event
 document.getElementById('osm-layer').addEventListener('change', updateMapMarkers);
 document.getElementById('load-peaks-btn').addEventListener('click', loadPeaksInView);
 
+document.getElementById('map-container').addEventListener('click', function (event) {
+  if (mapExpanded) return;
+  if (event.target.closest && event.target.closest('.leaflet-control, .map-expand, .map-close, .map-fabs')) return;
+  expandMap();
+});
+document.getElementById('map-expand').addEventListener('click', function (event) {
+  event.stopPropagation();
+  expandMap();
+});
+document.getElementById('map-close').addEventListener('click', function () { collapseMap(false); });
+document.getElementById('map-locate').addEventListener('click', function () {
+  if (!mapExpanded) expandMap();
+  if (map) map.locate({ setView: true, maxZoom: 12 });
+});
+document.getElementById('map-layers-btn').addEventListener('click', function () {
+  if (document.documentElement.classList.contains('map-show-layers')) showMapSheet('');
+  else showMapSheet('layers');
+});
+document.getElementById('map-sheet-btn').addEventListener('click', function () {
+  if (document.documentElement.classList.contains('map-show-collections')) showMapSheet('');
+  else showMapSheet('collections');
+});
+window.addEventListener('popstate', function () {
+  if (mapExpanded) collapseMap(true);
+});
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && mapExpanded) collapseMap(false);
+});
+
 function collectionPeakByName(item) {
   if (!collectionData || !item) return null;
   var want = Col.normName(item.name);
@@ -1554,7 +1667,8 @@ function showPeakDetail(peak) {
   if (!plan.steps.length) children.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
   box.replaceChildren.apply(box, children.concat(steps));
   box.classList.remove('hidden');
-  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
+  else box.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
   if (map) {
     map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10));
   }

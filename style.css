@@ -68,7 +68,7 @@ header {
   align-items: center;
   gap: 0.75rem;
   position: relative;
-  z-index: 2;
+  z-index: 1500;
 }
 
 header h1 {
@@ -237,6 +237,8 @@ textarea { resize: vertical; min-height: 80px; }
 
 .log-actions button { min-height: 44px; padding: 0.45rem 0.9rem; }
 
+#map-frame { position: relative; }
+
 #map-container {
   height: calc(100dvh - 8rem);
   min-height: 200px;
@@ -245,6 +247,153 @@ textarea { resize: vertical; min-height: 80px; }
   border: 1px solid var(--border);
   margin: 0;
   background: var(--card);
+}
+
+.map-gesture {
+  margin: 0.45rem 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.map-expand,
+.map-close,
+.map-fabs button {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  background: rgba(11, 17, 32, 0.94);
+  color: var(--text);
+  font-weight: 650;
+}
+
+.map-expand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: max-content;
+  margin: 0 auto;
+  bottom: 2.4rem;
+  z-index: 650;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+}
+
+.map-close,
+.map-fabs,
+.map-status { display: none; }
+
+header,
+#app > nav {
+  transition: transform 0.28s ease;
+}
+
+html.map-expanded header { transform: translateY(-110%); }
+html.map-expanded #app > nav { transform: translateY(110%); }
+
+html.map-expanded #map-frame,
+html.map-expanded #map-container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100% !important;
+  max-height: none;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  z-index: 1250;
+}
+
+html.map-expanded .map-gesture,
+html.map-expanded .map-expand,
+html.map-expanded .map-caption { display: none; }
+
+html.map-expanded .map-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: calc(0.55rem + env(safe-area-inset-top, 0px));
+  left: calc(0.55rem + env(safe-area-inset-left, 0px));
+  z-index: 1400;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+html.map-expanded .map-fabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: absolute;
+  top: calc(4.4rem + env(safe-area-inset-top, 0px));
+  left: calc(0.55rem + env(safe-area-inset-left, 0px));
+  z-index: 1400;
+}
+
+html.map-expanded .map-fabs button {
+  min-width: 44px;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+}
+
+html.map-expanded .leaflet-top.leaflet-right {
+  top: calc(0.55rem + env(safe-area-inset-top, 0px));
+  right: calc(0.55rem + env(safe-area-inset-right, 0px));
+}
+
+html.map-expanded .leaflet-bottom {
+  bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px));
+}
+
+html.map-expanded .map-status {
+  display: block;
+  position: absolute;
+  top: calc(0.7rem + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1400;
+  max-width: 70%;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(11, 17, 32, 0.94);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+html.map-expanded .map-status.hidden { display: none; }
+
+html.map-expanded #peak-detail,
+html.map-expanded #collections-card,
+html.map-expanded #layers-card,
+html.map-expanded #map .legend {
+  display: none;
+}
+
+html.map-expanded.map-show-layers #layers-card,
+html.map-expanded.map-show-collections #collections-card,
+html.map-expanded.map-show-peak #peak-detail {
+  display: block;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1360;
+  max-height: min(58dvh, 520px);
+  overflow: auto;
+  margin: 0;
+  border-radius: 16px 16px 0 0;
+  padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  header,
+  #app > nav,
+  #map-frame,
+  #map-container { transition: none; }
 }
 
 .map-fallback {
@@ -432,7 +581,7 @@ p { margin: 0.25rem 0; }
 #app > nav {
   position: relative;
   flex: 0 0 auto;
-  z-index: 2;
+  z-index: 1500;
   display: flex;
   justify-content: space-around;
   gap: 0.15rem;
