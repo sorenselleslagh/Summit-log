@@ -267,6 +267,77 @@ p { margin: 0.25rem 0; }
 .profile-actions { margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .install-hint { margin-top: 1rem; }
 #replay-intro { margin-top: 0.8rem; }
+
+#app > nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1300;
+  display: flex;
+  justify-content: space-around;
+  gap: 0.15rem;
+  background: rgba(11, 17, 32, 0.98);
+  border-top: 1px solid var(--border);
+  padding: 0.25rem 0.35rem calc(0.25rem + env(safe-area-inset-bottom));
+}
+
+#app > nav button {
+  flex: 1;
+  min-width: 44px;
+  min-height: 48px;
+}
+
+#app { padding-bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.15rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 0.45rem;
+}
+
+.swatch-log { background: #3b82f6; }
+.swatch-backlog { background: #f59e0b; }
+.swatch-osm { background: #a78bfa; }
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  margin: 0.2rem 0;
+}
+
+.check-row input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+
+.connection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.connection:last-child { border-bottom: none; }
+.connection button { min-width: 7.5rem; }
+#load-peaks-btn { margin-bottom: 0.6rem; }
 .login-note { margin-top: 1rem; }
 
 .suggestion {

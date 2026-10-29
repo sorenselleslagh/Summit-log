@@ -43,39 +43,49 @@ The drawing is `illustrations/mountain.svg`. Replace that file to swap in final 
 ## Install and offline
 
 - `manifest.webmanifest` and the icons in `icons/` let the browser install SummitLog. On iPhone, use Share → Add to Home Screen. Paths are relative, so install works from `/Summit-log/` as well as from a local server root.
-- `sw.js` caches the app shell (HTML, CSS, JS, icons, the intro drawing, and Leaflet) after the first online load. Logging, editing, the intro, and export/import then work with the network off.
+- `sw.js` caches the app shell (HTML, CSS, JS, icons, the intro drawing, and Leaflet) after the first online load. Logging, the backlog, and partner posts then work with the network off.
 - Map tiles are saved only after you view them. Offline, those tiles still appear. Tiles you have not opened are replaced with an “Offline” placeholder. Coming back online redraws the map.
 
-## Stats
+## Tabs
 
-- **Peaks** — hiking, alpine, and ski-touring entries. Sport, trad, and ice sessions stay in the log and are not counted.
-- **m elev** — elevation gain from every entry. A blank gain counts as zero; a recorded `0` stays `0`.
-- **Trips** — one per calendar day with at least one entry. Two routes on the same day are one trip. The bundled sample happens to use three different days, so its trip count matches its entry count; adding a second route on an existing day does not add a trip.
+Bottom bar: **Log**, **Backlog**, **Map**, **Partners**. **Profile** is the header button (résumé, export, install, connections, intro).
 
-Latitude and longitude of `0` are real positions and are kept. Leave both blank if you do not have a point.
+- **Log** is home. The counts are logged peaks, routes, and hikes. The peak number is your collection.
+- **Backlog** is what you want to do. **Done** moves that item to the log and keeps its fields. A route or hike linked to backlog peaks logs those peaks as well.
+- **Map** draws logged items in blue and backlog items in amber. A toggle shows famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20, and a few peaks) with **Add to backlog**. **Load peaks in this view** calls the OpenStreetMap Overpass API only when you tap it, only when zoomed in, and at most once every few seconds. Results are cached on this device. Offline, the famous list and any saved Overpass answer still work.
+- **Partners** stay on this device. **Find a partner** on a backlog item starts a post for that objective. Log entries are attached only if you tick them.
 
-## Data and a later account
+No pace, speed, ranking, or leaderboard is shown. There is no file import.
 
-The app is fully usable with no registration. Logs and partner posts live in localStorage under `summitlogs` and `partnerposts`. `storage.js` is the only module that reads and writes that storage. A future sync layer can replace that repository and keep the same load and save calls.
+## Item model
 
-Every entry and partner post is stored as:
+One log (`summitlogs`) and one backlog (`summitbacklog`). Every item is a peak, a route, or a hike. The form is one short card; the kind changes the hints.
 
-- `id` — stable UUID string. Older numeric ids and earlier string ids are rewritten once, in place, and then left alone.
-- `createdAt` and `updatedAt` — ISO timestamps. Missing ones are filled on migration. Edits keep `createdAt` and refresh `updatedAt`.
-- The existing fields (`name`, `type`, `date`, `elevation`, `notes`, `lat`, `lng`, and the partner-post fields) are unchanged.
+- **Peak** — name, summit elevation, map pin.
+- **Route** — name, grade, crag or mountain, activity (sport, trad, bouldering, alpine, ice, mixed, ski). The grade hint follows the activity (Font, French, AD/PD, and so on).
+- **Hike** — name, distance, elevation gain, optional track note, map pin.
 
-Nothing is dropped in that migration: names, notes, a gain of `0`, and coordinates of `0` all remain. Import accepts the same export shape, checks that `logs` and `partnerPosts` are arrays, skips invalid records, and keeps a UUID and timestamps when the file already has them. Text is stored as text and drawn as text, so names and notes cannot inject HTML.
+Routes and hikes can link to peaks. Each record keeps a stable UUID `id` plus `createdAt` and `updatedAt`. Older entries that only had an activity type are migrated in place: alpine and peak-bagging names become peaks, sport, trad, ice, and mixed become routes, ski tours become hikes. An id or timestamp that is already stored is kept. A coordinate of `0` stays `0`.
 
-When accounts exist, sign-up should attach this local dataset to the account instead of starting empty. The ids and timestamps are there so sync can match records across devices. There is no account or sync in this version, and the intro does not offer one.
+Text is stored as text and drawn as text.
 
-The display name (`summitlog_user`) is a label on this device. It does not split the log.
+The display name (`summitlog_user`) is a label on this device. It does not split the log. `storage.js` is the only module that reads and writes this storage.
+
+## Roadmap
+
+Not built yet:
+
+- **Accounts and sync.** Signing up should attach this log and backlog to the account without dropping or rewriting ids. A sync layer would replace `storage.js` and use `updatedAt` when two devices both have changes.
+- **Connections.** Profile lists Strava, Garmin Connect, and COROS as coming soon. They need an account.
+- **Camptocamp** is the likely source for alpine route detail later. It is not connected. Famous hikes here are a short built-in list; extra peaks come from Overpass when you ask.
 
 ## Project structure
 
-- `index.html` — intro, optional demo sign-in, log, map, partners, profile
-- `style.css` — layout, including a bottom tab bar on small screens
+- `index.html` — intro, optional demo sign-in, log, backlog, map, partners, profile
+- `style.css` — layout, with the four tabs on the bottom
 - `app.js` — interface
-- `logic.js` — stats, validation, ids, and timestamps
+- `logic.js` — item model, stats, validation, ids, and timestamps
+- `overpass.js` — polite OpenStreetMap peak requests
 - `storage.js` — localStorage repository
 - `sw.js` — offline cache
 - `manifest.webmanifest` — install metadata
@@ -86,4 +96,4 @@ The display name (`summitlog_user`) is a label on this device. It does not split
 
 ## Map
 
-Ranges are drawn around a few sample areas. A check mark means a logged point falls inside that area. Suggestions under the map are sample ideas, not live search. OpenStreetMap tiles are requested only as you pan, and only those tiles are cached.
+Ranges are drawn around a few sample areas. A check mark means a logged point falls inside that area. OpenStreetMap tiles are requested only as you pan, and only those tiles are cached. The famous-route list does not download tiles by itself.

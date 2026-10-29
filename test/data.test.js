@@ -62,11 +62,13 @@ var again = logic.migrateLogs(migrated, {
 assert.deepStrictEqual(again, migrated);
 
 var stats = logic.computeStats(migrated);
+assert.strictEqual(migrated[0].kind, 'peak');
+assert.strictEqual(migrated[2].kind, 'route');
+assert.strictEqual(migrated[2].activity, 'sport');
 assert.strictEqual(stats.peaks, 2);
-assert.strictEqual(stats.trips, 3);
-assert.strictEqual(stats.elevation, 8286);
+assert.strictEqual(stats.routes, 1);
+assert.strictEqual(stats.hikes, 0);
 assert.strictEqual(stats.entries, 3);
-assert.notStrictEqual(stats.peaks, stats.entries);
 
 var sameDay = logic.computeStats([
   logic.normalizeLog({ name: 'A', type: 'Hiking / Peak bagging', date: '2024-06-01', elevation: 100 }, ctx()),
@@ -75,14 +77,33 @@ var sameDay = logic.computeStats([
   logic.normalizeLog({ name: 'D', type: 'Ice / Mixed', date: '2024-06-03', elevation: 0 }, ctx()),
   logic.normalizeLog({ name: 'E', type: 'Ski touring', date: '', elevation: null }, ctx())
 ]);
-assert.strictEqual(sameDay.peaks, 3);
-assert.strictEqual(sameDay.trips, 3);
-assert.strictEqual(sameDay.elevation, 160);
+assert.strictEqual(sameDay.peaks, 2);
+assert.strictEqual(sameDay.routes, 2);
+assert.strictEqual(sameDay.hikes, 1);
 assert.strictEqual(sameDay.entries, 5);
 
-assert.strictEqual(logic.isPeak({ type: 'Sport / Trad climbing' }), false);
-assert.strictEqual(logic.isPeak({ type: 'Ice / Mixed' }), false);
-assert.strictEqual(logic.isPeak({ type: 'Ski touring' }), true);
+assert.strictEqual(logic.isPeak({ kind: 'peak' }), true);
+assert.strictEqual(logic.isPeak({ kind: 'route' }), false);
+assert.strictEqual(logic.isPeak({ kind: 'hike' }), false);
+assert.strictEqual(logic.gradeHint('bouldering'), 'Font grade, e.g. 6B+');
+assert.strictEqual(logic.gradeHint('sport'), 'French grade, e.g. 6b');
+assert.strictEqual(logic.gradeHint('alpine'), 'Alpine grade, e.g. PD, AD+');
+
+var sharedMint = sequenceMint();
+var sharedCtx = { now: NOW, mint: sharedMint };
+var linkedPeak = logic.createLog({ kind: 'peak', name: 'Linked peak' }, sharedCtx);
+var ridge = logic.createLog({
+  kind: 'route',
+  name: 'Ridge',
+  activity: 'alpine',
+  grade: 'AD',
+  peakIds: [linkedPeak.id]
+}, sharedCtx);
+var finished = logic.completeItem(ridge, [], [linkedPeak, ridge], { now: LATER, mint: sharedMint });
+assert.strictEqual(finished.backlog.length, 0);
+assert.strictEqual(finished.logs.length, 2);
+assert.ok(finished.logs.some(function (item) { return item.id === linkedPeak.id; }));
+assert.strictEqual(finished.logs.filter(function (item) { return item.id === ridge.id; })[0].createdAt, ridge.createdAt);
 
 var zero = logic.normalizeLog({ id: 1, name: 'Null Island', lat: 0, lng: 0, elevation: 0, date: '2024-01-02' }, ctx());
 assert.strictEqual(zero.lat, 0);
@@ -243,6 +264,7 @@ assert.ok(sw.includes("new URL("));
 assert.ok(sw.includes('./storage.js'));
 assert.ok(sw.includes('./illustrations/mountain.svg'));
 assert.ok(sw.includes('./favicon.ico'));
+assert.ok(sw.includes('./overpass.js'));
 assert.ok(!sw.includes("'/index"));
 assert.ok(!sw.includes('"/index'));
 assert.ok(!sw.includes("scope: '/'"));
@@ -257,6 +279,10 @@ assert.ok(html.includes('Start logging'));
 assert.ok(html.includes('illustrations/mountain.svg'));
 assert.ok(html.includes('View intro'));
 assert.ok(!html.includes('I have an account'));
+assert.ok(!html.includes('Import data'));
+assert.ok(html.includes('data-tab="backlog"'));
+assert.ok(html.includes('Connections'));
+assert.ok(html.includes('coming soon') || html.includes('Coming soon'));
 assert.ok(!html.includes('src="/'));
 assert.ok(!html.includes('href="/'));
 assert.ok(!app.includes('innerHTML'));
@@ -266,5 +292,24 @@ assert.ok(!fs.existsSync(path.join(root, 'summitlog.tar.gz')));
 assert.ok(fs.existsSync(path.join(root, '.nojekyll')));
 assert.ok(fs.existsSync(path.join(root, 'illustrations/mountain.svg')));
 assert.ok(fs.statSync(path.join(root, 'favicon.ico')).size > 100);
+
+var overpass = require('../overpass.js');
+var overQuery = overpass.buildQuery({ south: 45, west: 6, north: 46, east: 7 });
+assert.ok(overQuery.indexOf('natural"="peak"') >= 0);
+assert.ok(overQuery.indexOf('out tags 25') >= 0);
+assert.strictEqual(overpass.canFetch(8, 1000).ok, false);
+assert.strictEqual(overpass.canFetch(11, 5000).ok, true);
+overpass.noteRequest(5000);
+assert.strictEqual(overpass.canFetch(11, 6000).ok, false);
+assert.strictEqual(overpass.canFetch(11, 20000).ok, true);
+var osmPeaks = overpass.parseElements({
+  elements: [
+    { type: 'node', lat: 45.1, lon: 6.2, tags: { name: 'Pic Test', ele: '3000' } },
+    { type: 'way', tags: { name: 'ignore' } }
+  ]
+});
+assert.strictEqual(osmPeaks.length, 1);
+assert.strictEqual(osmPeaks[0].elevation, 3000);
+assert.strictEqual(osmPeaks[0].kind, 'peak');
 
 console.log('data tests ok');

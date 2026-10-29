@@ -14,7 +14,9 @@
   'use strict';
 
   var LOG_KEY = 'summitlogs';
+  var BACKLOG_KEY = 'summitbacklog';
   var POST_KEY = 'partnerposts';
+  var CACHE_KEY = 'summitlog_overpass_cache';
   var USER_KEY = 'summitlog_user';
   // Also read once in index.html before paint. This module is the only writer.
   var INTRO_KEY = 'summitlog_intro_seen';
@@ -82,6 +84,39 @@
       return cleaned;
     }
 
+    function loadBacklog() {
+      var read = readArray(BACKLOG_KEY);
+      if (read.state !== 'ok') return [];
+      return persistMigration(BACKLOG_KEY, read.items, logic.migrateLogs(read.items, context()));
+    }
+
+    function saveBacklog(items) {
+      var cleaned = logic.migrateLogs(items, context());
+      write(BACKLOG_KEY, cleaned);
+      return cleaned;
+    }
+
+    function readCache(bucket, key) {
+      try {
+        var all = JSON.parse(storage.getItem(CACHE_KEY) || '{}');
+        var entry = all[bucket] && all[bucket][key];
+        return entry ? entry.value : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function writeCache(bucket, key, value) {
+      var all = {};
+      try { all = JSON.parse(storage.getItem(CACHE_KEY) || '{}'); } catch (err) { all = {}; }
+      if (!all[bucket] || typeof all[bucket] !== 'object') all[bucket] = {};
+      var keys = Object.keys(all[bucket]);
+      if (keys.length > 6) delete all[bucket][keys[0]];
+      all[bucket][key] = { value: value };
+      try { storage.setItem(CACHE_KEY, JSON.stringify(all)); } catch (err) { return false; }
+      return true;
+    }
+
     function loadPosts() {
       var read = readArray(POST_KEY);
       if (read.state === 'missing') return [];
@@ -146,6 +181,10 @@
     return {
       loadLogs: loadLogs,
       saveLogs: saveLogs,
+      loadBacklog: loadBacklog,
+      saveBacklog: saveBacklog,
+      readCache: readCache,
+      writeCache: writeCache,
       loadPosts: loadPosts,
       savePosts: savePosts,
       getDisplayName: getDisplayName,
