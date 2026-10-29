@@ -47,7 +47,7 @@
           </article>
           <article class="intro-slide" id="intro-slide-2">
             <h2>You choose what you share</h2>
-            <p>A partner post adds only a short summary. Context, not a safety guarantee.</p>
+            <p>A queue shows only the logs you tick. That is context, not a safety guarantee.</p>
           </article>
         </div>
         <div class="intro-nav">
@@ -186,27 +186,36 @@
 
       <!-- PARTNERS -->
       <section id="partners" class="tab hidden">
-        <div class="card">
+        <div id="partner-home">
           <h2>Find partners</h2>
-          <p class="muted partners-intro">Start from a backlog item, or write an objective. Tick log entries to attach. Nothing is attached until you do. Not a safety guarantee.</p>
-          <button class="primary" id="post-btn" type="button">+ Post an objective</button>
-
-          <div id="post-form" class="card hidden form-card">
-            <input type="text" id="post-objective" placeholder="Objective (peak / route / area)" maxlength="200" aria-label="Objective">
-            <input type="text" id="post-dates" placeholder="Dates (e.g. next weekend, 15–17 Nov)" maxlength="120" aria-label="Dates">
-            <textarea id="post-looking" rows="2" maxlength="2000" placeholder="What are you looking for? Experience level, style..." aria-label="What you are looking for"></textarea>
-            <div id="post-context"></div>
-            <button class="primary" id="save-post-btn" type="button">Post</button>
+          <label class="field-label" for="objective-query">What's your objective?</label>
+          <div class="objective-search">
+            <input type="search" id="objective-query" placeholder="Peak, route, or trek" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="objective-suggestions" aria-label="What's your objective?">
+            <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
           </div>
+          <p class="muted partners-intro">Peaks from the Alpine 4000ers, your own log and backlog, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
         </div>
-        <div id="partner-posts"></div>
+
+        <div id="objective-page" class="hidden">
+          <button class="secondary" id="objective-back" type="button">Back</button>
+          <div id="objective-head"></div>
+          <h3 class="queue-title">Queue</h3>
+          <p class="muted small" id="queue-demo-note">People with a Demo badge are sample profiles, not real users. The list is not ordered by level.</p>
+          <div id="queue-list"></div>
+          <div id="join-panel" class="card"></div>
+        </div>
+
+        <div id="partner-profile" class="hidden">
+          <button class="secondary" id="partner-profile-back" type="button">Back to queue</button>
+          <div id="partner-profile-body"></div>
+        </div>
       </section>
 
       <!-- PROFILE -->
       <section id="profile" class="tab hidden">
         <div class="card">
           <h2>Your mountain résumé</h2>
-          <p>Private by default. Partner posts only share a short recent-activity summary.</p>
+          <p>Private by default. A partner queue shares only the logs you tick.</p>
           <div id="resume-summary" class="resume-block"></div>
           <div class="profile-actions">
             <button class="secondary" id="export-btn" type="button">Export data</button>
@@ -260,6 +269,7 @@
   </div>
 
   <script src="logic.js"></script>
+  <script src="partners.js"></script>
   <script src="storage.js"></script>
   <script src="overpass.js"></script>
   <script src="collections.js"></script>

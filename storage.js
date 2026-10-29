@@ -7,7 +7,8 @@
   else {
     root.SummitLogStorage = api.createRepository({
       storage: root.localStorage,
-      logic: root.SummitLogLogic
+      logic: root.SummitLogLogic,
+      partners: root.SummitPartners
     });
   }
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
@@ -16,6 +17,7 @@
   var LOG_KEY = 'summitlogs';
   var BACKLOG_KEY = 'summitbacklog';
   var POST_KEY = 'partnerposts';
+  var QUEUE_KEY = 'summitlog_queues';
   var CACHE_KEY = 'summitlog_overpass_cache';
   var USER_KEY = 'summitlog_user';
   // Also read once in index.html before paint. This module is the only writer.
@@ -25,6 +27,7 @@
   function createRepository(options) {
     var storage = options.storage;
     var logic = options.logic;
+    var partners = options.partners;
     var clock = options.now || function () { return new Date().toISOString(); };
     var mint = options.mint || logic.mintId;
     var warned = false;
@@ -131,6 +134,30 @@
       return cleaned;
     }
 
+    // One row per objective the user has joined. A later server sync can replace
+    // this array with the account's memberships. Demo people are not stored here.
+    function loadMemberships() {
+      var read = readArray(QUEUE_KEY);
+      if (read.state === 'corrupt' || read.state === 'unreadable') return [];
+      if (read.state === 'missing') {
+        var seeded = partners && partners.membershipsFromPosts
+          ? partners.membershipsFromPosts(loadPosts(), context())
+          : [];
+        write(QUEUE_KEY, seeded);
+        return seeded;
+      }
+      if (!partners || !partners.migrateMemberships) return read.items;
+      return persistMigration(QUEUE_KEY, read.items, partners.migrateMemberships(read.items, context()));
+    }
+
+    function saveMemberships(items) {
+      var cleaned = partners && partners.migrateMemberships
+        ? partners.migrateMemberships(items, context())
+        : (Array.isArray(items) ? items : []);
+      write(QUEUE_KEY, cleaned);
+      return cleaned;
+    }
+
     function getDisplayName() {
       var name;
       try {
@@ -209,6 +236,8 @@
       writeCache: writeCache,
       loadPosts: loadPosts,
       savePosts: savePosts,
+      loadMemberships: loadMemberships,
+      saveMemberships: saveMemberships,
       getDisplayName: getDisplayName,
       setDisplayName: setDisplayName,
       clearDisplayName: clearDisplayName,

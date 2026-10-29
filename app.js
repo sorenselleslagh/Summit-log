@@ -3,10 +3,17 @@ var Lgc = window.SummitLogLogic;
 var Store = window.SummitLogStorage;
 var Over = window.SummitLogOverpass;
 var Col = window.SummitCollections;
+var Partners = window.SummitPartners;
 
 var logs = [];
 var backlog = [];
 var partnerPosts = [];
+var memberships = [];
+var objectiveCatalog = [];
+var activeObjective = null;
+var activePerson = null;
+var joinFormOpen = false;
+var suggestionIndex = -1;
 var currentUser = '';
 var map;
 var markers = [];
@@ -14,7 +21,6 @@ var areaLayers = [];
 var osmMarkers = [];
 var editingId = null;
 var editingList = 'log';
-var postingItemId = '';
 var collectionData = null;
 var deferredInstall = null;
 
@@ -50,9 +56,14 @@ function el(tag, props) {
   return node;
 }
 
+function fill(parent, children) {
+  parent.replaceChildren.apply(parent, children.filter(function (child) {
+    return child != null && child !== false;
+  }));
+}
+
 function saveLogs() { logs = Store.saveLogs(logs); }
 function saveBacklog() { backlog = Store.saveBacklog(backlog); }
-function savePosts() { partnerPosts = Store.savePosts(partnerPosts); }
 
 function refreshAccountButton() {
   var button = document.getElementById('logout-btn');
@@ -64,6 +75,7 @@ function refreshAccountButton() {
 logs = Store.loadLogs();
 backlog = Store.loadBacklog();
 partnerPosts = Store.loadPosts();
+memberships = Store.loadMemberships();
 currentUser = Store.getDisplayName();
 
 function registerServiceWorker() {
@@ -104,8 +116,8 @@ function showApp() {
   initMap();
   renderLogs();
   renderBacklog();
-  renderPosts();
   renderFamous();
+  rebuildObjectives();
   loadCollections();
   fillLevelForm();
 }
@@ -350,7 +362,7 @@ function renderItemCard(item, listName) {
   ];
   if (listName === 'backlog') {
     actions.unshift(el('button', { class: 'primary', type: 'button', 'data-action': 'done', 'data-id': item.id, text: 'Done' }));
-    actions.push(el('button', { class: 'secondary', type: 'button', 'data-action': 'partner', 'data-id': item.id, text: 'Find a partner' }));
+    actions.push(el('button', { class: 'secondary', type: 'button', 'data-action': 'partner', 'data-id': item.id, text: 'Find partners' }));
   }
   return el('div', { class: 'card' },
     el('h3', { text: item.name }),
@@ -816,110 +828,428 @@ function loadPeaksInView() {
   });
 }
 
-// ---- Partner posts ----
-function renderPostCard(post) {
-  return el('div', { class: 'card' },
-    el('h3', { text: post.objective }),
-    el('p', { class: 'post-meta', text: post.dates }),
-    el('p', { class: 'post-looking', text: 'Looking for: ' + (post.looking || '') }),
-    el('p', { class: 'post-shared', text: 'Shared context: ' + (post.shared || 'No log entries attached') }),
-    el('button', {
-      class: 'danger',
+// ---- Partner queues ----
+var AVATAR_COLORS = ['#1e3a5f', '#3f2d12', '#1f3d32', '#3b1d3a', '#243044', '#3a2a1b'];
+
+function rebuildObjectives() {
+  objectiveCatalog = Partners.buildCatalog({
+    peaks: collectionData ? collectionData.peaks : [],
+    famous: Lgc.FAMOUS,
+    logs: logs,
+    backlog: backlog,
+    region: collectionData ? collectionData.region : 'Alps'
+  });
+}
+
+function refreshActiveObjective() {
+  if (!activeObjective) {
+    renderSuggestions();
+    return;
+  }
+  var next = null;
+  var want = Partners.fold(activeObjective.name);
+  objectiveCatalog.forEach(function (objective) {
+    if (Partners.fold(objective.name) === want) next = objective;
+  });
+  if (next) activeObjective = next;
+  renderSuggestions();
+  if (!document.getElementById('objective-page').classList.contains('hidden')) renderObjective();
+}
+
+function avatarNode(initials, key) {
+  var index = 0;
+  String(key || '').split('').forEach(function (ch) { index += ch.charCodeAt(0); });
+  return el('span', {
+    class: 'avatar',
+    'aria-hidden': 'true',
+    style: 'background:' + AVATAR_COLORS[index % AVATAR_COLORS.length],
+    text: initials || '?'
+  });
+}
+
+function showPartnerSearch() {
+  activePerson = null;
+  joinFormOpen = false;
+  document.getElementById('partner-home').classList.remove('hidden');
+  document.getElementById('objective-page').classList.add('hidden');
+  document.getElementById('partner-profile').classList.add('hidden');
+  renderSuggestions();
+}
+
+function showObjective(objective) {
+  if (!objective) return;
+  activeObjective = objective;
+  activePerson = null;
+  joinFormOpen = false;
+  document.getElementById('partner-home').classList.add('hidden');
+  document.getElementById('objective-page').classList.remove('hidden');
+  document.getElementById('partner-profile').classList.add('hidden');
+  renderObjective();
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
+}
+
+function renderSuggestions() {
+  var input = document.getElementById('objective-query');
+  var list = document.getElementById('objective-suggestions');
+  if (!input || !list) return;
+  var matches = Partners.searchObjectives(objectiveCatalog, input.value, 8);
+  suggestionIndex = matches.length ? 0 : -1;
+  input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+  if (!matches.length) {
+    list.replaceChildren();
+    return;
+  }
+  list.replaceChildren.apply(list, matches.map(function (objective, index) {
+    var button = el('button', {
       type: 'button',
-      'data-action': 'delete',
-      'data-id': post.id,
-      text: 'Remove'
+      role: 'option',
+      id: 'objective-option-' + index,
+      'data-objective': objective.id,
+      'aria-selected': index === 0 ? 'true' : 'false'
+    },
+      el('span', { class: 'suggestion-top' },
+        el('span', { class: 'suggestion-name', text: objective.name }),
+        el('span', { class: 'badge', text: Partners.kindLabel(objective.kind) })
+      ),
+      el('span', { class: 'suggestion-meta' },
+        el('span', { text: Partners.detailLine(objective) }),
+        el('span', { text: objective.range || '' })
+      )
+    );
+    return el('li', null, button);
+  }));
+}
+
+function openSuggestion(id) {
+  var found = null;
+  objectiveCatalog.forEach(function (objective) {
+    if (objective.id === id) found = objective;
+  });
+  if (found) showObjective(found);
+}
+
+function yourLevelText() {
+  var saved = Store.getLevel();
+  var level = Col.estimateLevel(logs, collectionData ? collectionData.peaks : [], saved);
+  var bits = [];
+  if (level.grade) bits.push(level.grade);
+  if (level.elevation != null) bits.push(level.elevation + ' m');
+  if (level.glacier === true) bits.push('glacier');
+  return bits.length ? 'From your log: ' + bits.join(' · ') : '';
+}
+
+function yourInitials() {
+  var name = (currentUser || '').trim();
+  if (!name) return 'You';
+  var parts = name.split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function sharedLogLine(log) {
+  return log.name + ' · ' + Partners.kindLabel(log.kind) + (log.detail ? ' · ' + log.detail : '');
+}
+
+function yourSharedLogs(membership) {
+  return (membership.attachedIds || []).map(function (id) {
+    var item = null;
+    logs.forEach(function (entry) { if (entry.id === id) item = entry; });
+    if (!item) return null;
+    return { name: item.name, kind: item.kind, detail: itemSummary(item) };
+  }).filter(Boolean);
+}
+
+function personCard(person) {
+  var shared = person.logs && person.logs.length
+    ? person.logs.map(function (log) { return log.name; }).join(', ')
+    : '';
+  var button = el('button', { class: 'queue-person', type: 'button', 'data-person': person.id },
+    avatarNode(person.initials, person.id),
+    el('span', { class: 'queue-copy' },
+      el('span', { class: 'suggestion-top' },
+        el('span', { class: 'suggestion-name', text: person.name }),
+        el('span', { class: person.demo ? 'badge demo-badge' : 'badge device-badge', text: person.demo ? 'Demo' : 'Only on this device' })
+      ),
+      person.level ? el('span', { class: 'queue-level', text: person.level }) : null,
+      person.dates ? el('span', { class: 'queue-dates', text: person.dates }) : null,
+      person.note ? el('span', { class: 'queue-note', text: person.note }) : null,
+      el('span', { class: 'queue-shared', text: shared ? 'Shared logs: ' + shared : 'No logs shared' })
+    )
+  );
+  return button;
+}
+
+function accountHint() {
+  return el('p', {
+    class: 'account-hint',
+    text: 'Sign in to be visible to others. Joining a queue for real requires an account. Your place is saved on this device for now.'
+  });
+}
+
+function renderJoinPanel(membership) {
+  var panel = document.getElementById('join-panel');
+  if (membership && !joinFormOpen) {
+    panel.replaceChildren(
+      el('div', { class: 'join-actions' },
+        el('button', { class: 'secondary', type: 'button', id: 'edit-queue', text: 'Edit your place' }),
+        el('button', { class: 'danger', type: 'button', id: 'leave-queue', text: 'Leave the queue' })
+      ),
+      accountHint()
+    );
+    return;
+  }
+  if (!joinFormOpen) {
+    panel.replaceChildren(
+      el('button', { class: 'primary btn-block', type: 'button', id: 'join-queue', text: 'Join the queue' }),
+      accountHint()
+    );
+    return;
+  }
+  var selected = {};
+  (membership && membership.attachedIds || []).forEach(function (id) { selected[id] = true; });
+  var choices = logs.length
+    ? logs.slice().reverse().map(function (item) {
+      var input = el('input', { type: 'checkbox', value: item.id });
+      input.checked = !!selected[item.id];
+      return el('label', { class: 'check-row' }, input, el('span', { text: item.name + ' · ' + kindLabel(item.kind) }));
     })
+    : [el('p', { class: 'muted', text: 'No log entries to attach. Nothing is shared until you tick one.' })];
+  var dates = el('input', {
+    type: 'text',
+    id: 'join-dates',
+    maxlength: '120',
+    placeholder: 'Preferred dates or period (optional)',
+    'aria-label': 'Preferred dates or period'
+  });
+  dates.value = membership ? membership.dates : '';
+  var note = el('textarea', {
+    id: 'join-note',
+    rows: '2',
+    maxlength: '400',
+    placeholder: 'Short note (optional)',
+    'aria-label': 'Short note'
+  });
+  note.value = membership ? membership.note : '';
+  panel.replaceChildren(
+    el('h3', { text: membership ? 'Edit your place' : 'Join the queue' }),
+    dates,
+    note,
+    el('div', { id: 'join-logs' },
+      el('p', { class: 'muted', text: 'Choose logs to share. None are included until you tick them.' }),
+      choices
+    ),
+    el('div', { class: 'join-actions' },
+      el('button', { class: 'primary', type: 'button', id: 'join-save', text: membership ? 'Save' : 'Join the queue' }),
+      el('button', { class: 'secondary', type: 'button', id: 'join-cancel', text: 'Cancel' })
+    ),
+    accountHint()
   );
 }
 
-function renderPosts() {
-  var container = document.getElementById('partner-posts');
-  if (!partnerPosts.length) {
-    container.replaceChildren(el('p', { class: 'muted', text: 'No partner posts yet.' }));
-    return;
+function renderObjective() {
+  if (!activeObjective) return;
+  var head = document.getElementById('objective-head');
+  head.replaceChildren(
+    el('h2', { text: activeObjective.name }),
+    el('p', { class: 'objective-meta' },
+      el('span', { class: 'badge', text: Partners.kindLabel(activeObjective.kind) }),
+      el('span', { text: Partners.detailLine(activeObjective) }),
+      activeObjective.range ? el('span', { text: activeObjective.range }) : null
+    )
+  );
+  var membership = Partners.membershipFor(activeObjective, memberships);
+  var people = [];
+  if (membership) {
+    people.push({
+      id: 'you',
+      demo: false,
+      name: currentUser || 'You',
+      initials: yourInitials(),
+      level: yourLevelText(),
+      dates: membership.dates,
+      note: membership.note,
+      logs: yourSharedLogs(membership)
+    });
   }
-  container.replaceChildren.apply(container, partnerPosts.slice().reverse().map(renderPostCard));
+  Partners.demoQueue(activeObjective).forEach(function (person) { people.push(person); });
+  var list = document.getElementById('queue-list');
+  if (!people.length) {
+    list.replaceChildren(el('p', { class: 'muted', text: 'No one is in this queue yet.' }));
+  } else {
+    list.replaceChildren.apply(list, people.map(personCard));
+  }
+  renderJoinPanel(membership);
 }
 
-document.getElementById('partner-posts').addEventListener('click', function (event) {
-  var button = buttonFromEvent(event);
-  if (!button || button.getAttribute('data-action') !== 'delete') return;
-  deletePost(button.getAttribute('data-id'));
-});
+function showPerson(person) {
+  if (!person) return;
+  activePerson = person;
+  document.getElementById('objective-page').classList.add('hidden');
+  document.getElementById('partner-profile').classList.remove('hidden');
+  var logsBox = person.logs && person.logs.length
+    ? person.logs.map(function (log) {
+      return el('div', { class: 'card shared-log' },
+        el('h3', { text: log.name }),
+        el('p', { class: 'entry-meta', text: Partners.kindLabel(log.kind) + (log.detail ? ' · ' + log.detail : '') })
+      );
+    })
+    : [el('p', { class: 'muted', text: person.demo ? 'No logs shared.' : 'You have not attached any logs.' })];
+  fill(document.getElementById('partner-profile-body'), [
+    el('div', { class: 'profile-head' },
+      avatarNode(person.initials, person.id),
+      el('div', null,
+        el('h2', { text: person.name }),
+        el('span', { class: person.demo ? 'badge demo-badge' : 'badge device-badge', text: person.demo ? 'Demo' : 'Only on this device' })
+      )
+    ),
+    el('p', {
+      class: 'muted',
+      text: person.demo
+        ? 'Sample profile. Not a real person. Only the logs chosen for this objective are shown.'
+        : 'This place is on your device. Other people cannot see it until you have an account.'
+    }),
+    person.level ? el('p', { text: person.level }) : null,
+    person.dates ? el('p', { class: 'queue-dates', text: person.dates }) : null,
+    person.note ? el('p', { class: 'queue-note', text: person.note }) : null,
+    el('h3', { text: person.demo ? 'Logs they chose to share' : 'Logs you chose to share' }),
+    el('div', { class: 'shared-logs' }, logsBox),
+    person.demo ? null : accountHint()
+  ]);
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
+}
 
-function renderContextChoices() {
-  var box = document.getElementById('post-context');
-  if (!logs.length) {
-    box.replaceChildren(el('p', { class: 'muted', text: 'No log entries to attach. Nothing is shared until you tick one.' }));
-    return;
+function personFromQueue(id) {
+  if (id === 'you') {
+    var membership = Partners.membershipFor(activeObjective, memberships);
+    if (!membership) return null;
+    return {
+      id: 'you',
+      demo: false,
+      name: currentUser || 'You',
+      initials: yourInitials(),
+      level: yourLevelText(),
+      dates: membership.dates,
+      note: membership.note,
+      logs: yourSharedLogs(membership)
+    };
   }
-  var rows = logs.slice().reverse().map(function (item) {
-    var input = el('input', { type: 'checkbox', value: item.id });
-    return el('label', { class: 'check-row' }, input, el('span', { text: item.name + ' · ' + kindLabel(item.kind) }));
+  var found = null;
+  Partners.demoQueue(activeObjective).forEach(function (person) {
+    if (person.id === id) found = person;
   });
-  box.replaceChildren.apply(box, [el('p', { class: 'muted', text: 'Attach log entries. None are included until you tick them.' })].concat(rows));
+  return found;
 }
 
-function openPostForm(objective, itemId) {
-  postingItemId = itemId || '';
-  document.getElementById('post-objective').value = objective || '';
-  document.getElementById('post-dates').value = '';
-  document.getElementById('post-looking').value = '';
-  renderContextChoices();
-  document.getElementById('post-form').classList.remove('hidden');
+function checkedLogIds() {
+  return Array.prototype.map.call(
+    document.querySelectorAll('#join-logs input:checked'),
+    function (input) { return input.value; }
+  );
+}
+
+function saveQueuePlace() {
+  if (!activeObjective) return;
+  memberships = Store.saveMemberships(Partners.upsertMembership(memberships, {
+    objectiveId: activeObjective.id,
+    objectiveName: activeObjective.name,
+    dates: document.getElementById('join-dates').value,
+    note: document.getElementById('join-note').value,
+    attachedIds: checkedLogIds()
+  }, { now: new Date().toISOString(), mint: Lgc.mintId }));
+  joinFormOpen = false;
+  renderObjective();
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
 }
 
 function startPartnerFrom(id) {
   var item = backlog.find(function (entry) { return entry.id === id; });
   if (!item) return;
+  rebuildObjectives();
+  var objective = Partners.resolveObjective(objectiveCatalog, item);
+  if (!objective) return;
   selectTab('partners');
-  openPostForm(item.name, item.id);
+  showObjective(objective);
 }
 
-document.getElementById('post-btn').addEventListener('click', function () {
-  var formOpen = !document.getElementById('post-form').classList.contains('hidden');
-  if (formOpen) {
-    document.getElementById('post-form').classList.add('hidden');
+document.getElementById('objective-query').addEventListener('input', function () {
+  suggestionIndex = -1;
+  renderSuggestions();
+});
+
+document.getElementById('objective-query').addEventListener('keydown', function (event) {
+  var options = document.querySelectorAll('#objective-suggestions [role="option"]');
+  if (event.key === 'ArrowDown' && options.length) {
+    event.preventDefault();
+    suggestionIndex = Math.min(options.length - 1, suggestionIndex + 1);
+  } else if (event.key === 'ArrowUp' && options.length) {
+    event.preventDefault();
+    suggestionIndex = Math.max(0, suggestionIndex - 1);
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    var pick = options[suggestionIndex] || options[0];
+    if (pick) openSuggestion(pick.getAttribute('data-objective'));
     return;
-  }
-  openPostForm('', '');
-});
-
-document.getElementById('save-post-btn').addEventListener('click', function () {
-  var attached = Array.prototype.map.call(
-    document.querySelectorAll('#post-context input:checked'),
-    function (input) { return input.value; }
-  );
-  var names = attached.map(function (id) {
-    var item = logs.find(function (entry) { return entry.id === id; });
-    return item ? item.name + ' (' + kindLabel(item.kind) + ')' : '';
-  }).filter(Boolean);
-  var post = Lgc.createPost({
-    objective: document.getElementById('post-objective').value,
-    dates: document.getElementById('post-dates').value,
-    looking: document.getElementById('post-looking').value,
-    itemId: postingItemId,
-    attachedIds: attached,
-    shared: names.length ? 'Context: ' + names.join(', ') : ''
+  } else if (event.key === 'Escape') {
+    document.getElementById('objective-suggestions').replaceChildren();
+    event.target.setAttribute('aria-expanded', 'false');
+    return;
+  } else return;
+  Array.prototype.forEach.call(options, function (option, index) {
+    option.setAttribute('aria-selected', index === suggestionIndex ? 'true' : 'false');
   });
-  if (!post) return alert('Objective required');
-  partnerPosts.push(post);
-  savePosts();
-  document.getElementById('post-form').classList.add('hidden');
-  postingItemId = '';
-  renderPosts();
+  if (options[suggestionIndex]) event.target.setAttribute('aria-activedescendant', options[suggestionIndex].id);
 });
 
-function deletePost(id) {
-  partnerPosts = partnerPosts.filter(function (post) { return post.id !== id; });
-  savePosts();
-  renderPosts();
-}
+document.getElementById('objective-suggestions').addEventListener('mousedown', function (event) {
+  event.preventDefault();
+});
+
+document.getElementById('objective-suggestions').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-objective]') : null;
+  if (!button) return;
+  openSuggestion(button.getAttribute('data-objective'));
+});
+
+document.getElementById('objective-back').addEventListener('click', showPartnerSearch);
+
+document.getElementById('partner-profile-back').addEventListener('click', function () {
+  if (activeObjective) showObjective(activeObjective);
+  else showPartnerSearch();
+});
+
+document.getElementById('queue-list').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-person]') : null;
+  if (!button) return;
+  showPerson(personFromQueue(button.getAttribute('data-person')));
+});
+
+document.getElementById('join-panel').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('button') : null;
+  if (!button || !event.currentTarget.contains(button)) return;
+  var id = button.id;
+  if (id === 'join-queue' || id === 'edit-queue') {
+    joinFormOpen = true;
+    renderObjective();
+  } else if (id === 'join-cancel') {
+    joinFormOpen = false;
+    renderObjective();
+  } else if (id === 'join-save') {
+    saveQueuePlace();
+  } else if (id === 'leave-queue') {
+    memberships = Store.saveMemberships(Partners.removeMembership(memberships, activeObjective));
+    joinFormOpen = false;
+    renderObjective();
+  }
+});
+
+document.querySelector('#app > nav button[data-tab="partners"]').addEventListener('click', showPartnerSearch);
 
 // ---- Export / Import ----
 document.getElementById('export-btn').addEventListener('click', function () {
-  var data = { logs: logs, backlog: backlog, partnerPosts: partnerPosts, exported: new Date().toISOString() };
+  var data = { logs: logs, backlog: backlog, partnerPosts: partnerPosts, queues: memberships, exported: new Date().toISOString() };
   var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   var link = document.createElement('a');
   var url = URL.createObjectURL(blob);
@@ -961,6 +1291,8 @@ function loadCollections() {
     collectionData = doc.collections && doc.collections[0];
     renderCollections();
     updateMapMarkers();
+    rebuildObjectives();
+    refreshActiveObjective();
   }).catch(function () {
     var box = document.getElementById('collections');
     if (box) box.textContent = 'The peak list could not be loaded.';
