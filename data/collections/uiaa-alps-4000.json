@@ -19,15 +19,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": "PD-/PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "Goûter Route (PD-/PD+)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "grade": "PD-",
+          "normalRoute": "Par les Grands Mulets - Itinéraire classique",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q583"
+          "wikidata": "Q583",
+          "sourceUrl": "https://www.camptocamp.org/routes/45967",
+          "sourceNote": "Wikipedia's list also gives the Goûter Route as PD- to PD+. Camptocamp's easiest classic route, the Grands Mulets, is PD-."
         },
         {
           "id": "uiaa-4000-002",
@@ -40,15 +38,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": "PD-/PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "Goûter Route (PD-/PD+) extension from summit of Mont Blanc",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "grade": "PD+",
+          "normalRoute": "Goûter Route, continued from the summit of Mont Blanc",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30395"
+          "wikidata": "Q30395",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_mountains_of_the_Alps_over_4000_metres",
+          "sourceNote": "Wikipedia lists this normal continuation as PD- to PD+. Recorded as PD+, the harder end. Camptocamp does not catalogue that short ridge separately; its routes from this summit start at AD+."
         },
         {
           "id": "uiaa-4000-003",
@@ -62,16 +58,14 @@
           ],
           "subrange": "Monte Rosa Massif",
           "grade": "AD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "From Monte Rosa Hut via Monte Rosa glacier (III, 40°, AD-)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "normalRoute": "Arête W (voie normale)",
           "terrain": [
-            "glacier"
+            "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q3403"
+          "wikidata": "Q3403",
+          "sourceUrl": "https://www.camptocamp.org/routes/46102",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-004",
@@ -85,14 +79,14 @@
           ],
           "subrange": "Monte Rosa Massif",
           "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "From Monte Rosa Hut via Silbersattel (II, PD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "normalRoute": "Arête S (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30397"
+          "wikidata": "Q30397",
+          "sourceUrl": "https://www.camptocamp.org/routes/45516",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-005",
@@ -106,17 +100,14 @@
           ],
           "subrange": "Monte Rosa Massif",
           "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "From Gnifetti Hut (Italian side) via Lys glacier or Monte Rosa Hut (Swiss side) via Grenz glacier to Lys Col and then along the Western flank and SE ridge to the summit (I, PD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "normalRoute": "Arête SE (voie normale)",
           "terrain": [
-            "glacier",
             "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30400"
+          "wikidata": "Q30400",
+          "sourceUrl": "https://www.camptocamp.org/routes/55889",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-006",
@@ -129,15 +120,15 @@
             "Switzerland"
           ],
           "subrange": "Monte Rosa Massif",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "F",
+          "normalRoute": "Par les glaciers de Lys et de Grenz (voie normale)",
+          "terrain": [
+            "glacier"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30405"
+          "wikidata": "Q30405",
+          "sourceUrl": "https://www.camptocamp.org/routes/49175",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-007",
@@ -150,14 +141,12 @@
           ],
           "subrange": "Mischabel Group",
           "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "From Domhütte via Northern flank to the summit (PD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "normalRoute": "Voie normale",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15117"
+          "wikidata": "Q15117",
+          "sourceUrl": "https://www.camptocamp.org/routes/45290",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-008",
@@ -170,18 +159,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": "AD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "From Gnifetti Hut via Lys glacier, Lys Col (Lisjoch) and East Ridge to the (Eastern) summit (II, AD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "grade": "PD+",
+          "normalRoute": "Arête SW (voie normale)",
           "terrain": [
-            "glacier",
             "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15120"
+          "wikidata": "Q15120",
+          "sourceUrl": "https://www.camptocamp.org/routes/56702",
+          "sourceNote": "The Wikipedia list's normal-route cell gives AD."
         },
         {
           "id": "uiaa-4000-009",
@@ -194,16 +180,14 @@
           ],
           "subrange": "Wallis Alps",
           "grade": "AD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "East ridge from Weisshornhütte (III, AD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "normalRoute": "Arête E",
           "terrain": [
             "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15122"
+          "wikidata": "Q15122",
+          "sourceUrl": "https://www.camptocamp.org/routes/55334",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-010",
@@ -216,16 +200,14 @@
           ],
           "subrange": "Mischabel Group",
           "grade": "AD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "South East ridge from Mischabeljochbiwak (III, AD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "normalRoute": "Arête S (voie normale)",
           "terrain": [
             "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30408"
+          "wikidata": "Q30408",
+          "sourceUrl": "https://www.camptocamp.org/routes/54586",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-011",
@@ -238,15 +220,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "West flank from Quintino Sella Hut (PD+)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD+",
+          "normalRoute": "Arête SW (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15120"
+          "wikidata": "Q15120",
+          "sourceUrl": "https://www.camptocamp.org/routes/56702",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
         },
         {
           "id": "uiaa-4000-012",
@@ -260,16 +242,14 @@
           ],
           "subrange": "Wallis Alps",
           "grade": "AD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "Hörnli ridge from Hörnli hut (III, AD)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "normalRoute": "Arête du Lion",
           "terrain": [
             "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q1374"
+          "wikidata": "Q1374",
+          "sourceUrl": "https://www.camptocamp.org/routes/57744",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-013",
@@ -281,15 +261,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD+",
+          "normalRoute": "Sortie depuis le sommet du Pilier Rouge du Brouillard",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30411"
+          "wikidata": "Q30411",
+          "sourceUrl": "https://www.camptocamp.org/routes/796500",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-014",
@@ -302,15 +280,15 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD+",
+          "normalRoute": "N face, standard ascent (+ E ridge)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30415"
+          "wikidata": "Q30415",
+          "sourceUrl": "https://www.camptocamp.org/routes/54990",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-015",
@@ -323,15 +301,15 @@
             "Switzerland"
           ],
           "subrange": "Monte Rosa Massif",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD",
+          "normalRoute": "Arête W (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30418"
+          "wikidata": "Q30418",
+          "sourceUrl": "https://www.camptocamp.org/routes/53047",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-016",
@@ -343,15 +321,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Arête S ou Wandfluegrat (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15125"
+          "wikidata": "Q15125",
+          "sourceUrl": "https://www.camptocamp.org/routes/54153",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-017",
@@ -364,15 +342,13 @@
             "Switzerland"
           ],
           "subrange": "Monte Rosa Massif",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Versant S (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30423"
+          "wikidata": "Q30423",
+          "sourceUrl": "https://www.camptocamp.org/routes/51948",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-018",
@@ -384,15 +360,15 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD",
+          "normalRoute": "Arête NE depuis la Mischabelhütte (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30426"
+          "wikidata": "Q30426",
+          "sourceUrl": "https://www.camptocamp.org/routes/55241",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-019",
@@ -404,15 +380,13 @@
             "Italy"
           ],
           "subrange": "Monte Rosa Massif",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD+",
+          "normalRoute": "Versant N (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30429"
+          "wikidata": "Q30429",
+          "sourceUrl": "https://www.camptocamp.org/routes/176760",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-020",
@@ -424,15 +398,13 @@
             "Switzerland"
           ],
           "subrange": "Grand Combin",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Versant NW (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15126"
+          "wikidata": "Q15126",
+          "sourceUrl": "https://www.camptocamp.org/routes/55346",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-021",
@@ -445,15 +417,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD",
+          "normalRoute": "Par l'Aiguille du Goûter",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30434"
+          "wikidata": "Q30434",
+          "sourceUrl": "https://www.camptocamp.org/routes/56732",
+          "sourceNote": "Camptocamp also rates the Italian normal (Via del Papa) PD+. The Goûter route, the usual normal, is PD."
         },
         {
           "id": "uiaa-4000-022",
@@ -465,15 +435,15 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD-",
+          "normalRoute": "Arête S",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30436"
+          "wikidata": "Q30436",
+          "sourceUrl": "https://www.camptocamp.org/routes/459504",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-023",
@@ -485,15 +455,13 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD",
+          "normalRoute": "Versant SW",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15127"
+          "wikidata": "Q15127",
+          "sourceUrl": "https://www.camptocamp.org/routes/48211",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-024",
@@ -505,15 +473,13 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD",
+          "normalRoute": "Face N (Voie Normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30438"
+          "wikidata": "Q30438",
+          "sourceUrl": "https://www.camptocamp.org/routes/53896",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-025",
@@ -525,15 +491,15 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "D",
+          "normalRoute": "Arête de Peuterey depuis bivouac Eccles",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30441"
+          "wikidata": "Q30441",
+          "sourceUrl": "https://www.camptocamp.org/routes/365967",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-026",
@@ -545,15 +511,15 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Nadelgrat bajando por el Galenjoch",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30444"
+          "wikidata": "Q30444",
+          "sourceUrl": "https://www.camptocamp.org/routes/229568",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-027",
@@ -566,15 +532,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD-",
+          "normalRoute": "Cresta SE - Via normale, dal rif. Quintino Sella",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30446"
+          "wikidata": "Q30446",
+          "sourceUrl": "https://www.camptocamp.org/routes/56031",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-028",
@@ -586,15 +550,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Arête SE puis SW par la Gabel (voie normale depuis la Rothornhütte)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15128"
+          "wikidata": "Q15128",
+          "sourceUrl": "https://www.camptocamp.org/routes/55292",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-029",
@@ -606,15 +570,13 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD+",
+          "normalRoute": "por la Dirrugat y la vertiente NW",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30448"
+          "wikidata": "Q30448",
+          "sourceUrl": "https://www.camptocamp.org/routes/452101",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-030",
@@ -626,15 +588,13 @@
             "Italy"
           ],
           "subrange": "Monte Rosa Massif",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Versant NW (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30450"
+          "wikidata": "Q30450",
+          "sourceUrl": "https://www.camptocamp.org/routes/196523",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-031",
@@ -647,15 +607,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": " Standard ascent",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30453"
+          "wikidata": "Q30453",
+          "sourceUrl": "https://www.camptocamp.org/routes/53890",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-032",
@@ -667,15 +625,13 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD",
+          "normalRoute": "Versant E depuis Langfluh",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15130"
+          "wikidata": "Q15130",
+          "sourceUrl": "https://www.camptocamp.org/routes/45559",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-033",
@@ -687,15 +643,13 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD",
+          "normalRoute": "Voie normale par la Berghaus Flue",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30455"
+          "wikidata": "Q30455",
+          "sourceUrl": "https://www.camptocamp.org/routes/56178",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-034",
@@ -707,15 +661,15 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD",
+          "normalRoute": "Arête NE",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15293"
+          "wikidata": "Q15293",
+          "sourceUrl": "https://www.camptocamp.org/routes/56751",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-035",
@@ -727,15 +681,15 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "F",
+          "normalRoute": "Arête WNW (Voie Normale) de Britanniahütte",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30457"
+          "wikidata": "Q30457",
+          "sourceUrl": "https://www.camptocamp.org/routes/45512",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-036",
@@ -747,15 +701,13 @@
             "Switzerland"
           ],
           "subrange": "Grand Combin",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD-",
+          "normalRoute": "Traversée du refuge Chiarella à Fionnay par les sommets du Grand Combin",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q651715"
+          "wikidata": "Q651715",
+          "sourceUrl": "https://www.camptocamp.org/routes/530039",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-037",
@@ -768,15 +720,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": " Standard ascent",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q3816904"
+          "wikidata": "Q3816904",
+          "sourceUrl": "https://www.camptocamp.org/routes/53890",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-038",
@@ -789,15 +739,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD-",
+          "normalRoute": "arista SW",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30459"
+          "wikidata": "Q30459",
+          "sourceUrl": "https://www.camptocamp.org/routes/46073",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-039",
@@ -810,15 +758,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Versant S (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q16540"
+          "wikidata": "Q16540",
+          "sourceUrl": "https://www.camptocamp.org/routes/53816",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-040",
@@ -830,15 +776,15 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD+",
+          "normalRoute": "Arête SE par le Rottalsattel (Voie Normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15312"
+          "wikidata": "Q15312",
+          "sourceUrl": "https://www.camptocamp.org/routes/45560",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-041",
@@ -851,15 +797,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Versant SW (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q2629296"
+          "wikidata": "Q2629296",
+          "sourceUrl": "https://www.camptocamp.org/routes/187953",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-042",
@@ -871,15 +815,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Versant NW (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30464"
+          "wikidata": "Q30464",
+          "sourceUrl": "https://www.camptocamp.org/routes/45969",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-043",
@@ -892,15 +834,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Traversée W → E",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q25247930"
+          "wikidata": "Q25247930",
+          "sourceUrl": "https://www.camptocamp.org/routes/187191",
+          "sourceNote": "Easiest graded Camptocamp route on Breithorn E (4,139 m), the eastern summit."
         },
         {
           "id": "uiaa-4000-044",
@@ -912,15 +852,13 @@
             "Switzerland"
           ],
           "subrange": "Grand Combin",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD+",
+          "normalRoute": "A dos de Mulets",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q2714286"
+          "wikidata": "Q2714286",
+          "sourceUrl": "https://www.camptocamp.org/routes/1545622",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-045",
@@ -932,15 +870,13 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD+",
+          "normalRoute": "Greben Moine",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30466"
+          "wikidata": "Q30466",
+          "sourceUrl": "https://www.camptocamp.org/routes/56802",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-046",
@@ -952,15 +888,15 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q16569708"
+          "wikidata": "Q16569708",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-047",
@@ -972,15 +908,15 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD+",
+          "normalRoute": "N ridge from Eccles hut",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30472"
+          "wikidata": "Q30472",
+          "sourceUrl": "https://www.camptocamp.org/routes/664017",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-048",
@@ -992,15 +928,15 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD+",
+          "normalRoute": "Arête SE",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q16525"
+          "wikidata": "Q16525",
+          "sourceUrl": "https://www.camptocamp.org/routes/54703",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-049",
@@ -1013,15 +949,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Traversée Grandes Jorasses → Rochefort",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q1995374"
+          "wikidata": "Q1995374",
+          "sourceUrl": "https://www.camptocamp.org/routes/195437",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-050",
@@ -1033,15 +967,15 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q16593000"
+          "wikidata": "Q16593000",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-051",
@@ -1054,15 +988,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Traversée W → E",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q2629309"
+          "wikidata": "Q2629309",
+          "sourceUrl": "https://www.camptocamp.org/routes/187191",
+          "sourceNote": "Easiest graded Camptocamp route on Breithorn Pointe 4106 (Gemello del Breithorn)."
         },
         {
           "id": "uiaa-4000-052",
@@ -1074,15 +1006,13 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD+",
+          "normalRoute": "Pilier S",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30476"
+          "wikidata": "Q30476",
+          "sourceUrl": "https://www.camptocamp.org/routes/132284",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-053",
@@ -1094,15 +1024,13 @@
             "France"
           ],
           "subrange": "Pelvoux",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F+",
+          "normalRoute": "Versant N (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30480"
+          "wikidata": "Q30480",
+          "sourceUrl": "https://www.camptocamp.org/routes/53811",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-054",
@@ -1114,15 +1042,15 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q18006050"
+          "wikidata": "Q18006050",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-055",
@@ -1135,15 +1063,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD+",
+          "normalRoute": "Arête SW (voie normale)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30485"
+          "wikidata": "Q30485",
+          "sourceUrl": "https://www.camptocamp.org/routes/54631",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-056",
@@ -1155,15 +1083,13 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD+",
+          "normalRoute": "Traversée Lauteraarhorn - Schreckhorn",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q16539"
+          "wikidata": "Q16539",
+          "sourceUrl": "https://www.camptocamp.org/routes/137805",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-057",
@@ -1176,15 +1102,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Versant SW",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q2620095"
+          "wikidata": "Q2620095",
+          "sourceUrl": "https://www.camptocamp.org/routes/55195",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-058",
@@ -1196,15 +1120,15 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q11943908"
+          "wikidata": "Q11943908",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-059",
@@ -1216,15 +1140,15 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD+",
+          "normalRoute": "Arête du Brouillard",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30488"
+          "wikidata": "Q30488",
+          "sourceUrl": "https://www.camptocamp.org/routes/175866",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-060",
@@ -1237,15 +1161,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Traversée Grandes Jorasses → Rochefort",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q3925690"
+          "wikidata": "Q3925690",
+          "sourceUrl": "https://www.camptocamp.org/routes/195437",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-061",
@@ -1257,15 +1179,15 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "D+",
+          "normalRoute": "Arête du Diable",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q11915635"
+          "wikidata": "Q11915635",
+          "sourceUrl": "https://www.camptocamp.org/routes/54098",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-062",
@@ -1277,15 +1199,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Arête WSW (Arbengrat)",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30490"
+          "wikidata": "Q30490",
+          "sourceUrl": "https://www.camptocamp.org/routes/176641",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-063",
@@ -1297,15 +1219,15 @@
             "Italy"
           ],
           "subrange": "Graian Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "F+",
+          "normalRoute": "Par le Glacier du Grand Paradis (voie normale)",
+          "terrain": [
+            "glacier"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q1372"
+          "wikidata": "Q1372",
+          "sourceUrl": "https://www.camptocamp.org/routes/53835",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-064",
@@ -1318,15 +1240,15 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Arête S",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30493"
+          "wikidata": "Q30493",
+          "sourceUrl": "https://www.camptocamp.org/routes/696380",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-065",
@@ -1338,15 +1260,13 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD-",
+          "normalRoute": "Versant SW par le Fieschersattel",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30495"
+          "wikidata": "Q30495",
+          "sourceUrl": "https://www.camptocamp.org/routes/128778",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-066",
@@ -1358,15 +1278,15 @@
             "Switzerland"
           ],
           "subrange": "Bernina Group",
-          "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "Spallagrat from Marco e Rosa hut (PD+, III)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD+",
+          "normalRoute": "Arête S ou Spallagrat",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q15132"
+          "wikidata": "Q15132",
+          "sourceUrl": "https://www.camptocamp.org/routes/56670",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
         },
         {
           "id": "uiaa-4000-067",
@@ -1378,15 +1298,15 @@
             "Italy"
           ],
           "subrange": "Monte Rosa Massif",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "PD-",
+          "normalRoute": "Par le glacier d'Indren (voie normale)",
+          "terrain": [
+            "glacier"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30450"
+          "wikidata": "Q30450",
+          "sourceUrl": "https://www.camptocamp.org/routes/50967",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-068",
@@ -1399,15 +1319,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Traversée Grandes Jorasses → Rochefort",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q3925668"
+          "wikidata": "Q3925668",
+          "sourceUrl": "https://www.camptocamp.org/routes/195437",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-069",
@@ -1419,15 +1337,13 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD",
+          "normalRoute": "Traversée E → W, de Münster à Faflerlalp",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30496"
+          "wikidata": "Q30496",
+          "sourceUrl": "https://www.camptocamp.org/routes/1107218",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-070",
@@ -1439,15 +1355,15 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Couloir S et arête SE",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30499"
+          "wikidata": "Q30499",
+          "sourceUrl": "https://www.camptocamp.org/routes/55881",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-071",
@@ -1459,15 +1375,13 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "D-",
+          "normalRoute": "Greben Jardin",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30502"
+          "wikidata": "Q30502",
+          "sourceUrl": "https://www.camptocamp.org/routes/55897",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-072",
@@ -1479,15 +1393,13 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Par la cabane Bordier (Voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30511"
+          "wikidata": "Q30511",
+          "sourceUrl": "https://www.camptocamp.org/routes/443666",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-073",
@@ -1499,15 +1411,13 @@
             "Switzerland"
           ],
           "subrange": "Mischabel Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F",
+          "normalRoute": "Dalla Langfluh per il Feejoch",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30525"
+          "wikidata": "Q30525",
+          "sourceUrl": "https://www.camptocamp.org/routes/45520",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-074",
@@ -1519,15 +1429,13 @@
             "Switzerland"
           ],
           "subrange": "Bernese Alps",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "PD-",
+          "normalRoute": "Versant SW par le Fieschersattel",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30527"
+          "wikidata": "Q30527",
+          "sourceUrl": "https://www.camptocamp.org/routes/128778",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-075",
@@ -1540,15 +1448,15 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD",
+          "normalRoute": "Par l'Arête de Rochefort",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30533"
+          "wikidata": "Q30533",
+          "sourceUrl": "https://www.camptocamp.org/routes/56128",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-076",
@@ -1560,15 +1468,13 @@
             "France"
           ],
           "subrange": "Pelvoux",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "F+",
+          "normalRoute": "Versant N (voie normale)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q2551474"
+          "wikidata": "Q2551474",
+          "sourceUrl": "https://www.camptocamp.org/routes/53811",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-077",
@@ -1580,15 +1486,13 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "Normal route via NW flank from Hohsaas (PD-)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "grade": "PD-",
+          "normalRoute": "Voie Normale (versant NW)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30529"
+          "wikidata": "Q30529",
+          "sourceUrl": "https://www.camptocamp.org/routes/45557",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
         },
         {
           "id": "uiaa-4000-078",
@@ -1601,15 +1505,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "D-",
+          "normalRoute": "SW Face by the Burgener Slabs",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30541"
+          "wikidata": "Q30541",
+          "sourceUrl": "https://www.camptocamp.org/routes/54431",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-079",
@@ -1621,15 +1523,15 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
-          "terrain": null,
-          "gear": null,
-          "gearSource": null,
+          "grade": "AD+",
+          "normalRoute": "Arête du Brouillard",
+          "terrain": [
+            "ridge"
+          ],
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30546"
+          "wikidata": "Q30546",
+          "sourceUrl": "https://www.camptocamp.org/routes/175866",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-080",
@@ -1641,17 +1543,15 @@
             "Switzerland"
           ],
           "subrange": "Wallis Alps",
-          "grade": "PD",
-          "gradeSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
-          "normalRoute": "Normal route via W ridge from Hohsaas (PD-)",
-          "normalRouteSource": "Wikipedia: List of mountains of the Alps over 4000 metres, column “Easiest (normal) route to summit” (CC BY-SA 4.0). The list of 82 summits is the UIAA official list (1994).",
+          "grade": "PD-",
+          "normalRoute": "Arête WSW (Voie Normale)",
           "terrain": [
             "ridge"
           ],
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q16650"
+          "wikidata": "Q16650",
+          "sourceUrl": "https://www.camptocamp.org/routes/53794",
+          "sourceNote": "The Wikipedia list's normal-route cell gives PD."
         },
         {
           "id": "uiaa-4000-081",
@@ -1664,15 +1564,13 @@
             "Italy"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD",
+          "normalRoute": "Couloir Eccles ",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q404672"
+          "wikidata": "Q404672",
+          "sourceUrl": "https://www.camptocamp.org/routes/1494350",
+          "sourceNote": null
         },
         {
           "id": "uiaa-4000-082",
@@ -1684,15 +1582,13 @@
             "France"
           ],
           "subrange": "Mont Blanc Group",
-          "grade": null,
-          "gradeSource": null,
-          "normalRoute": null,
-          "normalRouteSource": null,
+          "grade": "AD+",
+          "normalRoute": "Vzhodni steber (normalka)",
           "terrain": null,
-          "gear": null,
-          "gearSource": null,
           "coordSource": "Wikidata coordinate (P625), CC0, via the English Wikipedia sitelink for this summit.",
-          "wikidata": "Q30549"
+          "wikidata": "Q30549",
+          "sourceUrl": "https://www.camptocamp.org/routes/54257",
+          "sourceNote": null
         }
       ]
     }

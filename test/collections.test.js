@@ -11,17 +11,12 @@ assert.strictEqual(collection.id, 'uiaa-alps-4000');
 assert.strictEqual(collection.peaks.length, 82);
 
 var graded = collection.peaks.filter(function (peak) { return peak.grade; });
-var geared = collection.peaks.filter(function (peak) { return peak.gear; });
-assert.strictEqual(graded.length, 14);
-assert.strictEqual(geared.length, 0);
+assert.strictEqual(graded.length, 82);
 graded.forEach(function (peak) {
-  assert.ok(peak.gradeSource);
   assert.ok(peak.normalRoute);
-});
-collection.peaks.forEach(function (peak) {
-  assert.ok(peak.lat && peak.lng);
-  assert.strictEqual(peak.gear, null);
-  if (!peak.grade) assert.strictEqual(peak.gradeSource, null);
+  assert.ok(peak.sourceUrl);
+  assert.ok(!Object.prototype.hasOwnProperty.call(peak, 'gear'));
+  assert.ok(!Object.prototype.hasOwnProperty.call(peak, 'gearSource'));
 });
 
 var blanc = collection.peaks.filter(function (peak) { return peak.name === 'Mont Blanc'; })[0];
@@ -42,15 +37,17 @@ var summed = groups.reduce(function (n, group) { return n + group.peaks.length; 
 assert.strictEqual(summed, 82);
 
 var signal = collection.peaks.filter(function (peak) { return peak.name === 'Signalkuppe'; })[0];
-assert.strictEqual(signal.grade, null);
+assert.strictEqual(signal.grade, 'F');
+assert.ok(signal.sourceUrl.indexOf('camptocamp.org') >= 0);
+var ungraded = { id: 'x', name: 'Ungraded', elevation: 4300, subrange: signal.subrange, countries: signal.countries, grade: null };
 var level = Col.estimateLevel(logs, collection.peaks, null);
 assert.strictEqual(level.elevation, 4809);
 assert.ok(level.grade);
-var plan = Col.suggestBuildUp(signal, collection.peaks, level);
+var plan = Col.suggestBuildUp(ungraded, collection.peaks.concat([ungraded]), level);
 assert.ok(plan.note.indexOf('unknown') >= 0);
 assert.ok(plan.steps.length > 0);
 plan.steps.forEach(function (step) {
-  assert.ok(step.elevation < signal.elevation);
+  assert.ok(step.elevation < ungraded.elevation);
 });
 
 var manual = Col.estimateLevel(logs, collection.peaks, { useManual: true, grade: 'F', elevation: 2500, glacier: false });
@@ -73,4 +70,4 @@ assert.ok(html.includes('Build up') === false);
 assert.ok(html.includes('Your level'));
 assert.ok(!html.includes('Pyrenees'));
 
-console.log('collections tests ok', graded.length, 'graded,', 82 - graded.length, 'grade unknown, gear sourced', geared.length);
+console.log('collections tests ok', graded.length, 'of 82 graded');

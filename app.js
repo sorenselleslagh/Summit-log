@@ -993,8 +993,7 @@ function renderCollections() {
 
 function peakLine(peak) {
   return peak.elevation + ' m · ' + Col.countryLabel(peak) + ' · ' + peak.subrange +
-    ' · grade ' + (peak.grade || 'unknown') +
-    ' · gear ' + (peak.gear || 'unknown');
+    ' · grade ' + (peak.grade || 'unknown');
 }
 
 function showPeakDetail(peak) {

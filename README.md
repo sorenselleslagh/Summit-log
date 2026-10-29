@@ -75,13 +75,17 @@ The display name (`summitlog_user`) is a label on this device. It does not split
 
 `data/collections/uiaa-alps-4000.json` is the UIAA list of 82 Alpine 4000ers (1994), grouped by country and sub-range. Another range is another object in `collections`, so the file can grow later. The Pyrenees are not included yet.
 
-Elevations, countries, sub-ranges, and normal-route notes come from the Wikipedia table [List of mountains of the Alps over 4000 metres](https://en.wikipedia.org/wiki/List_of_mountains_of_the_Alps_over_4000_metres) (CC BY-SA 4.0), which reproduces the UIAA list. Coordinates are Wikidata P625 (CC0), linked from the English Wikipedia article for that summit. A normal-route grade is stored only when that Wikipedia column states one, with the column cited on the peak. Gear is left empty for every peak: that column does not state crampons, a rope, or glacier kit, and those are not guessed. The screen shows “unknown” in that case.
+Elevations, countries, and sub-ranges come from the Wikipedia table [List of mountains of the Alps over 4000 metres](https://en.wikipedia.org/wiki/List_of_mountains_of_the_Alps_over_4000_metres) (CC BY-SA 4.0), which reproduces the UIAA list. Coordinates are Wikidata P625 (CC0).
 
-Of the 82 peaks, **14 have a sourced grade** and **68 are unknown**. **None have sourced gear** (82 unknown).
+Each peak’s normal-route **grade** and the **route name** it applies to come from [Camptocamp](https://www.camptocamp.org) (content CC BY-SA), using the summit waypoint and the easiest alpine route, preferring one titled as the voie normale. The `sourceUrl` is that route’s Camptocamp page. Grades use the alpine scale (F, PD-, PD, PD+, AD-, AD, AD+, D, TD, and the same with +/−). Where that choice differs from the Wikipedia table, the peak’s `sourceNote` says so and Camptocamp’s grade is the one stored. Mont Blanc de Courmayeur is the exception: Camptocamp does not list the short continuation from Mont Blanc, so its grade is the Wikipedia table’s PD- to PD+, stored as PD+.
+
+Gear is not stored or shown.
+
+All **82** peaks have a sourced grade. None are unknown.
 
 Ticking a peak logs it as a Peak (or links the log entry you already have, matched by that collection id or by name, so Matterhorn and Matterhorn (Hörnli) are one summit). A logged route or hike that points at that log entry ticks the same box. Progress such as `2/82` is only yours. There is no leaderboard.
 
-On a peak, **Build up to this peak** suggests a few lower summits in the same area. Your level is the highest elevation and the hardest sourced grade among peaks you have logged, plus glacier experience only when a logged peak’s route text actually mentions a glacier. You can set the level yourself under Profile. If this peak’s grade is unknown, the note says so and the suggestions use elevation and area only.
+On a peak, **Build up to this peak** suggests a few lower summits in the same area, using only elevation, region, and grade when those fields exist. Your level is the highest elevation and the hardest sourced grade among peaks you have logged. Glacier experience is set only if you say so in Profile, or when a logged peak’s cited route name actually contains the word glacier. You can override the estimate under Profile → Your level. If a grade were missing, the note would say so instead of inventing one.
 
 ## Roadmap
 
