@@ -105,6 +105,62 @@ assert.strictEqual(finished.logs.length, 2);
 assert.ok(finished.logs.some(function (item) { return item.id === linkedPeak.id; }));
 assert.strictEqual(finished.logs.filter(function (item) { return item.id === ridge.id; })[0].createdAt, ridge.createdAt);
 
+var mineMint = sequenceMint();
+var mineCtx = { now: NOW, mint: mineMint };
+var kept = logic.createLog({ name: 'Old peak', kind: 'peak', date: '2020-01-02', notes: 'keep me' }, mineCtx);
+var wish = logic.createLog({ name: 'Wish', kind: 'route', activity: 'sport', grade: '6a', notes: 'someday' }, mineCtx);
+var unified = logic.unifyLists([kept], [wish], mineCtx);
+assert.strictEqual(unified.length, 2);
+assert.strictEqual(unified[0].id, kept.id);
+assert.strictEqual(unified[0].createdAt, kept.createdAt);
+assert.strictEqual(unified[0].status, 'done');
+assert.strictEqual(unified[0].date, '2020-01-02');
+assert.strictEqual(unified[0].notes, 'keep me');
+assert.strictEqual(unified[1].id, wish.id);
+assert.strictEqual(unified[1].createdAt, wish.createdAt);
+assert.strictEqual(unified[1].status, 'planned');
+assert.strictEqual(unified[1].priority, 0);
+var marked = logic.markDone(unified, wish.id, { date: '2024-05-01', notes: 'dry rock' }, { now: LATER, mint: sequenceMint() });
+var finishedWish = marked.filter(function (item) { return item.id === wish.id; })[0];
+assert.strictEqual(finishedWish.status, 'done');
+assert.strictEqual(finishedWish.date, '2024-05-01');
+assert.strictEqual(finishedWish.notes, 'dry rock');
+assert.strictEqual(finishedWish.createdAt, wish.createdAt);
+assert.strictEqual(finishedWish.updatedAt, LATER);
+var repeat = logic.createLog({ name: 'Old peak', kind: 'peak', date: '2024-06-01', status: 'done' }, mineCtx);
+assert.notStrictEqual(repeat.id, kept.id);
+assert.strictEqual(repeat.name, kept.name);
+var ordered = logic.reorderPlanned(
+  logic.unifyLists([], [wish, kept], mineCtx),
+  [wish.id, kept.id],
+  { now: LATER, mint: sequenceMint() }
+);
+assert.strictEqual(logic.plannedOrder(ordered)[0].id, wish.id);
+assert.strictEqual(logic.plannedOrder(ordered)[0].createdAt, wish.createdAt);
+
+var legacyStore = memoryStorage({
+  summitlogs: JSON.stringify([{ id: kept.id, name: 'Old peak', kind: 'peak', date: '2020-01-02', notes: 'keep me', createdAt: NOW, updatedAt: NOW }]),
+  summitbacklog: JSON.stringify([{ id: wish.id, name: 'Wish', kind: 'route', activity: 'sport', grade: '6a', notes: 'someday', createdAt: NOW, updatedAt: NOW }])
+});
+var legacyLog = legacyStore.getItem('summitlogs');
+var legacyBack = legacyStore.getItem('summitbacklog');
+var migratedRepo = storageApi.createRepository({
+  storage: legacyStore,
+  logic: logic,
+  now: function () { return NOW; },
+  mint: sequenceMint()
+});
+var migratedItems = migratedRepo.loadItems();
+assert.strictEqual(migratedItems.length, 2);
+assert.strictEqual(migratedItems[0].id, kept.id);
+assert.strictEqual(migratedItems[0].createdAt, NOW);
+assert.strictEqual(migratedItems[1].id, wish.id);
+assert.strictEqual(migratedItems[1].status, 'planned');
+assert.strictEqual(legacyStore.getItem('summitlogs'), legacyLog);
+assert.strictEqual(legacyStore.getItem('summitbacklog'), legacyBack);
+assert.strictEqual(legacyStore.getItem('summitlog_schema'), '2');
+assert.strictEqual(migratedRepo.loadItems().length, 2);
+
 var zero = logic.normalizeLog({ id: 1, name: 'Null Island', lat: 0, lng: 0, elevation: 0, date: '2024-01-02' }, ctx());
 assert.strictEqual(zero.lat, 0);
 assert.strictEqual(zero.lng, 0);
@@ -280,7 +336,12 @@ assert.ok(html.includes('illustrations/mountain.svg'));
 assert.ok(html.includes('View intro'));
 assert.ok(!html.includes('I have an account'));
 assert.ok(!html.includes('Import data'));
-assert.ok(html.includes('data-tab="backlog"'));
+assert.ok(html.includes('data-tab="mine"'));
+assert.ok(html.includes('>Backlog</button>'));
+assert.ok(html.includes('<h2>Backlog</h2>'));
+assert.ok(!html.includes('My peaks'));
+assert.ok(!html.includes('>Mine</button>'));
+assert.ok(!html.includes('data-tab="backlog"'));
 assert.ok(html.includes('Connections'));
 assert.ok(html.includes('coming soon') || html.includes('Coming soon'));
 assert.ok(!html.includes('src="/'));

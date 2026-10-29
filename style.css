@@ -383,6 +383,43 @@ p { margin: 0.25rem 0; }
 .profile-head h2 { margin-bottom: 0.25rem; }
 .shared-log { margin-top: 0.6rem; }
 #join-panel { margin-top: 0.4rem; }
+
+.segments {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  margin: 0.75rem 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.segments button {
+  flex: 1;
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 650;
+}
+.segments button.active { background: var(--accent); color: white; }
+.mine-tools { display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 0.75rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  min-height: 44px;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+}
+.chip.active, .chip[aria-pressed="true"] { background: var(--accent-soft); color: #93c5fd; border-color: var(--accent); }
+.mine-actions { display: flex; gap: 0.5rem; margin-bottom: 0.8rem; }
+.mine-actions button { flex: 1; }
+.icon-btn { min-width: 44px; padding: 0.45rem 0.7rem; }
+.mine-card[draggable="true"] { cursor: grab; }
+#done-prompt { margin-bottom: 0.8rem; }
 .post-meta { color: var(--muted); font-size: 0.9rem; }
 .post-looking { margin: 0.5rem 0; white-space: pre-wrap; }
 .post-shared { font-size: 0.9rem; color: #93c5fd; }
