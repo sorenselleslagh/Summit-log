@@ -2,6 +2,7 @@
 var Lgc = window.SummitLogLogic;
 var Store = window.SummitLogStorage;
 var Over = window.SummitLogOverpass;
+var Col = window.SummitCollections;
 
 var logs = [];
 var backlog = [];
@@ -14,6 +15,7 @@ var osmMarkers = [];
 var editingId = null;
 var editingList = 'log';
 var postingItemId = '';
+var collectionData = null;
 var deferredInstall = null;
 
 var areas = [
@@ -103,6 +105,8 @@ function showApp() {
   renderBacklog();
   renderPosts();
   renderFamous();
+  loadCollections();
+  fillLevelForm();
 }
 
 function showLogin() {
@@ -354,6 +358,7 @@ function renderLogs() {
   renderResume();
   syncAreas();
   updateMapMarkers();
+  renderCollections();
 }
 
 function renderBacklog() {
@@ -722,9 +727,18 @@ function updateMapMarkers() {
   if (!map) return;
   markers.forEach(function (marker) { map.removeLayer(marker); });
   markers = [];
-  logs.forEach(function (item) { addCircle(item, '#3b82f6'); });
-  backlog.forEach(function (item) { addCircle(item, '#f59e0b'); });
-  if (document.getElementById('osm-layer').checked) {
+  logs.forEach(function (item) {
+    if (!collectionPeakByName(item)) addCircle(item, '#3b82f6');
+  });
+  backlog.forEach(function (item) {
+    if (!collectionPeakByName(item)) addCircle(item, '#f59e0b');
+  });
+  if (collectionData) {
+    collectionData.peaks.forEach(function (peak) {
+      addCircle(peak, Col.isSummited(peak, logs) ? '#22c55e' : '#64748b', collectionPopup(peak));
+    });
+  }
+  if (document.getElementById('osm-layer') && document.getElementById('osm-layer').checked) {
     Lgc.FAMOUS.forEach(function (place) { addCircle(place, '#a78bfa', placePopup(place)); });
     osmMarkers.forEach(function (place) { addCircle(place, '#a78bfa', placePopup(place)); });
   }
@@ -894,6 +908,259 @@ document.getElementById('famous-list').addEventListener('click', function (event
 
 document.getElementById('osm-layer').addEventListener('change', updateMapMarkers);
 document.getElementById('load-peaks-btn').addEventListener('click', loadPeaksInView);
+
+function collectionPeakByName(item) {
+  if (!collectionData || !item) return null;
+  var want = Col.normName(item.name);
+  var found = null;
+  collectionData.peaks.forEach(function (peak) {
+    if (Col.normName(peak.name) === want) found = peak;
+  });
+  return found;
+}
+
+function loadCollections() {
+  if (collectionData) {
+    renderCollections();
+    return;
+  }
+  fetch('data/collections/uiaa-alps-4000.json').then(function (response) {
+    if (!response.ok) throw new Error('collections');
+    return response.json();
+  }).then(function (doc) {
+    collectionData = doc.collections && doc.collections[0];
+    renderCollections();
+    updateMapMarkers();
+  }).catch(function () {
+    var box = document.getElementById('collections');
+    if (box) box.textContent = 'The peak list could not be loaded.';
+  });
+}
+
+function formatProgress(peaks) {
+  var count = Col.progress(peaks, logs);
+  return count.done + '/' + count.total;
+}
+
+function renderCollections() {
+  var box = document.getElementById('collections');
+  if (!box || !collectionData) return;
+  var total = Col.progress(collectionData.peaks, logs);
+  var groups = Col.groupCollection(collectionData);
+  var details = el('details', { class: 'collection-block', open: 'open' },
+    el('summary', null,
+      el('span', { text: collectionData.region + ' · ' + collectionData.name }),
+      el('span', { class: 'progress-count', text: total.done + '/' + total.total })
+    )
+  );
+  groups.forEach(function (group) {
+    var country = el('details', { class: 'subrange-block' },
+      el('summary', null,
+        el('span', { text: group.name }),
+        el('span', { class: 'progress-count', text: formatProgress(group.peaks) })
+      )
+    );
+    group.subranges.forEach(function (sub) {
+      var block = el('details', { class: 'subrange-block' },
+        el('summary', null,
+          el('span', { text: sub.name }),
+          el('span', { class: 'progress-count', text: formatProgress(sub.peaks) })
+        )
+      );
+      sub.peaks.forEach(function (peak) {
+        var input = el('input', { type: 'checkbox', 'aria-label': 'Mark ' + peak.name + ' summited' });
+        input.checked = Col.isSummited(peak, logs);
+        input.addEventListener('change', function () {
+          if (input.checked) markSummited(peak);
+          else clearSummited(peak);
+        });
+        var button = el('button', { class: 'linkish', type: 'button', text: peak.name });
+        button.addEventListener('click', function () { showPeakDetail(peak); });
+        block.appendChild(el('div', { class: 'peak-row' },
+          input,
+          el('div', null,
+            button,
+            el('p', { class: 'entry-meta', text: peakLine(peak) })
+          )
+        ));
+      });
+      country.appendChild(block);
+    });
+    details.appendChild(country);
+  });
+  box.replaceChildren(details);
+}
+
+function peakLine(peak) {
+  return peak.elevation + ' m · ' + Col.countryLabel(peak) + ' · ' + peak.subrange +
+    ' · grade ' + (peak.grade || 'unknown') +
+    ' · gear ' + (peak.gear || 'unknown');
+}
+
+function showPeakDetail(peak) {
+  var box = document.getElementById('peak-detail');
+  if (!box) return;
+  var level = Col.estimateLevel(logs, collectionData.peaks, Store.getLevel());
+  var plan = Col.suggestBuildUp(peak, collectionData.peaks, level);
+  var summited = el('button', { class: 'primary', type: 'button', text: Col.isSummited(peak, logs) ? 'Summited' : 'Mark summited' });
+  summited.addEventListener('click', function () {
+    if (Col.isSummited(peak, logs)) clearSummited(peak);
+    else markSummited(peak);
+    showPeakDetail(peak);
+  });
+  var backlogBtn = el('button', { class: 'secondary', type: 'button', text: 'Add to backlog' });
+  backlogBtn.addEventListener('click', function () {
+    addCatalogItem({
+      name: peak.name,
+      kind: 'peak',
+      lat: peak.lat,
+      lng: peak.lng,
+      elevation: peak.elevation,
+      note: peak.normalRoute || ''
+    });
+  });
+  var steps = plan.steps.map(function (step) {
+    var button = el('button', { class: 'linkish', type: 'button', text: step.name });
+    button.addEventListener('click', function () { showPeakDetail(step); });
+    return el('div', { class: 'build-step' },
+      button,
+      el('p', { class: 'entry-meta', text: peakLine(step) })
+    );
+  });
+  var children = [
+    el('h3', { text: peak.name }),
+    el('p', { text: peakLine(peak) }),
+    el('p', { class: 'muted', text: peak.normalRoute ? 'Normal route: ' + peak.normalRoute : 'Normal route: unknown' }),
+    el('div', { class: 'log-actions' }, summited, backlogBtn),
+    el('h3', { text: 'Build up to this peak' }),
+    el('p', { text: plan.note })
+  ];
+  if (!plan.steps.length) children.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
+  box.replaceChildren.apply(box, children.concat(steps));
+  box.classList.remove('hidden');
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (map) {
+    map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10));
+  }
+}
+
+function collectionPopup(peak) {
+  var details = el('button', { type: 'button', text: 'Details' });
+  details.addEventListener('click', function () { showPeakDetail(peak); });
+  var add = el('button', { type: 'button', text: 'Add to backlog' });
+  add.addEventListener('click', function () {
+    addCatalogItem({ name: peak.name, kind: 'peak', lat: peak.lat, lng: peak.lng, elevation: peak.elevation, note: peak.normalRoute || '' });
+  });
+  var mark = el('button', { type: 'button', text: Col.isSummited(peak, logs) ? 'Summited' : 'Mark summited' });
+  mark.addEventListener('click', function () {
+    if (Col.isSummited(peak, logs)) clearSummited(peak);
+    else markSummited(peak);
+  });
+  return el('div', null,
+    el('strong', { text: peak.name }),
+    el('br'),
+    document.createTextNode(peakLine(peak)),
+    el('br'),
+    details, document.createTextNode(' '), add, document.createTextNode(' '), mark
+  );
+}
+
+function markSummited(peak) {
+  var existing = Col.matchingLogPeaks(peak, logs)[0];
+  if (existing) {
+    if (existing.collectionId !== peak.id) {
+      var updated = Lgc.updateLog(existing, { collectionId: peak.id });
+      var index = logs.findIndex(function (item) { return item.id === existing.id; });
+      if (index >= 0) logs[index] = updated;
+      saveLogs();
+    }
+  } else {
+    var created = Lgc.createLog({
+      kind: 'peak',
+      name: peak.name,
+      elevation: peak.elevation,
+      lat: peak.lat,
+      lng: peak.lng,
+      collectionId: peak.id
+    });
+    if (created) {
+      logs.push(created);
+      saveLogs();
+    }
+  }
+  renderLogs();
+  renderCollections();
+}
+
+function clearSummited(peak) {
+  var matches = Col.matchingLogPeaks(peak, logs);
+  if (!matches.length) return;
+  if (!confirm('Remove ' + peak.name + ' from your log?')) {
+    renderCollections();
+    return;
+  }
+  var ids = {};
+  matches.forEach(function (item) { ids[item.id] = true; });
+  logs = logs.filter(function (item) { return !ids[item.id]; });
+  saveLogs();
+  renderLogs();
+  renderCollections();
+  var box = document.getElementById('peak-detail');
+  if (box && !box.classList.contains('hidden')) showPeakDetail(peak);
+}
+
+function fillLevelForm() {
+  var grade = document.getElementById('level-grade');
+  if (!grade) return;
+  if (!grade.options.length) {
+    var empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = 'Not set';
+    grade.appendChild(empty);
+    Col.GRADE_ORDER.forEach(function (value) {
+      var option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      grade.appendChild(option);
+    });
+  }
+  var saved = Store.getLevel();
+  var level = Col.estimateLevel(logs, collectionData ? collectionData.peaks : [], saved);
+  if (saved && saved.useManual) {
+    grade.value = saved.grade || '';
+    document.getElementById('level-elev').value = saved.elevation == null ? '' : String(saved.elevation);
+    document.getElementById('level-glacier').value = saved.glacier === true ? 'yes' : saved.glacier === false ? 'no' : '';
+  }
+  document.getElementById('level-note').textContent = 'From your log: ' +
+    (level.elevation != null ? level.elevation + ' m' : 'elevation unknown') + ', ' +
+    (level.grade ? 'grade ' + level.grade : 'grade unknown') + ', ' +
+    (level.glacier === true ? 'glacier experience noted' : 'glacier experience unknown') + '.';
+}
+
+document.getElementById('level-save').addEventListener('click', function () {
+  var elevRaw = document.getElementById('level-elev').value.trim();
+  var elevation = elevRaw === '' ? null : Number(elevRaw);
+  if (elevRaw !== '' && !Number.isFinite(elevation)) {
+    alert('Enter a summit elevation in metres, or leave it blank.');
+    return;
+  }
+  var glacierValue = document.getElementById('level-glacier').value;
+  Store.setLevel({
+    useManual: true,
+    grade: document.getElementById('level-grade').value || null,
+    elevation: elevation,
+    glacier: glacierValue === 'yes' ? true : glacierValue === 'no' ? false : null
+  });
+  fillLevelForm();
+});
+
+document.getElementById('level-auto').addEventListener('click', function () {
+  Store.setLevel({ useManual: false });
+  document.getElementById('level-grade').value = '';
+  document.getElementById('level-elev').value = '';
+  document.getElementById('level-glacier').value = '';
+  fillLevelForm();
+});
 
 // ---- Install ----
 window.addEventListener('beforeinstallprompt', function (event) {

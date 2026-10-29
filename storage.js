@@ -20,6 +20,7 @@
   var USER_KEY = 'summitlog_user';
   // Also read once in index.html before paint. This module is the only writer.
   var INTRO_KEY = 'summitlog_intro_seen';
+  var LEVEL_KEY = 'summitlog_level';
 
   function createRepository(options) {
     var storage = options.storage;
@@ -160,6 +161,27 @@
       }
     }
 
+    function getLevel() {
+      try {
+        var raw = storage.getItem(LEVEL_KEY);
+        if (!raw) return null;
+        var data = JSON.parse(raw);
+        return data && typeof data === 'object' ? data : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function setLevel(level) {
+      try {
+        storage.setItem(LEVEL_KEY, JSON.stringify(level));
+        return true;
+      } catch (err) {
+        fail('Could not save on this device. Storage may be full or blocked.');
+        return false;
+      }
+    }
+
     function isIntroDismissed() {
       try {
         return storage.getItem(INTRO_KEY) === '1';
@@ -190,6 +212,8 @@
       getDisplayName: getDisplayName,
       setDisplayName: setDisplayName,
       clearDisplayName: clearDisplayName,
+      getLevel: getLevel,
+      setLevel: setLevel,
       isIntroDismissed: isIntroDismissed,
       dismissIntro: dismissIntro
     };

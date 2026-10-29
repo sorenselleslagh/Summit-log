@@ -14,6 +14,8 @@ var SHELL = [
   './logic.js',
   './storage.js',
   './overpass.js',
+  './collections.js',
+  './data/collections/uiaa-alps-4000.json',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

@@ -261,6 +261,12 @@
     return Math.round(n * 10) / 10;
   }
 
+  function cleanCollectionId(value) {
+    if (typeof value !== 'string') return '';
+    var text = value.trim().toLowerCase();
+    return /^[a-z0-9-]{1,48}$/.test(text) ? text : '';
+  }
+
   function parseIdList(value) {
     if (!Array.isArray(value)) return [];
     var out = [];
@@ -294,6 +300,7 @@
       notes: cleanText(raw.notes, LIMITS.notes),
       lat: coords.lat,
       lng: coords.lng,
+      collectionId: cleanCollectionId(raw.collectionId),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     };

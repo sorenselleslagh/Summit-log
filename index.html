@@ -163,6 +163,14 @@
           <span class="swatch swatch-log"></span> Logged
           <span class="swatch swatch-backlog"></span> Backlog
           <span class="swatch swatch-osm"></span> OSM
+          <span class="swatch swatch-done"></span> Collection, done
+          <span class="swatch swatch-todo"></span> Collection, not yet
+        </div>
+        <div id="peak-detail" class="card hidden"></div>
+        <div class="card" id="collections-card">
+          <h3>Collections</h3>
+          <p class="muted suggestion-intro">Personal progress only. Grades and gear stay unknown unless a cited normal route says otherwise.</p>
+          <div id="collections"></div>
         </div>
         <div class="card">
           <h3>Routes and peaks</h3>
@@ -207,6 +215,25 @@
           </div>
           <p class="muted small install-hint">Install SummitLog from the browser menu so it opens like an app. On iPhone, use Share, then Add to Home Screen. After this page has loaded once, the log keeps working offline.</p>
         </div>
+        <div class="card" id="level-card">
+          <h2>Your level</h2>
+          <p class="muted">Used only to suggest easier steps toward a peak. It is not a ranking.</p>
+          <label class="field-label" for="level-grade">Highest alpine grade you've done</label>
+          <select id="level-grade" aria-label="Highest alpine grade you've done"></select>
+          <label class="field-label" for="level-elev">Highest summit elevation (m)</label>
+          <input type="number" id="level-elev" min="0" max="9000" inputmode="numeric" placeholder="Leave blank to use your log" aria-label="Highest summit elevation in metres">
+          <label class="field-label" for="level-glacier">Glacier experience</label>
+          <select id="level-glacier" aria-label="Glacier experience">
+            <option value="">Not set</option>
+            <option value="yes">Yes</option>
+            <option value="no">Not yet</option>
+          </select>
+          <div class="profile-actions">
+            <button class="primary" id="level-save" type="button">Save level</button>
+            <button class="secondary" id="level-auto" type="button">Use what I've logged</button>
+          </div>
+          <p id="level-note" class="muted small"></p>
+        </div>
         <div class="card" id="connections">
           <h2>Connections</h2>
           <p class="muted">Coming soon. These need an account, which SummitLog does not have yet.</p>
@@ -234,6 +261,7 @@
   <script src="logic.js"></script>
   <script src="storage.js"></script>
   <script src="overpass.js"></script>
+  <script src="collections.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
