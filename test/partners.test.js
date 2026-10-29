@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v4'"));
+assert.ok(sw.includes("VERSION = 'v5'"));
 assert.ok(!html.includes('Post an objective'));
 
 console.log('partners tests ok', catalog.length, 'objectives');

@@ -197,6 +197,7 @@ function fitMap() {
   var box = document.getElementById('map-container');
   var mainEl = document.querySelector('#app main');
   if (!section || !box || !mainEl || section.classList.contains('hidden')) return;
+  if (mapAnimating || document.documentElement.classList.contains('map-cover')) return;
   if (mainEl.clientHeight < 120) return;
   var mainStyle = getComputedStyle(mainEl);
   var padTop = parseFloat(mainStyle.paddingTop) || 0;
@@ -217,6 +218,7 @@ function watchChrome() {
 }
 
 function selectTab(name) {
+  if (name !== 'map' && document.documentElement.classList.contains('map-expanded')) collapseMap(false);
   if (name !== 'mine' && form) form.classList.add('hidden');
   document.querySelectorAll('#app > nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
@@ -877,6 +879,264 @@ function configureMarkerIcons() {
   });
 }
 
+var mapExpanded = false;
+var mapHistoryPushed = false;
+var mapAnimating = false;
+var MAP_MS = 380;
+var MAP_EASE = 'cubic-bezier(0.22, 1.18, 0.36, 1)';
+
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function mapBox() {
+  return document.getElementById('map-scaler');
+}
+
+function embeddedMapHeight() {
+  var mainEl = document.querySelector('#app main');
+  if (!mainEl) return 320;
+  var padTop = parseFloat(getComputedStyle(mainEl).paddingTop) || 0;
+  return Math.max(180, Math.floor(mainEl.clientHeight - padTop) - 2);
+}
+
+function showSpacer(height) {
+  var spacer = document.getElementById('map-spacer');
+  if (!spacer) return;
+  spacer.style.height = height + 'px';
+  spacer.hidden = false;
+}
+
+function hideSpacer() {
+  var spacer = document.getElementById('map-spacer');
+  if (!spacer) return;
+  spacer.hidden = true;
+  spacer.style.height = '';
+}
+
+function clearMotion(container) {
+  container.style.transition = '';
+  container.style.transform = '';
+  container.style.transformOrigin = '';
+  container.style.borderRadius = '';
+  container.style.willChange = '';
+  container.style.opacity = '';
+}
+
+function settleTiles() {
+  var root = document.documentElement;
+  root.classList.add('map-resizing');
+  if (map) map.invalidateSize({ animate: false, pan: false });
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () { root.classList.remove('map-resizing'); });
+  });
+}
+
+function playTransform(container, next, done) {
+  mapAnimating = true;
+  var finished = false;
+  function finish(event) {
+    if (finished) return;
+    if (event && event.target !== container) return;
+    if (event && event.propertyName !== 'transform') return;
+    finished = true;
+    container.removeEventListener('transitionend', finish);
+    done();
+  }
+  container.addEventListener('transitionend', finish);
+  setTimeout(function () { finish(); }, MAP_MS + 80);
+  var computed = getComputedStyle(container).transform;
+  container.style.transformOrigin = '0 0';
+  container.style.willChange = 'transform';
+  container.style.transition = 'none';
+  if (computed && computed !== 'none') container.style.transform = computed;
+  container.getBoundingClientRect();
+  container.style.transition = 'transform ' + MAP_MS + 'ms ' + MAP_EASE + ', border-radius ' + MAP_MS + 'ms ' + MAP_EASE;
+  container.style.transform = next;
+}
+
+function growTransform(rect) {
+  var scaleX = window.innerWidth / Math.max(1, rect.width);
+  var scaleY = window.innerHeight / Math.max(1, rect.height);
+  return 'translate(' + (-rect.left) + 'px,' + (-rect.top) + 'px) scale(' + scaleX + ',' + scaleY + ')';
+}
+
+function shrinkTransform(rect) {
+  var scaleX = rect.width / Math.max(1, window.innerWidth);
+  var scaleY = rect.height / Math.max(1, window.innerHeight);
+  return 'translate(' + rect.left + 'px,' + rect.top + 'px) scale(' + scaleX + ',' + scaleY + ')';
+}
+
+function showMapStatus(text) {
+  var status = document.getElementById('map-status');
+  if (!status) return;
+  status.textContent = text;
+  status.classList.remove('hidden');
+  setTimeout(function () { status.classList.add('hidden'); }, 3200);
+}
+
+function showMapSheet(name) {
+  var root = document.documentElement;
+  ['layers', 'collections', 'peak'].forEach(function (sheet) {
+    root.classList.toggle('map-show-' + sheet, sheet === name);
+  });
+}
+
+function setMapGestures(enabled) {
+  if (!map) return;
+  var names = ['dragging', 'touchZoom', 'scrollWheelZoom', 'doubleClickZoom', 'boxZoom', 'keyboard'];
+  names.forEach(function (name) {
+    if (!map[name]) return;
+    if (enabled) map[name].enable();
+    else map[name].disable();
+  });
+}
+
+function pushMapHistory() {
+  try {
+    history.pushState({ summitlogMap: true }, '');
+    mapHistoryPushed = true;
+  } catch (err) {
+    mapHistoryPushed = false;
+  }
+}
+
+function popMapHistory(fromPop) {
+  if (!fromPop && mapHistoryPushed) {
+    mapHistoryPushed = false;
+    history.back();
+  } else {
+    mapHistoryPushed = false;
+  }
+}
+
+function coverMap(container, height) {
+  showSpacer(height);
+  document.documentElement.classList.add('map-cover');
+  document.getElementById('map-container').style.height = '';
+  clearMotion(container);
+}
+
+function expandMap() {
+  if (mapExpanded || mapAnimating) return;
+  var container = mapBox();
+  if (!container) return;
+  var first = container.getBoundingClientRect();
+  var root = document.documentElement;
+  mapExpanded = true;
+  root.classList.add('map-expanded');
+  pushMapHistory();
+  if (prefersReducedMotion()) {
+    coverMap(container, first.height);
+    root.classList.add('map-settled');
+    container.style.opacity = '0';
+    container.getBoundingClientRect();
+    container.style.transition = 'opacity 180ms linear';
+    container.style.opacity = '1';
+    setTimeout(function () {
+      container.style.transition = '';
+      container.style.opacity = '';
+      settleTiles();
+      setMapGestures(true);
+    }, 190);
+    return;
+  }
+  container.style.borderRadius = '0px';
+  playTransform(container, growTransform(first), function () {
+    if (!mapExpanded) return;
+    coverMap(container, first.height);
+    root.classList.add('map-settled');
+    mapAnimating = false;
+    settleTiles();
+    setMapGestures(true);
+  });
+}
+
+function collapseMap(fromPop) {
+  if (!mapExpanded && !mapAnimating) return;
+  var container = mapBox();
+  var root = document.documentElement;
+  var covered = root.classList.contains('map-cover');
+  mapExpanded = false;
+  root.classList.remove('map-settled', 'map-show-layers', 'map-show-collections', 'map-show-peak');
+  setMapGestures(false);
+  popMapHistory(fromPop);
+  if (!container) return;
+  if (prefersReducedMotion()) {
+    root.classList.remove('map-expanded', 'map-cover');
+    clearMotion(container);
+    hideSpacer();
+    mapAnimating = false;
+    fitMap();
+    settleTiles();
+    return;
+  }
+  if (!covered) {
+    root.classList.remove('map-expanded');
+    container.style.borderRadius = '';
+    playTransform(container, 'translate(0px, 0px) scale(1, 1)', function () {
+      clearMotion(container);
+      mapAnimating = false;
+    });
+    return;
+  }
+  root.classList.remove('map-expanded');
+  var spacer = document.getElementById('map-spacer');
+  var target = spacer ? spacer.getBoundingClientRect() : container.getBoundingClientRect();
+  container.style.borderRadius = '12px';
+  playTransform(container, shrinkTransform(target), function () {
+    root.classList.remove('map-cover');
+    clearMotion(container);
+    hideSpacer();
+    mapAnimating = false;
+    fitMap();
+    settleTiles();
+  });
+}
+
+function bindMapHandle() {
+  var handle = document.getElementById('map-handle');
+  if (!handle) return;
+  var swipe = null;
+  handle.addEventListener('pointerdown', function (event) {
+    if (!mapExpanded || mapAnimating || !document.documentElement.classList.contains('map-settled')) return;
+    swipe = { id: event.pointerId, y: event.clientY, lastY: event.clientY, lastT: Date.now(), dy: 0, vy: 0 };
+    handle.setPointerCapture(event.pointerId);
+  });
+  handle.addEventListener('pointermove', function (event) {
+    if (!swipe || event.pointerId !== swipe.id) return;
+    var now = Date.now();
+    swipe.vy = (event.clientY - swipe.lastY) / Math.max(1, now - swipe.lastT);
+    swipe.lastY = event.clientY;
+    swipe.lastT = now;
+    swipe.dy = Math.max(0, event.clientY - swipe.y);
+    var container = mapBox();
+    container.style.transition = 'none';
+    container.style.transform = 'translateY(' + swipe.dy + 'px)';
+  });
+  function endSwipe(event) {
+    if (!swipe || event.pointerId !== swipe.id) return;
+    var dy = swipe.dy;
+    var vy = swipe.vy;
+    swipe = null;
+    if (dy > 96 || vy > 0.65) {
+      collapseMap(false);
+      return;
+    }
+    var container = mapBox();
+    container.style.transition = 'transform 280ms ' + MAP_EASE;
+    container.style.transform = 'translateY(0px)';
+    container.addEventListener('transitionend', function clear(ev) {
+      if (ev.propertyName !== 'transform') return;
+      container.removeEventListener('transitionend', clear);
+      container.style.transition = '';
+      container.style.transform = '';
+    });
+  }
+  handle.addEventListener('pointerup', endSwipe);
+  handle.addEventListener('pointercancel', endSwipe);
+}
+
 function initMap() {
   if (typeof L === 'undefined') {
     showMapFallback();
@@ -885,11 +1145,23 @@ function initMap() {
   try {
     if (!map) {
       configureMarkerIcons();
-      map = L.map('map-container').setView([46.5, 8.5], 6);
+      map = L.map('map-container', {
+        zoomControl: false,
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false
+      }).setView([46.5, 8.5], 6);
+      L.control.zoom({ position: 'topright' }).addTo(map);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
         errorTileUrl: 'icons/tile-offline.svg'
       }).addTo(map);
+      map.on('locationerror', function () {
+        showMapStatus('Location is unavailable on this device.');
+      });
       syncAreas();
     }
     updateMapMarkers();
@@ -1424,6 +1696,36 @@ document.getElementById('famous-list').addEventListener('click', function (event
 document.getElementById('osm-layer').addEventListener('change', updateMapMarkers);
 document.getElementById('load-peaks-btn').addEventListener('click', loadPeaksInView);
 
+document.getElementById('map-container').addEventListener('click', function (event) {
+  if (mapExpanded) return;
+  if (event.target.closest && event.target.closest('.leaflet-control, .map-expand, .map-close, .map-fabs')) return;
+  expandMap();
+});
+document.getElementById('map-expand').addEventListener('click', function (event) {
+  event.stopPropagation();
+  expandMap();
+});
+document.getElementById('map-close').addEventListener('click', function () { collapseMap(false); });
+bindMapHandle();
+document.getElementById('map-locate').addEventListener('click', function () {
+  if (!mapExpanded) expandMap();
+  if (map) map.locate({ setView: true, maxZoom: 12 });
+});
+document.getElementById('map-layers-btn').addEventListener('click', function () {
+  if (document.documentElement.classList.contains('map-show-layers')) showMapSheet('');
+  else showMapSheet('layers');
+});
+document.getElementById('map-sheet-btn').addEventListener('click', function () {
+  if (document.documentElement.classList.contains('map-show-collections')) showMapSheet('');
+  else showMapSheet('collections');
+});
+window.addEventListener('popstate', function () {
+  if (mapExpanded) collapseMap(true);
+});
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && mapExpanded) collapseMap(false);
+});
+
 function collectionPeakByName(item) {
   if (!collectionData || !item) return null;
   var want = Col.normName(item.name);
@@ -1554,7 +1856,8 @@ function showPeakDetail(peak) {
   if (!plan.steps.length) children.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
   box.replaceChildren.apply(box, children.concat(steps));
   box.classList.remove('hidden');
-  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
+  else box.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
   if (map) {
     map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10));
   }

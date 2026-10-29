@@ -188,7 +188,22 @@
 
       <!-- MAP -->
       <section id="map" class="tab hidden">
-        <div id="map-container"></div>
+        <div id="map-frame">
+          <div id="map-spacer" hidden></div>
+          <div id="map-scaler">
+            <div id="map-container"></div>
+          </div>
+          <button class="map-expand" id="map-expand" type="button">Expand map</button>
+          <button class="map-handle" id="map-handle" type="button" aria-label="Drag down to close the map"></button>
+          <button class="map-close" id="map-close" type="button" aria-label="Close map">×</button>
+          <div class="map-fabs" id="map-fabs">
+            <button type="button" id="map-locate">Locate</button>
+            <button type="button" id="map-layers-btn">Layers</button>
+            <button type="button" id="map-sheet-btn">List</button>
+          </div>
+          <p id="map-status" class="map-status hidden" role="status"></p>
+        </div>
+        <p class="map-gesture">Tap the map to open it full screen. Scrolling this page is not taken over by the map.</p>
         <p class="muted map-caption">Blue is done, amber is planned. A check mark on a range means you have logged something there.</p>
         <div class="legend">
           <span class="swatch swatch-log"></span> Done
@@ -203,7 +218,7 @@
           <p class="muted suggestion-intro">Personal progress only. A grade is shown only when a cited normal route gives one.</p>
           <div id="collections"></div>
         </div>
-        <div class="card">
+        <div class="card" id="layers-card">
           <h3>Routes and peaks</h3>
           <label class="check-row">
             <input type="checkbox" id="osm-layer">
