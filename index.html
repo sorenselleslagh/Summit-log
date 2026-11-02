@@ -386,6 +386,27 @@
       <footer>SummitLog prototype · Data stored locally in your browser</footer>
     </main>
 
+    <div id="peak-page" class="peak-page hidden"></div>
+    <div id="plan-toast" class="plan-toast hidden" role="status"></div>
+    <div id="plan-quick" class="plan-quick hidden" role="dialog" aria-modal="true" aria-labelledby="plan-quick-title">
+      <div class="plan-quick-card">
+        <h3 id="plan-quick-title">Add to plan</h3>
+        <p id="plan-quick-name"></p>
+        <label class="field-label" for="plan-quick-stage">Stage</label>
+        <select id="plan-quick-stage" aria-label="Stage">
+          <option value="idea">Idea</option>
+          <option value="objective">Objective</option>
+          <option value="scheduled">Scheduled</option>
+        </select>
+        <label class="field-label" for="plan-quick-time">Timeframe</label>
+        <input type="text" id="plan-quick-time" maxlength="120" placeholder="Optional, such as July" aria-label="Timeframe">
+        <div class="join-actions">
+          <button class="primary" id="plan-quick-add" type="button">Add</button>
+          <button class="secondary" id="plan-quick-skip" type="button">Skip</button>
+        </div>
+      </div>
+    </div>
+
     <nav aria-label="Sections">
       <button type="button" data-tab="explore">Explore</button>
       <button class="active" type="button" data-tab="plan">Plan</button>
