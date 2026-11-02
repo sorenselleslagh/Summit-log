@@ -115,4 +115,4 @@ Not built yet:
 
 ## Map
 
-Ranges are drawn around a few sample areas. A check mark means a logged point falls inside that area. OpenStreetMap tiles are requested only as you pan, and only those tiles are cached. The famous-route list does not download tiles by itself.
+Ranges are drawn around a few sample areas. A check mark means a logged point falls inside that area. The full-screen map uses OpenTopoMap (muted terrain, OpenStreetMap data). Tiles are requested only as you pan, and only those tiles are cached. The famous-route list does not download tiles by itself.

@@ -1,6 +1,6 @@
 // App-shell cache plus on-demand map tiles. Paths are relative to this file
 // so the same worker works at / and under /Summit-log/ on GitHub Pages.
-var VERSION = 'v9';
+var VERSION = 'v10';
 var SHELL_CACHE = 'summitlog-shell-' + VERSION;
 var CDN_CACHE = 'summitlog-cdn-' + VERSION;
 var TILE_CACHE = 'summitlog-tiles-' + VERSION;
@@ -35,7 +35,8 @@ var CDN = [
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+  'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Inter:wght@430;500;600;700&display=swap'
 ];
 
 var OFFLINE_TILE_SVG = [
@@ -53,7 +54,8 @@ function scopeUrl(path) {
 }
 
 function isTile(url) {
-  return /(^|\.)tile\.openstreetmap\.org$/.test(url.hostname) && /\.png$/i.test(url.pathname);
+  if (/(^|\.)tile\.openstreetmap\.org$/.test(url.hostname) && /\.png$/i.test(url.pathname)) return true;
+  return /(^|\.)tile\.opentopomap\.org$/.test(url.hostname) && /\.png$/i.test(url.pathname);
 }
 
 function isCommons(url) {
@@ -209,7 +211,7 @@ self.addEventListener('fetch', function (event) {
     event.respondWith(shellResponse(request));
     return;
   }
-  if (url.hostname === 'unpkg.com') {
+  if (url.hostname === 'unpkg.com' || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(cdnResponse(request));
   }
 });

@@ -49,7 +49,7 @@ html.boot-app #app {
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.55;
@@ -71,9 +71,15 @@ header {
   z-index: 1500;
 }
 
+header h1,
+h1, h2, .summit-name {
+  font-family: Fraunces, Georgia, "Times New Roman", serif;
+  font-optical-sizing: auto;
+}
+
 header h1 {
-  font-size: 1.25rem;
-  font-weight: 650;
+  font-size: 1.35rem;
+  font-weight: 560;
   letter-spacing: -0.02em;
 }
 
@@ -459,15 +465,283 @@ html.map-expanded.map-show-collections #collections-card,
 html.map-expanded.map-show-peak #peak-detail {
   display: block;
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: calc(0.7rem + env(safe-area-inset-bottom, 0px));
   z-index: 1360;
-  max-height: min(58dvh, 520px);
+  max-height: min(48dvh, 440px);
   overflow: auto;
   margin: 0;
-  border-radius: 16px 16px 0 0;
-  padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px;
+  padding: 0.4rem 1rem 1rem;
+  background: #f7f4ef;
+  color: #1c1915;
+  border: none;
+  box-shadow: 0 18px 50px rgba(28, 25, 21, 0.2);
+}
+
+html.map-sheet-tall.map-show-peak #peak-detail {
+  max-height: min(86dvh, 760px);
+}
+
+html.map-expanded #peak-detail .summit-name {
+  font-size: 2rem;
+  line-height: 1.05;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  margin: 0.15rem 0 0.35rem;
+}
+
+html.map-expanded #peak-detail .sheet-meta,
+html.map-expanded #peak-detail .muted,
+html.map-expanded #peak-detail p {
+  color: #5c564e;
+}
+
+html.map-expanded #peak-detail .primary { background: #1f6b45; border-color: #1f6b45; }
+
+html.map-expanded #peak-detail .grade-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: #e7efe4;
+  color: #1f6b45;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.sheet-grab {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin: 0 0 0.2rem;
+  border: none;
+  background: transparent;
+}
+
+.sheet-grab::before {
+  content: "";
+  display: block;
+  width: 42px;
+  height: 5px;
+  margin: 6px auto 0;
+  border-radius: 999px;
+  background: #d5cfc6;
+}
+
+.summit-hero,
+.summit-hero img,
+.summit-hero-fallback {
+  width: 100%;
+  height: 168px;
+  border-radius: 18px;
+  object-fit: cover;
+  display: block;
+  position: relative;
+}
+
+.summit-hero { position: relative; margin-bottom: 0.7rem; }
+
+.summit-hero-fallback {
+  background: #e7e1d8 url("illustrations/peak-card.svg") center/cover no-repeat;
+}
+
+.sheet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.7rem;
+  align-items: center;
+  font-size: 0.86rem;
+}
+
+.sheet-meta span { display: inline-flex; align-items: center; gap: 0.28rem; }
+
+.sheet-meta svg { width: 14px; height: 14px; }
+
+.map-chrome { display: none; }
+
+html.map-settled .map-chrome {
+  display: block;
+}
+
+.map-search {
+  position: fixed;
+  top: calc(0.7rem + env(safe-area-inset-top, 0px));
+  left: calc(4.2rem + env(safe-area-inset-left, 0px));
+  right: calc(4.6rem + env(safe-area-inset-right, 0px));
+  z-index: 1410;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 48px;
+  padding: 0 0.35rem 0 0.95rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.96);
+  color: #1c1915;
+  box-shadow: 0 10px 28px rgba(28, 25, 21, 0.16);
+}
+
+.map-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #1c1915;
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+#map-filter {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: #1f6b45;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#map-filter svg,
+.map-fabs svg { width: 18px; height: 18px; }
+
+.map-chips {
+  position: fixed;
+  top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  left: 0;
+  right: 0;
+  z-index: 1405;
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding: 0.15rem 0.8rem 0.4rem;
+  scrollbar-width: none;
+}
+
+.map-chip {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0.3rem 0.8rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.94);
+  color: #1c1915;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(28, 25, 21, 0.12);
+}
+
+.map-chip.active,
+.map-chip[aria-pressed="true"] {
+  background: #1f6b45;
+  color: white;
+}
+
+.map-summary {
+  position: fixed;
+  left: 50%;
+  bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 1350;
+  margin: 0;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(28, 25, 21, 0.88);
+  color: #f7f4ef;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(28, 25, 21, 0.2);
+}
+
+html.map-show-peak .map-summary,
+html.map-show-layers .map-summary,
+html.map-show-collections .map-summary { display: none; }
+
+html.map-cover .map-fabs {
+  top: auto;
+  bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px));
+  left: auto;
+  right: calc(0.7rem + env(safe-area-inset-right, 0px));
+}
+
+html.map-show-peak .map-fabs,
+html.map-show-layers .map-fabs,
+html.map-show-collections .map-fabs {
+  top: calc(8.2rem + env(safe-area-inset-top, 0px));
+  bottom: auto;
+}
+
+html.map-cover .map-fabs button {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.96);
+  color: #1c1915;
+  box-shadow: 0 10px 24px rgba(28, 25, 21, 0.16);
+}
+
+html.map-cover .leaflet-control-zoom a {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 252, 248, 0.96);
+  color: #1c1915;
+}
+
+.photo-pin, .pin-dot, .pin-cluster { background: transparent; border: none; }
+
+.pin-face {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #e7e1d8 url("illustrations/peak-card.svg") center/cover no-repeat;
+  box-shadow: 0 0 0 3px white, 0 8px 16px rgba(28, 25, 21, 0.28);
+}
+
+.photo-pin.is-done .pin-face { box-shadow: 0 0 0 3px #1f6b45, 0 8px 16px rgba(28, 25, 21, 0.28); }
+.photo-pin.is-planned .pin-face { box-shadow: 0 0 0 3px #c4841d, 0 8px 16px rgba(28, 25, 21, 0.28); }
+.photo-pin.is-trek .pin-face { box-shadow: 0 0 0 3px #3d6f8f, 0 8px 16px rgba(28, 25, 21, 0.28); }
+
+.pin-dot span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: 3px;
+  border-radius: 999px;
+  background: #243028;
+  box-shadow: 0 0 0 2px rgba(255, 252, 248, 0.9);
+}
+
+.pin-cluster span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #243028;
+  color: #f7f4ef;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(28, 25, 21, 0.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-search, .map-chip, .map-summary, .map-fabs button, #peak-detail {
+    transition: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
