@@ -26,7 +26,7 @@ python3 -m http.server 8080 --directory /tmp/summit-pages
 
 Then open http://localhost:8080/Summit-log/ .
 
-The first visit shows a short intro. **Start logging** opens the log with no sign-up. Sample peaks load when the log is empty. An optional display name is available from the header; it is not an account, and the password is not stored.
+The first visit shows a short intro. **Start planning** opens Plan with no sign-up. Sample peaks load when the log is empty. An avatar in the header opens Profile; it is a display name, not an account, and the password is not stored.
 
 Checks for the data rules:
 
@@ -36,29 +36,30 @@ node test/data.test.js
 
 ## Intro
 
-The first screen is one page: a mountain drawing, the line “Your climbs, your log, your partners”, three short cards, and **Start logging**. Dismissal is stored as `summitlog_intro_seen` in localStorage, so later visits open the log. Profile → About → **View intro** shows it again.
+The first screen is one page: a mountain drawing, the line “Your climbs, your log, your partners”, three cards (Explore, Plan, My logbook), and **Start planning**. Dismissal is stored as `summitlog_intro_seen` in localStorage, so later visits open Plan. Profile → About → **View intro** shows it again.
 
 The drawing is `illustrations/mountain.svg`. Replace that file to swap in final artwork. The page inlines it.
 
 ## Install and offline
 
 - `manifest.webmanifest` and the icons in `icons/` let the browser install SummitLog. On iPhone, use Share → Add to Home Screen. Paths are relative, so install works from `/Summit-log/` as well as from a local server root.
-- `sw.js` caches the app shell (HTML, CSS, JS, icons, the intro drawing, and Leaflet) after the first online load. Logging, the backlog, and your place in a partner queue then work with the network off.
+- `sw.js` caches the app shell (HTML, CSS, JS, icons, the intro drawing, peak photo credits, and Leaflet) after the first online load. Planning, the logbook, and your place in a partner queue then work with the network off. Peak photos from Wikimedia Commons are saved after you view them.
 - Map tiles are saved only after you view them. Offline, those tiles still appear. Tiles you have not opened are replaced with an “Offline” placeholder. Coming back online redraws the map.
 
 ## Tabs
 
-Bottom bar: **Backlog**, **Map**, **Partners**. **Profile** is the header button (résumé, export, install, connections, intro).
+Bottom bar: **Explore**, **Plan** (the primary tab, in the centre), **Logbook**. Profile and Connections are the avatar in the header.
 
-- **Backlog** is home. **Planned** is the wishlist, ordered by you (move up, down, or drag) with an optional season. **Done** is the log, newest date first, with the date, notes, and when the item was added. **Mark as done** asks for that date and a short note. You can also log straight to Done. The same objective can be done more than once. Chips filter Peak, Route, and Hike, and the search box narrows the list. Counts are done items only. The peak number is your collection.
-- **Map** draws done items in blue and planned items in amber. The embedded map does not take over page scrolling. **Expand map** (or a tap on the map) grows that card to full screen, about 380ms, while the header slides up and the tab bar slides down. Close, a swipe down on the handle, Escape, or the browser back button reverses it. Locate, zoom, layers, and the collection list fade in once the map has arrived. Reduced motion uses a short fade instead. A toggle shows famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20, and a few peaks) with **Add to planned**. **Load peaks in this view** calls the OpenStreetMap Overpass API only when you tap it, only when zoomed in, and at most once every few seconds. Results are cached on this device. Offline, the famous list and any saved Overpass answer still work.
-- **Partners** is a search for an objective: the Alpine 4000ers, your planned and done items, and the famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20). Open one to see its queue. **Join the queue** can include rough dates, a short note, and log entries, and nothing is attached until you tick it. **Find partners** on a planned item opens that objective. Your place is stored on this device (`summitlog_queues`). Other people in a queue are sample profiles with a Demo badge, not real users. Being visible to other people needs an account, which does not exist yet. There is no ranking.
+- **Plan** is home. It is the wishlist, ordered by you (move up, down, or drag). Open an idea for research (grade and source link when the peak is in the Alpine 4000ers, season, dates, notes), **Find partners** (the objective queue lives here), and a short preparation checklist. **Mark as done** asks for the date, a memory, and optional photos, then creates the logbook entry. Logging something you already did is a smaller action on the logbook, not a second primary button.
+- **Explore** is a discovery list: **Find your next peak**, search with the same objective suggestions, and a dark-green **Map** button. Rails show Highest Peaks, the Alpine 4000ers with your progress, famous treks, and easier training peaks. **Near you** uses location only if you ask. A bookmark adds that peak or trek to Plan. Photos are the Wikidata P18 image on Wikimedia Commons when the licence is free (CC or public domain), with the licence on the card and a link to the file page. If that image is missing, the card uses an illustrated placeholder. The Map button, or a tap on the small preview, grows that preview to full screen, about 380ms, while the header slides up and the tab bar slides down. Close, a swipe down on the handle, Escape, or the browser back button reverses it. Locate, zoom, layers, and the collection list fade in once the map has arrived. Reduced motion uses a short fade instead. **Load peaks in this view** calls the OpenStreetMap Overpass API only when you tap it, only when zoomed in, and at most once every few seconds. Results are cached on this device.
+- **My logbook** is completed adventures, newest first, with the date, the memory, and photos stored in IndexedDB after they are scaled down. Chips filter Peak, Route, and Hike. Counts are done items only. **Alpine 4000ers progress** jumps back to that rail on Explore.
+- **Find partners** is inside a plan, not its own tab. The queue is the Alpine 4000ers, your planned and done items, and the famous treks (Tour du Mont Blanc / UTMB, HRP, Tour du Mont Rose, GR5, GR20). **Join the queue** can include rough dates, a short note, and log entries, and nothing is attached until you tick it. Your place is stored on this device (`summitlog_queues`). Other people in a queue are sample profiles with a Demo badge, not real users. Being visible to other people needs an account, which does not exist yet. There is no ranking.
 
 No pace, speed, ranking, or leaderboard is shown. There is no file import.
 
 ## Item model
 
-One list (`summititems`, schema 2). Every item is a peak, a route, or a hike, and it is planned until you mark it done. Older `summitlogs` and `summitbacklog` entries are copied in once, with the same ids and timestamps, and those keys are left on the device. The form is one short card; the kind changes the hints.
+One list (`summititems`, schema 3). Planned items are Plan and done items are the logbook. Older `summitlogs` and `summitbacklog` entries are copied in once, with the same ids and timestamps, and those keys are left on the device. A plan can also keep `planDates` and a `checklist`. Photos are not in localStorage; they live in IndexedDB (`summitlog` / `photos`) after the page scales them down. The form is one short card; the kind changes the hints.
 
 - **Peak** — name, summit elevation, map pin.
 - **Route** — name, grade, crag or mountain, activity (sport, trad, bouldering, alpine, ice, mixed, ski). The grade hint follows the activity (Font, French, AD/PD, and so on).
@@ -96,13 +97,15 @@ Not built yet:
 
 ## Project structure
 
-- `index.html` — intro, optional demo sign-in, backlog, map, partners, profile
-- `style.css` — layout, with Backlog, Map, and Partners on the bottom
+- `index.html` — intro, optional demo sign-in, Explore, Plan, logbook, profile
+- `style.css` — layout, with Explore, Plan, and Logbook on the bottom
 - `app.js` — interface
 - `logic.js` — item model, stats, validation, ids, and timestamps
 - `partners.js` — objective search and queue records, including the sample Demo profiles
 - `overpass.js` — polite OpenStreetMap peak requests
 - `storage.js` — localStorage repository (`summitlog_queues` holds the places you joined)
+- `photos.js` — IndexedDB store for logbook photos
+- `data/peak-photos.json` — Wikimedia Commons thumbs for peaks that have a free Wikidata P18 image
 - `sw.js` — offline cache
 - `manifest.webmanifest` — install metadata
 - `illustrations/mountain.svg` — intro artwork

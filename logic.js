@@ -304,6 +304,8 @@
       status: raw.status === 'planned' ? 'planned' : 'done',
       priority: raw.status === 'planned' ? parsePriority(raw.priority) : null,
       season: cleanSeason(raw.season),
+      planDates: cleanText(raw.planDates, 120),
+      checklist: cleanChecklist(raw.checklist),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     };
@@ -321,6 +323,20 @@
     var n = typeof value === 'number' ? value : Number(value);
     if (!Number.isFinite(n) || n < 0 || n > 100000) return null;
     return Math.round(n);
+  }
+
+  function cleanChecklist(value) {
+    if (!Array.isArray(value)) return [];
+    var out = [];
+    value.forEach(function (item) {
+      if (!item || typeof item !== 'object') return;
+      var text = cleanText(item.text, 200);
+      if (!text) return;
+      var id = typeof item.id === 'string' ? item.id.trim().slice(0, 48) : '';
+      if (!id) id = 'step-' + (out.length + 1);
+      out.push({ id: id, text: text, done: item.done === true });
+    });
+    return out.slice(0, 24);
   }
 
   function withStatus(raw, status, priority) {
@@ -621,7 +637,7 @@
     createPost: createPost,
     migrateLogs: migrateLogs,
     migratePosts: migratePosts,
-    SCHEMA_VERSION: 2,
+    SCHEMA_VERSION: 3,
     unifyLists: unifyLists,
     migrateItems: migrateItems,
     plannedOrder: plannedOrder,

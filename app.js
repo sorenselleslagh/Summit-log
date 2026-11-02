@@ -4,11 +4,15 @@ var Store = window.SummitLogStorage;
 var Over = window.SummitLogOverpass;
 var Col = window.SummitCollections;
 var Partners = window.SummitPartners;
+var Photos = window.SummitPhotos;
 
 var items = [];
 var mineSegment = 'planned';
 var mineKinds = {};
 var donePromptId = '';
+var activePlanId = '';
+var peakPhotos = {};
+var userLocation = null;
 var partnerPosts = [];
 var memberships = [];
 var objectiveCatalog = [];
@@ -70,7 +74,10 @@ function plannedItems() { return items.filter(function (item) { return item.stat
 
 function refreshAccountButton() {
   var button = document.getElementById('logout-btn');
-  document.getElementById('user-display').textContent = currentUser || '';
+  var avatar = document.getElementById('profile-btn');
+  var label = document.getElementById('user-display');
+  if (label) label.textContent = currentUser || '';
+  if (avatar) avatar.textContent = currentUser ? yourInitials() : 'You';
   if (!button) return;
   button.textContent = currentUser ? 'Log out' : 'Sign in';
 }
@@ -116,10 +123,12 @@ function showApp() {
   refreshAccountButton();
   updateOfflineBanner();
   initMap();
-  setMineSegment(plannedItems().length || !doneItems().length ? 'planned' : 'done');
+  renderMine();
+  selectTab('plan');
   renderFamous();
   rebuildObjectives();
   loadCollections();
+  loadPeakPhotos();
   fillLevelForm();
 }
 
@@ -137,7 +146,7 @@ function showIntro(replay) {
 document.getElementById('start-logging').addEventListener('click', function () {
   Store.dismissIntro();
   showApp();
-  selectTab('mine');
+  selectTab('plan');
 });
 
 document.getElementById('intro-back').addEventListener('click', function () {
@@ -193,16 +202,11 @@ document.getElementById('logout-btn').addEventListener('click', function () {
 
 // ---- Tabs ----
 function fitMap() {
-  var section = document.getElementById('map');
+  var section = document.getElementById('explore');
   var box = document.getElementById('map-container');
-  var mainEl = document.querySelector('#app main');
-  if (!section || !box || !mainEl || section.classList.contains('hidden')) return;
+  if (!section || !box || section.classList.contains('hidden')) return;
   if (mapAnimating || document.documentElement.classList.contains('map-cover')) return;
-  if (mainEl.clientHeight < 120) return;
-  var mainStyle = getComputedStyle(mainEl);
-  var padTop = parseFloat(mainStyle.paddingTop) || 0;
-  var next = Math.max(180, Math.floor(mainEl.clientHeight - padTop) - 2);
-  if (box.style.height !== next + 'px') box.style.height = next + 'px';
+  if (box.style.height !== '168px') box.style.height = '168px';
   if (map) map.invalidateSize();
 }
 
@@ -218,8 +222,8 @@ function watchChrome() {
 }
 
 function selectTab(name) {
-  if (name !== 'map' && document.documentElement.classList.contains('map-expanded')) collapseMap(false);
-  if (name !== 'mine' && form) form.classList.add('hidden');
+  if (name !== 'explore' && document.documentElement.classList.contains('map-expanded')) collapseMap(false);
+  if (name !== 'plan' && name !== 'logbook' && form) form.classList.add('hidden');
   document.querySelectorAll('#app > nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
   });
@@ -228,10 +232,12 @@ function selectTab(name) {
   });
   var mainEl = document.querySelector('#app main');
   if (mainEl) mainEl.scrollTop = 0;
-  if (name === 'map') {
+  if (name === 'explore') {
     fitMap();
     setTimeout(fitMap, 100);
   }
+  if (name === 'plan') showPlanHome();
+  if (name === 'logbook') showLogbookHome();
 }
 
 document.querySelectorAll('#app > nav button').forEach(function (btn) {
@@ -381,10 +387,10 @@ function historyLine(item) {
   return [added, when].filter(Boolean).join(' · ');
 }
 
-function matchesMine(item) {
+function matchesLogbook(item) {
   var kinds = Object.keys(mineKinds).filter(function (kind) { return mineKinds[kind]; });
   if (kinds.length && kinds.indexOf(item.kind) < 0) return false;
-  var query = document.getElementById('mine-search');
+  var query = document.getElementById('logbook-search');
   var text = query ? Partners.fold(query.value) : '';
   if (!text) return true;
   return Partners.fold(item.name).indexOf(text) >= 0 || Partners.nameKey(item.name).indexOf(text) >= 0;
@@ -403,10 +409,11 @@ function renderItemCard(item) {
     el('button', { class: 'danger', type: 'button', 'data-action': 'delete', 'data-id': item.id, text: 'Delete' })
   ];
   if (planned) {
-    actions.unshift(el('button', { class: 'primary', type: 'button', 'data-action': 'done', 'data-id': item.id, text: 'Mark as done' }));
-    actions.push(el('button', { class: 'secondary', type: 'button', 'data-action': 'partner', 'data-id': item.id, text: 'Find partners' }));
+    actions.unshift(el('button', { class: 'primary', type: 'button', 'data-action': 'open', 'data-id': item.id, text: 'Open' }));
     actions.unshift(el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'down', 'data-id': item.id, 'aria-label': 'Move down', text: '↓' }));
     actions.unshift(el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'up', 'data-id': item.id, 'aria-label': 'Move up', text: '↑' }));
+  } else {
+    actions.unshift(el('button', { class: 'secondary', type: 'button', 'data-action': 'memory', 'data-id': item.id, text: 'Memories' }));
   }
   var card = el('div', { class: 'card mine-card', draggable: planned ? 'true' : 'false', 'data-id': item.id },
     el('h3', { text: item.name }),
@@ -444,47 +451,46 @@ function renderResume() {
   );
 }
 
-function visibleMine() {
-  var source = mineSegment === 'planned' ? Lgc.plannedOrder(items) : Lgc.doneOrder(items);
-  return source.filter(matchesMine);
-}
-
 function renderMine() {
-  var list = document.getElementById('mine-list');
-  var rows = visibleMine();
-  if (!list) return;
-  if (!rows.length) {
-    var empty = mineSegment === 'planned'
-      ? 'Nothing planned. Add a peak, route, or hike you want to do.'
-      : 'Nothing done yet. Log an ascent, or mark a plan as done.';
-    var search = document.getElementById('mine-search');
-    if ((search && search.value.trim()) || Object.keys(mineKinds).some(function (kind) { return mineKinds[kind]; })) {
-      empty = 'Nothing matches.';
-    }
-    list.replaceChildren(el('p', { class: 'muted', text: empty }));
-  } else {
-    list.replaceChildren.apply(list, rows.map(renderItemCard));
+  var planList = document.getElementById('plan-list');
+  var bookList = document.getElementById('logbook-list');
+  if (planList) {
+    var plans = Lgc.plannedOrder(items);
+    planList.replaceChildren.apply(planList, plans.length
+      ? plans.map(renderItemCard)
+      : [el('p', { class: 'muted', text: 'Nothing planned yet. Explore a peak, or add an idea.' })]);
+  }
+  if (bookList) {
+    var done = Lgc.doneOrder(items).filter(matchesLogbook);
+    var filtered = Object.keys(mineKinds).some(function (kind) { return mineKinds[kind]; });
+    var search = document.getElementById('logbook-search');
+    var empty = (search && search.value.trim()) || filtered
+      ? 'Nothing matches.'
+      : 'Nothing in the logbook yet. Mark a plan as done, or log something you already did.';
+    bookList.replaceChildren.apply(bookList, done.length
+      ? done.map(renderItemCard)
+      : [el('p', { class: 'muted', text: empty })]);
+    paintLogPhotos(done);
   }
   var stats = Lgc.computeStats(doneItems());
-  document.getElementById('peak-count').textContent = String(stats.peaks);
-  document.getElementById('route-count').textContent = String(stats.routes);
-  document.getElementById('hike-count').textContent = String(stats.hikes);
+  var peakCount = document.getElementById('peak-count');
+  if (peakCount) peakCount.textContent = String(stats.peaks);
+  var routeCount = document.getElementById('route-count');
+  if (routeCount) routeCount.textContent = String(stats.routes);
+  var hikeCount = document.getElementById('hike-count');
+  if (hikeCount) hikeCount.textContent = String(stats.hikes);
   renderResume();
   syncAreas();
   updateMapMarkers();
   renderCollections();
+  renderExplore();
 }
 
 function setMineSegment(name) {
-  mineSegment = name === 'done' ? 'done' : 'planned';
-  document.getElementById('seg-planned').classList.toggle('active', mineSegment === 'planned');
-  document.getElementById('seg-done').classList.toggle('active', mineSegment === 'done');
-  document.getElementById('seg-planned').setAttribute('aria-selected', mineSegment === 'planned' ? 'true' : 'false');
-  document.getElementById('seg-done').setAttribute('aria-selected', mineSegment === 'done' ? 'true' : 'false');
-  document.getElementById('done-prompt').classList.add('hidden');
   donePromptId = '';
-  var mainEl = document.querySelector('#app main');
-  if (mainEl) mainEl.scrollTop = 0;
+  var prompt = document.getElementById('done-prompt');
+  if (prompt) prompt.classList.add('hidden');
+  selectTab(name === 'done' ? 'logbook' : 'plan');
   renderMine();
 }
 
@@ -504,15 +510,16 @@ function onItemClick(event) {
   if (action === 'edit') editItem(id);
   if (action === 'delete') deleteItem(id);
   if (action === 'done') openDonePrompt(id);
+  if (action === 'open') showPlanDetail(id);
+  if (action === 'memory') showMemory(id);
   if (action === 'partner') startPartnerFrom(id);
   if (action === 'up') movePlanned(id, -1);
   if (action === 'down') movePlanned(id, 1);
 }
 
-document.getElementById('mine-list').addEventListener('click', onItemClick);
-document.getElementById('seg-planned').addEventListener('click', function () { setMineSegment('planned'); });
-document.getElementById('seg-done').addEventListener('click', function () { setMineSegment('done'); });
-document.getElementById('mine-search').addEventListener('input', renderMine);
+document.getElementById('plan-list').addEventListener('click', onItemClick);
+document.getElementById('logbook-list').addEventListener('click', onItemClick);
+document.getElementById('logbook-search').addEventListener('input', renderMine);
 document.querySelectorAll('.chip').forEach(function (chip) {
   chip.addEventListener('click', function () {
     var kind = chip.getAttribute('data-kind');
@@ -580,7 +587,7 @@ function syncStatusFields() {
 function resetEntryForm(listName) {
   editingId = null;
   editingList = listName === 'done' ? 'done' : 'planned';
-  document.getElementById('form-title').textContent = editingList === 'planned' ? 'Plan something' : 'Log a done ascent';
+  document.getElementById('form-title').textContent = editingList === 'planned' ? 'Add an idea' : 'Log an ascent';
   document.getElementById('item-kind').value = 'peak';
   document.getElementById('name').value = '';
   document.getElementById('grade').value = '';
@@ -611,8 +618,14 @@ function openEntryForm(listName) {
 
 document.getElementById('item-kind').addEventListener('change', syncKindFields);
 document.getElementById('activity').addEventListener('change', syncKindFields);
-document.getElementById('add-planned-btn').addEventListener('click', function () { setMineSegment('planned'); openEntryForm('planned'); });
-document.getElementById('add-done-btn').addEventListener('click', function () { setMineSegment('done'); openEntryForm('done'); });
+document.getElementById('add-planned-btn').addEventListener('click', function () {
+  selectTab('plan');
+  openEntryForm('planned');
+});
+document.getElementById('add-done-btn').addEventListener('click', function () {
+  selectTab('logbook');
+  openEntryForm('done');
+});
 
 document.getElementById('save-btn').addEventListener('click', function () {
   var kind = document.getElementById('item-kind').value;
@@ -695,15 +708,21 @@ function openDonePrompt(id) {
   var item = items.find(function (entry) { return entry.id === id && entry.status === 'planned'; });
   if (!item) return;
   donePromptId = id;
+  activePlanId = id;
+  document.getElementById('plan-home').classList.add('hidden');
+  document.getElementById('plan-detail').classList.add('hidden');
+  document.getElementById('partner-flow').classList.add('hidden');
   document.getElementById('done-prompt-name').textContent = item.name + (item.peakIds && item.peakIds.length ? '. Linked peaks are marked done with the same date.' : '');
   document.getElementById('done-date').value = item.date || Lgc.todayISO();
-  document.getElementById('done-note').value = item.notes || '';
+  document.getElementById('done-note').value = '';
+  document.getElementById('done-photo').value = '';
   document.getElementById('done-prompt').classList.remove('hidden');
-  document.getElementById('done-prompt').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
 }
 
 function movePlanned(id, delta) {
-  var visible = visibleMine();
+  var visible = Lgc.plannedOrder(items);
   var index = -1;
   visible.forEach(function (item, i) { if (item.id === id) index = i; });
   var next = index + delta;
@@ -733,20 +752,32 @@ function reorderPlannedTo(fromId, toId) {
 }
 
 document.getElementById('done-cancel').addEventListener('click', function () {
+  var id = donePromptId;
   donePromptId = '';
   document.getElementById('done-prompt').classList.add('hidden');
+  if (id) showPlanDetail(id);
+  else showPlanHome();
 });
 
 document.getElementById('done-save').addEventListener('click', function () {
   if (!donePromptId) return;
-  items = Lgc.markDone(items, donePromptId, {
+  var id = donePromptId;
+  var files = Array.prototype.slice.call(document.getElementById('done-photo').files || []);
+  items = Lgc.markDone(items, id, {
     date: document.getElementById('done-date').value,
     notes: document.getElementById('done-note').value
   });
   saveItems();
   donePromptId = '';
   document.getElementById('done-prompt').classList.add('hidden');
-  setMineSegment('done');
+  var saved = files.map(function (file) {
+    return downscaleFile(file).then(function (blob) { return Photos.add(id, blob); }).catch(function () { return null; });
+  });
+  Promise.all(saved).then(function () {
+    renderMine();
+    selectTab('logbook');
+    showMemory(id);
+  });
 });
 
 // ---- Map ----
@@ -776,6 +807,7 @@ function addCatalogItem(place) {
     lng: place.lng,
     elevation: place.elevation,
     notes: place.note || '',
+    collectionId: place.collectionId || '',
     status: 'planned',
     priority: 0
   });
@@ -783,7 +815,7 @@ function addCatalogItem(place) {
   items.push(entry);
   saveItems();
   renderMine();
-  setMapNote(place.name + ' added to Planned.');
+  setMapNote(place.name + ' added to your plan.');
 }
 
 function renderFamous() {
@@ -798,7 +830,7 @@ function renderFamous() {
         class: 'secondary',
         type: 'button',
         'data-famous': place.name,
-        text: 'Add to planned'
+        text: 'Add to plan'
       })
     );
   }));
@@ -842,7 +874,7 @@ function markerPopup(item) {
 }
 
 function placePopup(place) {
-  var button = el('button', { type: 'button', text: 'Add to planned' });
+  var button = el('button', { type: 'button', text: 'Add to plan' });
   button.addEventListener('click', function () { addCatalogItem(place); });
   return el('div', null,
     el('strong', { text: place.name }),
@@ -1289,6 +1321,7 @@ function avatarNode(initials, key) {
 function showPartnerSearch() {
   activePerson = null;
   joinFormOpen = false;
+  showPartnerFlow();
   document.getElementById('partner-home').classList.remove('hidden');
   document.getElementById('objective-page').classList.add('hidden');
   document.getElementById('partner-profile').classList.add('hidden');
@@ -1300,6 +1333,7 @@ function showObjective(objective) {
   activeObjective = objective;
   activePerson = null;
   joinFormOpen = false;
+  showPartnerFlow();
   document.getElementById('partner-home').classList.add('hidden');
   document.getElementById('objective-page').classList.remove('hidden');
   document.getElementById('partner-profile').classList.add('hidden');
@@ -1589,7 +1623,8 @@ function startPartnerFrom(id) {
   rebuildObjectives();
   var objective = Partners.resolveObjective(objectiveCatalog, item);
   if (!objective) return;
-  selectTab('partners');
+  activePlanId = id;
+  selectTab('plan');
   showObjective(objective);
 }
 
@@ -1632,7 +1667,15 @@ document.getElementById('objective-suggestions').addEventListener('click', funct
   openSuggestion(button.getAttribute('data-objective'));
 });
 
-document.getElementById('objective-back').addEventListener('click', showPartnerSearch);
+document.getElementById('objective-back').addEventListener('click', function () {
+  if (activePlanId) showPlanDetail(activePlanId);
+  else showPlanHome();
+});
+
+document.getElementById('partner-home-back').addEventListener('click', function () {
+  if (activePlanId) showPlanDetail(activePlanId);
+  else showPlanHome();
+});
 
 document.getElementById('partner-profile-back').addEventListener('click', function () {
   if (activeObjective) showObjective(activeObjective);
@@ -1664,12 +1707,10 @@ document.getElementById('join-panel').addEventListener('click', function (event)
   }
 });
 
-document.querySelector('#app > nav button[data-tab="partners"]').addEventListener('click', showPartnerSearch);
-
 // ---- Export / Import ----
 document.getElementById('export-btn').addEventListener('click', function () {
   var data = {
-    schema: 2,
+    schema: 3,
     items: items,
     logs: doneItems(),
     backlog: plannedItems(),
@@ -1750,6 +1791,7 @@ function loadCollections() {
     updateMapMarkers();
     rebuildObjectives();
     refreshActiveObjective();
+    renderExplore();
   }).catch(function () {
     var box = document.getElementById('collections');
     if (box) box.textContent = 'The peak list could not be loaded.';
@@ -1826,16 +1868,22 @@ function showPeakDetail(peak) {
     else markSummited(peak);
     showPeakDetail(peak);
   });
-  var backlogBtn = el('button', { class: 'secondary', type: 'button', text: 'Add to planned' });
+  var backlogBtn = el('button', { class: 'secondary', type: 'button', text: alreadyPlanned(peak.name) ? 'In your plan' : 'Add to plan' });
   backlogBtn.addEventListener('click', function () {
+    if (alreadyPlanned(peak.name)) {
+      openPlanByName(peak.name);
+      return;
+    }
     addCatalogItem({
       name: peak.name,
       kind: 'peak',
       lat: peak.lat,
       lng: peak.lng,
       elevation: peak.elevation,
-      note: peak.normalRoute || ''
+      note: peak.normalRoute || '',
+      collectionId: collectionData ? collectionData.id : ''
     });
+    selectTab('plan');
   });
   var steps = plan.steps.map(function (step) {
     var button = el('button', { class: 'linkish', type: 'button', text: step.name });
@@ -1866,9 +1914,17 @@ function showPeakDetail(peak) {
 function collectionPopup(peak) {
   var details = el('button', { type: 'button', text: 'Details' });
   details.addEventListener('click', function () { showPeakDetail(peak); });
-  var add = el('button', { type: 'button', text: 'Add to planned' });
+  var add = el('button', { type: 'button', text: 'Add to plan' });
   add.addEventListener('click', function () {
-    addCatalogItem({ name: peak.name, kind: 'peak', lat: peak.lat, lng: peak.lng, elevation: peak.elevation, note: peak.normalRoute || '' });
+    addCatalogItem({
+      name: peak.name,
+      kind: 'peak',
+      lat: peak.lat,
+      lng: peak.lng,
+      elevation: peak.elevation,
+      note: peak.normalRoute || '',
+      collectionId: collectionData ? collectionData.id : ''
+    });
   });
   var mark = el('button', { type: 'button', text: Col.isSummited(peak, doneItems()) ? 'Summited' : 'Mark summited' });
   mark.addEventListener('click', function () {
@@ -2008,6 +2064,553 @@ window.addEventListener('online', function () {
   redrawTiles();
 });
 window.addEventListener('offline', updateOfflineBanner);
+
+function bookmarkIcon(filled) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '18');
+  svg.setAttribute('height', '18');
+  svg.setAttribute('aria-hidden', 'true');
+  var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M6 3.5h12a1 1 0 0 1 1 1V21l-7-4.2L5 21V4.5a1 1 0 0 1 1-1z');
+  path.setAttribute('fill', filled ? 'currentColor' : 'none');
+  path.setAttribute('stroke', 'currentColor');
+  path.setAttribute('stroke-width', '1.8');
+  path.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(path);
+  return svg;
+}
+
+function downscaleFile(file) {
+  return new Promise(function (resolve, reject) {
+    if (!file || !/^image\//.test(file.type || '')) {
+      reject(new Error('photo'));
+      return;
+    }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      var max = 1400;
+      var scale = Math.min(1, max / Math.max(img.width, img.height));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function (blob) {
+        if (blob) resolve(blob);
+        else reject(new Error('photo'));
+      }, 'image/jpeg', 0.82);
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      reject(new Error('photo'));
+    };
+    img.src = url;
+  });
+}
+
+function showPlanHome() {
+  var home = document.getElementById('plan-home');
+  if (!home) return;
+  home.classList.remove('hidden');
+  document.getElementById('plan-detail').classList.add('hidden');
+  document.getElementById('partner-flow').classList.add('hidden');
+  document.getElementById('done-prompt').classList.add('hidden');
+  donePromptId = '';
+}
+
+function showPartnerFlow() {
+  document.getElementById('plan-home').classList.add('hidden');
+  document.getElementById('plan-detail').classList.add('hidden');
+  document.getElementById('done-prompt').classList.add('hidden');
+  document.getElementById('partner-flow').classList.remove('hidden');
+}
+
+function showLogbookHome() {
+  var home = document.getElementById('logbook-home');
+  if (!home) return;
+  home.classList.remove('hidden');
+  document.getElementById('logbook-detail').classList.add('hidden');
+}
+
+function patchItem(id, fields) {
+  var index = items.findIndex(function (entry) { return entry.id === id; });
+  if (index < 0) return null;
+  var next = Lgc.updateLog(items[index], fields);
+  if (!next) return null;
+  items[index] = next;
+  saveItems();
+  return next;
+}
+
+function openPlanByName(name) {
+  var key = String(name || '').trim().toLowerCase();
+  var item = null;
+  plannedItems().forEach(function (entry) {
+    if (entry.name.toLowerCase() === key) item = entry;
+  });
+  if (!item) return;
+  selectTab('plan');
+  showPlanDetail(item.id);
+}
+
+function checklistNode(item) {
+  var list = el('ul', { class: 'check-list' });
+  (item.checklist || []).forEach(function (step, index) {
+    var input = el('input', { type: 'checkbox', 'aria-label': step.text });
+    input.checked = step.done === true;
+    input.addEventListener('change', function () {
+      var next = (item.checklist || []).map(function (entry, i) {
+        if (i !== index) return entry;
+        return { id: entry.id, text: entry.text, done: input.checked };
+      });
+      var updated = patchItem(item.id, { checklist: next });
+      if (updated) item.checklist = updated.checklist;
+    });
+    var remove = el('button', { class: 'secondary icon-btn', type: 'button', 'aria-label': 'Remove step', text: '×' });
+    remove.addEventListener('click', function () {
+      var next = (item.checklist || []).filter(function (entry) { return entry.id !== step.id; });
+      patchItem(item.id, { checklist: next });
+      showPlanDetail(item.id);
+    });
+    list.appendChild(el('li', null,
+      el('label', { class: 'check-row' }, input, el('span', { text: step.text })),
+      remove
+    ));
+  });
+  var addInput = el('input', {
+    type: 'text',
+    id: 'check-new',
+    maxlength: '200',
+    placeholder: 'Add a preparation step',
+    'aria-label': 'Preparation step'
+  });
+  var add = el('button', { class: 'secondary', type: 'button', text: 'Add' });
+  function commit() {
+    var text = addInput.value.trim();
+    if (!text) return;
+    var next = (item.checklist || []).concat([{ id: 'step-' + Date.now(), text: text, done: false }]);
+    patchItem(item.id, { checklist: next });
+    showPlanDetail(item.id);
+  }
+  add.addEventListener('click', commit);
+  addInput.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commit();
+    }
+  });
+  return el('div', null, list, el('div', { class: 'check-add' }, addInput, add));
+}
+
+function planDetailNode(item) {
+  var peak = collectionPeakByName(item);
+  var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+  back.addEventListener('click', showPlanHome);
+  var season = el('select', { id: 'plan-season', 'aria-label': 'Season' });
+  [['', 'Any time'], ['winter', 'Winter'], ['spring', 'Spring'], ['summer', 'Summer'], ['autumn', 'Autumn']].forEach(function (pair) {
+    var option = document.createElement('option');
+    option.value = pair[0];
+    option.textContent = pair[1];
+    season.appendChild(option);
+  });
+  season.value = item.season || '';
+  season.addEventListener('change', function () { patchItem(item.id, { season: season.value }); });
+  var dates = el('input', {
+    type: 'text',
+    id: 'plan-dates',
+    maxlength: '120',
+    placeholder: 'Dates, if you have them',
+    'aria-label': 'Dates',
+    value: item.planDates || ''
+  });
+  dates.addEventListener('change', function () { patchItem(item.id, { planDates: dates.value }); });
+  var notes = el('textarea', { id: 'plan-notes', rows: '4', maxlength: '4000', placeholder: 'Route notes', 'aria-label': 'Research notes' });
+  notes.value = item.notes || '';
+  var saveNotes = el('button', { class: 'secondary', type: 'button', text: 'Save notes' });
+  saveNotes.addEventListener('click', function () {
+    patchItem(item.id, { notes: notes.value });
+    saveNotes.textContent = 'Saved';
+  });
+  var research = [el('h3', { text: 'Research' })];
+  if (peak) {
+    research.push(el('p', { text: (peak.grade ? 'Grade ' + peak.grade + '. ' : '') + (peak.normalRoute || 'Normal route not recorded.') }));
+    if (peak.sourceUrl) {
+      research.push(el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }));
+    }
+  } else if (item.grade) {
+    research.push(el('p', { text: 'Grade ' + item.grade }));
+  } else {
+    research.push(el('p', { class: 'muted', text: 'Add a note for the route, the grade, or where you read about it.' }));
+  }
+  var partners = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
+  partners.addEventListener('click', function () { startPartnerFrom(item.id); });
+  var done = el('button', { class: 'primary plan-done', type: 'button', text: 'Mark as done' });
+  done.addEventListener('click', function () { openDonePrompt(item.id); });
+  return el('div', { class: 'plan-sheet' },
+    back,
+    el('h2', { text: item.name }),
+    el('p', { class: 'entry-meta', text: [kindLabel(item.kind), item.elevation ? item.elevation + ' m' : '', seasonLabel(item.season)].filter(Boolean).join(' · ') }),
+    el('label', { class: 'field-label', for: 'plan-season', text: 'Season' }),
+    season,
+    el('label', { class: 'field-label', for: 'plan-dates', text: 'Dates' }),
+    dates,
+    research[0],
+    research[1],
+    research[2] || false,
+    notes,
+    saveNotes,
+    el('h3', { text: 'Prepare' }),
+    checklistNode(item),
+    el('h3', { text: 'Partners' }),
+    el('p', { class: 'muted', text: 'The queue is for this objective. Sample people wear a Demo badge.' }),
+    partners,
+    done
+  );
+}
+
+function showPlanDetail(id) {
+  var item = items.find(function (entry) { return entry.id === id && entry.status === 'planned'; });
+  if (!item) {
+    showPlanHome();
+    return;
+  }
+  activePlanId = id;
+  donePromptId = '';
+  document.getElementById('plan-home').classList.add('hidden');
+  document.getElementById('partner-flow').classList.add('hidden');
+  document.getElementById('done-prompt').classList.add('hidden');
+  var box = document.getElementById('plan-detail');
+  box.classList.remove('hidden');
+  box.replaceChildren(planDetailNode(item));
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
+}
+
+function paintMemoryPhotos(itemId, box) {
+  if (!Photos || !box) return;
+  Photos.list(itemId).then(function (rows) {
+    if (!box.isConnected) return;
+    if (!rows.length) {
+      box.replaceChildren(el('p', { class: 'muted', text: 'No photos yet.' }));
+      return;
+    }
+    box.replaceChildren.apply(box, rows.map(function (row) {
+      var img = el('img', { class: 'memory-photo', alt: 'Photo from this entry' });
+      img.src = URL.createObjectURL(row.blob);
+      return img;
+    }));
+  }).catch(function () {});
+}
+
+function showMemory(id) {
+  var item = items.find(function (entry) { return entry.id === id && entry.status !== 'planned'; });
+  if (!item) {
+    showLogbookHome();
+    return;
+  }
+  document.getElementById('logbook-home').classList.add('hidden');
+  var box = document.getElementById('logbook-detail');
+  box.classList.remove('hidden');
+  var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+  back.addEventListener('click', showLogbookHome);
+  var photos = el('div', { class: 'memory-photos' });
+  var file = el('input', { type: 'file', accept: 'image/*', multiple: 'multiple', 'aria-label': 'Add photos' });
+  file.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(file.files || []);
+    Promise.all(files.map(function (one) {
+      return downscaleFile(one).then(function (blob) { return Photos.add(item.id, blob); }).catch(function () { return null; });
+    })).then(function () { showMemory(item.id); });
+  });
+  var progress = el('button', { class: 'secondary', type: 'button', text: 'Alpine 4000ers progress' });
+  progress.addEventListener('click', function () {
+    selectTab('explore');
+    var rail = document.getElementById('rail-4000');
+    if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  box.replaceChildren(el('div', { class: 'plan-sheet' },
+    back,
+    el('h2', { text: item.name }),
+    el('p', { class: 'entry-meta', text: [kindLabel(item.kind), item.date ? prettyDate(item.date) : '', item.elevation ? item.elevation + ' m' : ''].filter(Boolean).join(' · ') }),
+    item.notes ? el('p', { class: 'entry-notes', text: item.notes }) : el('p', { class: 'muted', text: 'No memory written yet.' }),
+    el('h3', { text: 'Photos' }),
+    photos,
+    el('label', { class: 'field-label', text: 'Add a photo' }),
+    file,
+    progress
+  ));
+  paintMemoryPhotos(item.id, photos);
+  var mainEl = document.querySelector('#app main');
+  if (mainEl) mainEl.scrollTop = 0;
+}
+
+function paintLogPhotos(done) {
+  if (!Photos) return;
+  done.forEach(function (item) {
+    Photos.list(item.id).then(function (rows) {
+      var card = document.querySelector('#logbook-list [data-id="' + item.id + '"]');
+      if (!card || !rows.length || card.querySelector('.memory-strip')) return;
+      var img = el('img', { class: 'memory-strip', alt: '' });
+      img.src = URL.createObjectURL(rows[0].blob);
+      card.insertBefore(img, card.firstChild);
+    }).catch(function () {});
+  });
+}
+
+function loadPeakPhotos() {
+  fetch('data/peak-photos.json').then(function (response) {
+    if (!response.ok) throw new Error('photos');
+    return response.json();
+  }).then(function (doc) {
+    peakPhotos = doc || {};
+    renderExplore();
+  }).catch(function () { peakPhotos = peakPhotos || {}; });
+}
+
+function photoRecord(peak) {
+  if (!peak || !peak.wikidata) return null;
+  return peakPhotos[peak.wikidata] || null;
+}
+
+function photoNode(photo, name) {
+  if (!photo || !photo.thumb) {
+    return el('div', { class: 'peak-photo peak-photo-empty', role: 'img', 'aria-label': 'Illustrated placeholder for ' + name });
+  }
+  var img = el('img', { class: 'peak-photo', alt: '', loading: 'lazy', decoding: 'async', src: photo.thumb });
+  img.addEventListener('error', function () {
+    img.replaceWith(el('div', { class: 'peak-photo peak-photo-empty', role: 'img', 'aria-label': 'Illustrated placeholder for ' + name }));
+  });
+  var credit = el('a', {
+    class: 'photo-credit',
+    href: photo.page,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    title: photo.credit || photo.license,
+    text: photo.license || 'Photo'
+  });
+  credit.addEventListener('click', function (event) { event.stopPropagation(); });
+  return el('div', { class: 'peak-photo-frame' }, img, credit);
+}
+
+function bookmarkButton(name, place) {
+  var saved = alreadyPlanned(name);
+  var button = el('button', {
+    class: saved ? 'bookmark in-plan' : 'bookmark',
+    type: 'button',
+    'aria-label': saved ? name + ' is in your plan' : 'Add ' + name + ' to plan'
+  }, bookmarkIcon(saved));
+  button.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (alreadyPlanned(name)) openPlanByName(name);
+    else addCatalogItem(place);
+  });
+  return button;
+}
+
+function peakCard(peak) {
+  var place = {
+    name: peak.name,
+    kind: 'peak',
+    lat: peak.lat,
+    lng: peak.lng,
+    elevation: peak.elevation,
+    note: peak.normalRoute || '',
+    collectionId: collectionData ? collectionData.id : ''
+  };
+  var card = el('article', { class: 'peak-card' },
+    el('div', { class: 'peak-photo-wrap' }, photoNode(photoRecord(peak), peak.name), bookmarkButton(peak.name, place)),
+    el('div', { class: 'peak-card-body' },
+      el('h3', { text: peak.name }),
+      el('p', { class: 'peak-card-loc', text: (peak.subrange || 'Alps') + ' · ' + Col.countryLabel(peak) }),
+      el('p', { class: 'peak-card-elev', text: peak.elevation + ' m' })
+    )
+  );
+  card.addEventListener('click', function (event) {
+    if (event.target.closest && event.target.closest('.bookmark, .photo-credit')) return;
+    showPeakDetail(peak);
+    var box = document.getElementById('peak-detail');
+    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  return card;
+}
+
+function showTrekDetail(place) {
+  var box = document.getElementById('peak-detail');
+  if (!box) return;
+  var add = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(place.name) ? 'In your plan' : 'Add to plan' });
+  add.addEventListener('click', function () {
+    if (alreadyPlanned(place.name)) openPlanByName(place.name);
+    else {
+      addCatalogItem(place);
+      showTrekDetail(place);
+    }
+  });
+  box.classList.remove('hidden');
+  box.replaceChildren(
+    el('h3', { text: place.name }),
+    el('p', { text: place.note || '' }),
+    el('p', { class: 'muted', text: place.area || '' }),
+    add
+  );
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function trekCard(place) {
+  var card = el('article', { class: 'peak-card' },
+    el('div', { class: 'peak-photo-wrap' }, photoNode(peakPhotos['place:' + place.name], place.name), bookmarkButton(place.name, place)),
+    el('div', { class: 'peak-card-body' },
+      el('h3', { text: place.name }),
+      el('p', { class: 'peak-card-loc', text: place.area || '' }),
+      el('p', { class: 'peak-card-elev', text: place.note || '' })
+    )
+  );
+  card.addEventListener('click', function (event) {
+    if (event.target.closest && event.target.closest('.bookmark, .photo-credit')) return;
+    showTrekDetail(place);
+  });
+  return card;
+}
+
+function exploreRail(title, meta, cards, id) {
+  var head = el('div', { class: 'rail-head' },
+    el('h3', { text: title }),
+    meta ? el('span', { class: 'progress-count', text: meta }) : null
+  );
+  if (title === 'Suggested training peaks') {
+    var button = el('button', {
+      class: 'secondary near-btn',
+      type: 'button',
+      text: userLocation ? 'Update location' : 'Near you'
+    });
+    button.addEventListener('click', requestNear);
+    head.appendChild(button);
+  }
+  var section = el('section', { class: 'rail' }, head, el('div', { class: 'rail-scroll' }, cards));
+  if (id) section.id = id;
+  return section;
+}
+
+function kmBetween(from, peak) {
+  var dLat = (peak.lat - from.lat) * Math.PI / 180;
+  var dLng = (peak.lng - from.lng) * Math.PI / 180;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(from.lat * Math.PI / 180) * Math.cos(peak.lat * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function requestNear() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    renderExplore();
+  }, function () {
+    setMapNote('Location is unavailable, so the training peaks stay as they are.');
+  }, { maximumAge: 600000, timeout: 8000 });
+}
+
+function renderExplore() {
+  var root = document.getElementById('explore-rails');
+  if (!root || !collectionData) return;
+  var peaks = collectionData.peaks.slice();
+  var progress = Col.progress(peaks, doneItems());
+  var highest = peaks.slice().sort(function (a, b) { return b.elevation - a.elevation; }).slice(0, 8);
+  var training = peaks.filter(function (peak) {
+    return peak.grade === 'F' || peak.grade === 'F+' || peak.grade === 'PD-' || peak.grade === 'PD';
+  }).sort(function (a, b) { return a.elevation - b.elevation; }).slice(0, 12);
+  var treks = Lgc.FAMOUS.filter(function (place) { return place.kind === 'hike'; });
+  var rails = [
+    exploreRail('Highest Peaks', null, highest.map(peakCard)),
+    exploreRail('Alpine 4000ers', progress.done + ' of ' + progress.total, peaks.map(peakCard), 'rail-4000'),
+    exploreRail('Famous treks', null, treks.map(trekCard))
+  ];
+  if (userLocation) {
+    var near = peaks.slice().sort(function (a, b) {
+      return kmBetween(userLocation, a) - kmBetween(userLocation, b);
+    }).slice(0, 8);
+    rails.push(exploreRail('Near you', null, near.map(peakCard)));
+  }
+  rails.push(exploreRail('Suggested training peaks', null, training.map(peakCard)));
+  root.replaceChildren.apply(root, rails);
+}
+
+function renderExploreSuggestions() {
+  var input = document.getElementById('explore-query');
+  var list = document.getElementById('explore-suggestions');
+  if (!input || !list) return;
+  var query = input.value.trim();
+  var matches = query ? Partners.searchObjectives(objectiveCatalog, query, 8) : [];
+  input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+  if (!matches.length) {
+    list.replaceChildren();
+    return;
+  }
+  list.replaceChildren.apply(list, matches.map(function (objective, index) {
+    var button = el('button', {
+      type: 'button',
+      role: 'option',
+      'data-explore': objective.id,
+      'aria-selected': index === 0 ? 'true' : 'false'
+    },
+      el('span', { class: 'suggestion-name', text: objective.name }),
+      el('span', { class: 'badge', text: Partners.kindLabel(objective.kind) })
+    );
+    return el('li', null, button);
+  }));
+}
+
+function placeFromObjective(objective) {
+  var peak = null;
+  if (collectionData) {
+    collectionData.peaks.forEach(function (item) {
+      if (Col.normName(item.name) === Col.normName(objective.name)) peak = item;
+    });
+  }
+  if (peak) {
+    return {
+      name: peak.name,
+      kind: 'peak',
+      lat: peak.lat,
+      lng: peak.lng,
+      elevation: peak.elevation,
+      note: peak.normalRoute || '',
+      collectionId: collectionData.id
+    };
+  }
+  var famous = famousByName(objective.name);
+  if (famous) return famous;
+  return { name: objective.name, kind: objective.kind || 'peak', elevation: objective.elevation, note: objective.note || '' };
+}
+
+function addExploreObjective(id) {
+  var found = null;
+  objectiveCatalog.forEach(function (objective) {
+    if (objective.id === id) found = objective;
+  });
+  if (!found) return;
+  var place = placeFromObjective(found);
+  document.getElementById('explore-query').value = '';
+  renderExploreSuggestions();
+  if (alreadyPlanned(place.name)) openPlanByName(place.name);
+  else addCatalogItem(place);
+}
+
+document.getElementById('explore-query').addEventListener('input', renderExploreSuggestions);
+document.getElementById('explore-suggestions').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-explore]') : null;
+  if (!button) return;
+  addExploreObjective(button.getAttribute('data-explore'));
+});
+document.getElementById('open-map').addEventListener('click', function () {
+  if (document.getElementById('explore').classList.contains('hidden')) selectTab('explore');
+  requestAnimationFrame(function () { expandMap(); });
+});
+document.getElementById('collection-progress').addEventListener('click', function () {
+  selectTab('explore');
+  var rail = document.getElementById('rail-4000');
+  if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 // ---- Init ----
 registerServiceWorker();

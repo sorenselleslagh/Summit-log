@@ -158,7 +158,19 @@ assert.strictEqual(migratedItems[1].id, wish.id);
 assert.strictEqual(migratedItems[1].status, 'planned');
 assert.strictEqual(legacyStore.getItem('summitlogs'), legacyLog);
 assert.strictEqual(legacyStore.getItem('summitbacklog'), legacyBack);
-assert.strictEqual(legacyStore.getItem('summitlog_schema'), '2');
+assert.strictEqual(legacyStore.getItem('summitlog_schema'), '3');
+assert.deepStrictEqual(migratedItems[0].checklist, []);
+assert.strictEqual(migratedItems[0].planDates, '');
+var withSteps = logic.normalizeLog({
+  name: 'A',
+  status: 'planned',
+  planDates: 'June',
+  checklist: [{ id: 'a', text: 'Crampons', done: false }, { text: '', done: true }]
+}, ctx());
+assert.strictEqual(withSteps.planDates, 'June');
+assert.strictEqual(withSteps.checklist.length, 1);
+assert.strictEqual(withSteps.checklist[0].text, 'Crampons');
+assert.strictEqual(withSteps.checklist[0].done, false);
 assert.strictEqual(migratedRepo.loadItems().length, 2);
 
 var zero = logic.normalizeLog({ id: 1, name: 'Null Island', lat: 0, lng: 0, elevation: 0, date: '2024-01-02' }, ctx());
@@ -326,19 +338,31 @@ assert.ok(!sw.includes('"/index'));
 assert.ok(!sw.includes("scope: '/'"));
 
 var html = read('index.html');
+var photos = JSON.parse(read('data/peak-photos.json'));
+Object.keys(photos).forEach(function (key) {
+  var photo = photos[key];
+  assert.ok(photo.thumb.indexOf('wikimedia.org') >= 0, key);
+  assert.ok(photo.page.indexOf('commons.wikimedia.org') >= 0, key);
+  assert.ok(/CC|Public domain|PDM/i.test(photo.license), key + ' ' + photo.license);
+  assert.ok(photo.credit, key);
+});
 var app = read('app.js');
 assert.ok(html.includes('href="favicon.ico"'));
 assert.ok(html.includes('href="manifest.webmanifest"'));
 assert.ok(html.includes('src="storage.js"'));
 assert.ok(html.includes('Your climbs, your log, your partners'));
-assert.ok(html.includes('Start logging'));
+assert.ok(html.includes('Start planning'));
 assert.ok(html.includes('illustrations/mountain.svg'));
 assert.ok(html.includes('View intro'));
 assert.ok(!html.includes('I have an account'));
 assert.ok(!html.includes('Import data'));
-assert.ok(html.includes('data-tab="mine"'));
-assert.ok(html.includes('>Backlog</button>'));
-assert.ok(html.includes('<h2>Backlog</h2>'));
+assert.ok(html.includes('data-tab="plan"'));
+assert.ok(html.includes('data-tab="explore"'));
+assert.ok(html.includes('data-tab="logbook"'));
+assert.ok(html.includes('>Plan</button>'));
+assert.ok(html.includes('Find your next peak'));
+assert.ok(html.includes('<h2>Plan</h2>'));
+assert.ok(html.includes('<h2>My logbook</h2>'));
 assert.ok(!html.includes('My peaks'));
 assert.ok(!html.includes('>Mine</button>'));
 assert.ok(!html.includes('data-tab="backlog"'));
