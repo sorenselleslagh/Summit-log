@@ -796,6 +796,7 @@ html.map-cover .leaflet-control-zoom a {
 .photo-pin, .pin-dot, .pin-cluster { background: transparent; border: none; }
 
 .pin-face {
+  position: relative;
   display: block;
   width: 44px;
   height: 44px;
@@ -805,6 +806,17 @@ html.map-cover .leaflet-control-zoom a {
 }
 
 .photo-pin.is-done .pin-face { box-shadow: 0 0 0 3px #1f6b45, 0 8px 16px rgba(28, 25, 21, 0.28); }
+.photo-pin.is-done .pin-face::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #1f6b45 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.2 6.2l2.4 2.4 5.2-5.2' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/10px no-repeat;
+  box-shadow: 0 0 0 2px #fff;
+}
 .photo-pin.is-planned .pin-face { box-shadow: 0 0 0 3px #c4841d, 0 8px 16px rgba(28, 25, 21, 0.28); }
 .photo-pin.is-trek .pin-face { box-shadow: 0 0 0 3px #3d6f8f, 0 8px 16px rgba(28, 25, 21, 0.28); }
 
@@ -818,6 +830,8 @@ html.map-cover .leaflet-control-zoom a {
   box-shadow: 0 0 0 2px rgba(255, 252, 248, 0.9);
 }
 
+.pin-dot.is-done span { box-shadow: 0 0 0 2px #1f6b45; }
+
 .pin-cluster span {
   display: flex;
   align-items: center;
@@ -830,8 +844,10 @@ html.map-cover .leaflet-control-zoom a {
   font-family: Inter, system-ui, sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
-  box-shadow: 0 8px 16px rgba(28, 25, 21, 0.25);
+  box-shadow: 0 0 0 3px #fff, 0 8px 16px rgba(28, 25, 21, 0.25);
 }
+
+.pin-cluster.is-done span { box-shadow: 0 0 0 3px #1f6b45, 0 8px 16px rgba(28, 25, 21, 0.25); }
 
 .pin-face,
 .pin-dot span,
