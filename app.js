@@ -10,6 +10,11 @@ var items = [];
 var mineSegment = 'planned';
 var mineKinds = {};
 var planStages = {};
+var logbookView = 'timeline';
+var logbookMap = null;
+var logbookMarkers = [];
+var calendarCursor = new Date();
+var calendarTouched = false;
 var donePromptId = '';
 var activePlanId = '';
 var peakPhotos = {};
@@ -338,6 +343,17 @@ document.getElementById('replay-intro').addEventListener('click', function () {
 });
 
 // ---- Items ----
+function activityLabel(item) {
+  if (!item) return '';
+  if (item.activityType === 'rock') {
+    var names = { sport: 'Sport', trad: 'Trad', multipitch: 'Multipitch', bouldering: 'Bouldering' };
+    return 'Rock climbing' + (names[item.discipline] ? ' · ' + names[item.discipline] : '');
+  }
+  if (item.activityType === 'hiking') return 'Hiking & trekking';
+  if (item.activityType === 'mountaineering') return 'Mountaineering';
+  return kindLabel(item.kind);
+}
+
 function kindLabel(kind) {
   if (kind === 'route') return 'Route';
   if (kind === 'hike') return 'Hike';
@@ -390,7 +406,7 @@ function historyLine(item) {
 
 function matchesLogbook(item) {
   var kinds = Object.keys(mineKinds).filter(function (kind) { return mineKinds[kind]; });
-  if (kinds.length && kinds.indexOf(item.kind) < 0) return false;
+  if (kinds.length && kinds.indexOf(item.activityType || 'mountaineering') < 0) return false;
   var query = document.getElementById('logbook-search');
   var text = query ? Partners.fold(query.value) : '';
   if (!text) return true;
@@ -418,7 +434,7 @@ function renderItemCard(item) {
   }
   var card = el('div', { class: 'card mine-card', draggable: planned ? 'true' : 'false', 'data-id': item.id },
     el('h3', { text: item.name }),
-    el('span', { class: 'badge', text: kindLabel(item.kind) }),
+    el('span', { class: 'badge', text: activityLabel(item) }),
     el('p', { class: 'entry-meta', text: meta }),
     notes,
     el('div', { class: 'log-actions' }, actions)
@@ -490,7 +506,7 @@ function renderPlanCard(item) {
     planThumb(item),
     el('div', { class: 'plan-record-body' },
       el('h3', { text: item.name }),
-      el('p', { class: 'entry-meta', text: kindLabel(item.kind) }),
+      el('p', { class: 'entry-meta', text: activityLabel(item) }),
       el('p', { text: item.routeName || 'Route TBD' }),
       el('p', { class: 'entry-meta', text: when }),
       el('p', { class: 'plan-status', text: planStatusLine(item) })
@@ -539,6 +555,7 @@ function renderMine() {
       ? done.map(renderItemCard)
       : [el('p', { class: 'muted', text: empty })]);
     paintLogPhotos(done);
+    refreshLogbookView(done);
   }
   var stats = Lgc.computeStats(doneItems());
   var peakCount = document.getElementById('peak-count');
@@ -679,6 +696,8 @@ function resetEntryForm(listName) {
   document.getElementById('elevation').value = '';
   document.getElementById('distance').value = '';
   document.getElementById('track').value = '';
+  var stages = document.getElementById('hike-stages');
+  if (stages) stages.value = '';
   document.getElementById('notes').value = '';
   document.getElementById('lat').value = '';
   document.getElementById('lng').value = '';
@@ -698,8 +717,29 @@ function openEntryForm(listName) {
   resetEntryForm(listName);
   form.classList.remove('hidden');
   form.classList.toggle('form-brief', listName !== 'done' && !editingId);
+  form.classList.toggle('form-pick', listName === 'done' && !editingId);
+  document.getElementById('activity-type-picker').classList.toggle('hidden', listName !== 'done' || !!editingId);
   form.scrollIntoView({ behavior: 'smooth' });
 }
+
+function stagesFromInput() {
+  var box = document.getElementById('hike-stages');
+  if (!box || !box.value.trim()) return [];
+  return box.value.split('\n').map(function (line) {
+    return { name: line.trim() };
+  }).filter(function (stage) { return stage.name; });
+}
+
+document.getElementById('activity-type-picker').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-activity-type]') : null;
+  if (!button) return;
+  var type = button.getAttribute('data-activity-type');
+  document.getElementById('item-kind').value = type === 'rock' ? 'route' : type === 'hiking' ? 'hike' : 'peak';
+  if (type === 'rock') document.getElementById('activity').value = 'sport';
+  form.classList.remove('form-pick');
+  document.getElementById('activity-type-picker').classList.add('hidden');
+  syncKindFields();
+});
 
 document.getElementById('item-kind').addEventListener('change', syncKindFields);
 document.getElementById('activity').addEventListener('change', syncKindFields);
@@ -734,6 +774,9 @@ document.getElementById('save-btn').addEventListener('click', function () {
     notes: document.getElementById('notes').value,
     lat: coords.lat,
     lng: coords.lng,
+    activityType: kind === 'route' ? 'rock' : kind === 'hike' ? 'hiking' : 'mountaineering',
+    discipline: kind === 'route' ? document.getElementById('activity').value : '',
+    stages: stagesFromInput(),
     status: planned ? 'planned' : 'done',
     season: planned ? document.getElementById('season').value : '',
     priority: previous ? previous.priority : 0
@@ -778,7 +821,7 @@ function editItem(id) {
   syncKindFields();
   syncStatusFields();
   renderPeakLinks(item.peakIds || []);
-  form.classList.remove('hidden', 'form-brief');
+  form.classList.remove('hidden', 'form-brief', 'form-pick');
   document.getElementById('form-more').classList.add('hidden');
   form.scrollIntoView({ behavior: 'smooth' });
 }
@@ -802,6 +845,10 @@ function openDonePrompt(id) {
   document.getElementById('done-date').value = item.date || Lgc.todayISO();
   document.getElementById('done-note').value = '';
   document.getElementById('done-photo').value = '';
+  ['done-route', 'done-partners', 'done-weather', 'done-snow', 'done-temp', 'done-duration', 'done-distance', 'done-gain'].forEach(function (fieldId) {
+    var field = document.getElementById(fieldId);
+    if (field) field.value = '';
+  });
   document.getElementById('done-prompt').classList.remove('hidden');
   var mainEl = document.querySelector('#app main');
   if (mainEl) mainEl.scrollTop = 0;
@@ -851,7 +898,17 @@ document.getElementById('done-save').addEventListener('click', function () {
   var files = Array.prototype.slice.call(document.getElementById('done-photo').files || []);
   items = Lgc.markDone(items, id, {
     date: document.getElementById('done-date').value,
-    notes: document.getElementById('done-note').value
+    notes: document.getElementById('done-note').value,
+    routeTaken: document.getElementById('done-route').value,
+    partnersWith: document.getElementById('done-partners').value,
+    conditions: {
+      weather: document.getElementById('done-weather').value,
+      snow: document.getElementById('done-snow').value,
+      temp: document.getElementById('done-temp').value
+    },
+    duration: document.getElementById('done-duration').value,
+    distance: document.getElementById('done-distance').value,
+    elevationGain: document.getElementById('done-gain').value
   });
   saveItems();
   donePromptId = '';
@@ -2538,11 +2595,28 @@ function showMemory(id) {
     var rail = document.getElementById('rail-4000');
     if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+  var plannedBits = [
+    'Planned: ' + (item.routeName || 'Route TBD'),
+    item.fixedDate ? prettyDate(item.fixedDate) : (item.timeframe || 'Date not set')
+  ];
+  var actualBits = [
+    'Actual: ' + (item.routeTaken || 'Route not recorded'),
+    item.date ? prettyDate(item.date) : 'Date not set'
+  ];
+  if (item.partnersWith) actualBits.push(item.partnersWith);
+  if (item.duration) actualBits.push(item.duration);
+  if (item.conditions && (item.conditions.weather || item.conditions.snow || item.conditions.temp)) {
+    actualBits.push([item.conditions.weather, item.conditions.snow, item.conditions.temp].filter(Boolean).join(', '));
+  }
   box.replaceChildren(el('div', { class: 'plan-sheet' },
     back,
     el('h2', { text: item.name }),
-    el('p', { class: 'entry-meta', text: [kindLabel(item.kind), item.date ? prettyDate(item.date) : '', item.elevation ? item.elevation + ' m' : ''].filter(Boolean).join(' · ') }),
-    item.notes ? el('p', { class: 'entry-notes', text: item.notes }) : el('p', { class: 'muted', text: 'No memory written yet.' }),
+    el('p', { class: 'entry-meta', text: activityLabel(item) }),
+    el('h3', { text: 'Planned vs actual' }),
+    el('p', { text: plannedBits.join(' · ') }),
+    el('p', { text: actualBits.join(' · ') }),
+    item.stages && item.stages.length ? el('p', { class: 'entry-meta', text: 'Stages: ' + item.stages.map(function (stage) { return stage.name; }).join(', ') }) : null,
+    item.notes ? el('p', { class: 'entry-notes', text: item.notes }) : el('p', { class: 'muted', text: 'No journal written yet.' }),
     el('h3', { text: 'Photos' }),
     photos,
     el('label', { class: 'field-label', text: 'Add a photo' }),
@@ -2819,6 +2893,151 @@ document.getElementById('collection-progress').addEventListener('click', functio
   selectTab('explore');
   var rail = document.getElementById('rail-4000');
   if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+function refreshLogbookView(done) {
+  if (logbookView === 'map') renderLogbookMap(done);
+  if (logbookView === 'calendar') renderCalendar(done);
+  if (logbookView === 'stats') renderPersonalStats(done);
+}
+
+function setLogbookView(name) {
+  logbookView = name === 'map' || name === 'calendar' || name === 'stats' ? name : 'timeline';
+  if (logbookView === 'calendar' && !calendarTouched) {
+    var dates = Lgc.doneOrder(items).map(function (item) { return item.date; }).filter(Boolean).sort();
+    if (dates.length) calendarCursor = new Date(dates[dates.length - 1] + 'T12:00:00');
+  }
+  ['timeline', 'map', 'calendar', 'stats'].forEach(function (view) {
+    var pane = document.getElementById('logbook-' + view);
+    if (pane) pane.classList.toggle('hidden', view !== logbookView);
+    var button = document.querySelector('#logbook-views [data-view="' + view + '"]');
+    if (!button) return;
+    button.classList.toggle('active', view === logbookView);
+    button.setAttribute('aria-selected', view === logbookView ? 'true' : 'false');
+  });
+  refreshLogbookView(Lgc.doneOrder(items).filter(matchesLogbook));
+}
+
+function renderLogbookMap(done) {
+  var box = document.getElementById('logbook-map');
+  if (!box || typeof L === 'undefined') {
+    if (box) box.replaceChildren(el('p', { class: 'muted', text: 'The map did not load.' }));
+    return;
+  }
+  if (!logbookMap) {
+    logbookMap = L.map(box, { zoomControl: false }).setView([46.5, 8.5], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(logbookMap);
+  }
+  logbookMarkers.forEach(function (marker) { logbookMap.removeLayer(marker); });
+  logbookMarkers = [];
+  var bounds = [];
+  done.forEach(function (item) {
+    if (!Lgc.hasCoords(item)) return;
+    var marker = L.circleMarker([item.lat, item.lng], { radius: 7, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.85 }).addTo(logbookMap);
+    marker.bindPopup(item.name);
+    logbookMarkers.push(marker);
+    bounds.push([item.lat, item.lng]);
+  });
+  setTimeout(function () {
+    if (!logbookMap) return;
+    logbookMap.invalidateSize();
+    if (bounds.length) logbookMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 8 });
+  }, 60);
+}
+
+function renderCalendar(done) {
+  var box = document.getElementById('logbook-calendar');
+  if (!box) return;
+  var year = calendarCursor.getFullYear();
+  var month = calendarCursor.getMonth();
+  var first = new Date(year, month, 1);
+  var start = (first.getDay() + 6) % 7;
+  var days = new Date(year, month + 1, 0).getDate();
+  var byDay = {};
+  done.forEach(function (item) {
+    if (!item.date || item.date.slice(0, 7) !== year + '-' + String(month + 1).padStart(2, '0')) return;
+    var day = Number(item.date.slice(8, 10));
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push(item.name);
+  });
+  var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  var prev = el('button', { class: 'secondary', type: 'button', text: 'Previous' });
+  var next = el('button', { class: 'secondary', type: 'button', text: 'Next' });
+  prev.addEventListener('click', function () {
+    calendarTouched = true;
+    calendarCursor = new Date(year, month - 1, 1);
+    renderCalendar(done);
+  });
+  next.addEventListener('click', function () {
+    calendarTouched = true;
+    calendarCursor = new Date(year, month + 1, 1);
+    renderCalendar(done);
+  });
+  var grid = el('div', { class: 'calendar-grid' });
+  ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].forEach(function (label) {
+    grid.appendChild(el('span', { class: 'calendar-dow', text: label }));
+  });
+  for (var i = 0; i < start; i++) grid.appendChild(el('span', { class: 'calendar-empty' }));
+  for (var day = 1; day <= days; day++) {
+    var cell = el('span', { class: byDay[day] ? 'calendar-day has' : 'calendar-day', text: String(day) });
+    if (byDay[day]) cell.title = byDay[day].join(', ');
+    grid.appendChild(cell);
+  }
+  var listed = el('ul', { class: 'resume-list' });
+  Object.keys(byDay).sort(function (a, b) { return Number(a) - Number(b); }).forEach(function (day) {
+    listed.appendChild(el('li', { text: day + ' · ' + byDay[day].join(', ') }));
+  });
+  box.replaceChildren(
+    el('div', { class: 'calendar-nav' }, prev, el('strong', { text: months[month] + ' ' + year }), next),
+    grid,
+    listed.childNodes.length ? listed : el('p', { class: 'muted', text: 'Nothing logged in this month.' })
+  );
+}
+
+function renderPersonalStats(done) {
+  var box = document.getElementById('logbook-stats');
+  if (!box) return;
+  var summits = done.filter(function (item) { return item.activityType === 'mountaineering'; });
+  var summitElevation = summits.reduce(function (sum, item) { return sum + (item.elevation || 0); }, 0);
+  var distance = done.reduce(function (sum, item) { return sum + (item.distance || 0); }, 0);
+  var gain = done.reduce(function (sum, item) {
+    return sum + (item.elevationGain || 0) + (item.activityType === 'hiking' ? (item.elevation || 0) : 0);
+  }, 0);
+  var rock = done.filter(function (item) { return item.activityType === 'rock'; }).length;
+  var hikes = done.filter(function (item) { return item.activityType === 'hiking'; }).length;
+  var order = (Col && Col.GRADE_ORDER) || [];
+  var recorded = [];
+  done.forEach(function (item) {
+    if (item.grade && recorded.indexOf(item.grade) < 0) recorded.push(item.grade);
+  });
+  var known = recorded.filter(function (grade) { return order.indexOf(grade) >= 0; }).sort(function (a, b) {
+    return order.indexOf(a) - order.indexOf(b);
+  });
+  var other = recorded.filter(function (grade) { return order.indexOf(grade) < 0; });
+  var lines = [
+    el('p', { class: 'muted', text: 'These numbers are only yours. Nothing here is a comparison.' }),
+    el('div', { class: 'stats' },
+      el('div', { class: 'stat' }, el('strong', { text: String(summits.length) }), el('span', { text: 'Summits' })),
+      el('div', { class: 'stat' }, el('strong', { text: String(rock) }), el('span', { text: 'Rock routes' })),
+      el('div', { class: 'stat' }, el('strong', { text: String(hikes) }), el('span', { text: 'Treks' }))
+    ),
+    el('p', { text: 'Summit elevation in your log: ' + summitElevation + ' m.' }),
+    el('p', { text: 'Distance you recorded: ' + Math.round(distance * 10) / 10 + ' km.' }),
+    el('p', { text: 'Elevation gain you recorded: ' + gain + ' m.' })
+  ];
+  if (known.length) lines.push(el('p', { text: 'Alpine grades in your log, easier to harder: ' + known.join(', ') + '.' }));
+  if (other.length) lines.push(el('p', { text: 'Other grades you recorded: ' + other.join(', ') + '.' }));
+  if (!recorded.length) lines.push(el('p', { class: 'muted', text: 'No grade recorded yet.' }));
+  if (known.length) lines.push(el('p', { text: 'The hardest alpine grade in your log is ' + known[known.length - 1] + '.' }));
+  box.replaceChildren.apply(box, lines);
+}
+
+document.getElementById('logbook-views').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-view]') : null;
+  if (!button) return;
+  setLogbookView(button.getAttribute('data-view'));
 });
 
 // ---- Init ----

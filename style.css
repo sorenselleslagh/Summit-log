@@ -897,6 +897,20 @@ p { margin: 0.25rem 0; }
 
 .logbook-foot { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.9rem; }
 
+#logbook-views { margin: 0.4rem 0 0.9rem; }
+#logbook-views button { flex: 1; font-size: 0.82rem; padding: 0.4rem 0.2rem; }
+#logbook-map { height: 320px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+.calendar-nav { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; margin-bottom: 0.6rem; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; text-align: center; }
+.calendar-dow { color: var(--muted); font-size: 0.75rem; }
+.calendar-day, .calendar-empty { min-height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+.calendar-day.has { background: var(--accent-soft); color: #93c5fd; font-weight: 700; }
+.type-picker { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.6rem; }
+.type-picker button { min-height: 48px; }
+#add-form.form-pick > :not(#activity-type-picker):not(h3) { display: none !important; }
+#done-more { margin: 0.6rem 0; }
+#done-more input { margin-top: 0.45rem; }
+
 .memory-photos { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 
 .memory-photo,

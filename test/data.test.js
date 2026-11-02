@@ -158,7 +158,7 @@ assert.strictEqual(migratedItems[1].id, wish.id);
 assert.strictEqual(migratedItems[1].status, 'planned');
 assert.strictEqual(legacyStore.getItem('summitlogs'), legacyLog);
 assert.strictEqual(legacyStore.getItem('summitbacklog'), legacyBack);
-assert.strictEqual(legacyStore.getItem('summitlog_schema'), '4');
+assert.strictEqual(legacyStore.getItem('summitlog_schema'), '5');
 assert.deepStrictEqual(migratedItems[0].checklist, []);
 assert.strictEqual(migratedItems[0].planDates, '');
 var withSteps = logic.normalizeLog({
@@ -194,6 +194,34 @@ assert.ok(!JSON.stringify(view).includes('secret'));
 var booked = logic.normalizeLog({ name: 'X', status: 'planned', fixedDate: '2026-07-01', notes: 'private' }, ctx());
 assert.strictEqual(booked.stage, 'scheduled');
 assert.strictEqual(logic.deriveStage(logic.normalizeLog({ name: 'Y', status: 'planned', stage: 'idea', stageManual: true, routeName: 'Lion' }, ctx())), 'idea');
+var asPeak = logic.normalizeLog({ name: 'Mont Blanc', kind: 'peak', status: 'done', date: '2024-08-01', collectionId: 'uiaa-alps-4000' }, ctx());
+assert.strictEqual(asPeak.activityType, 'mountaineering');
+assert.strictEqual(asPeak.links[0].name, 'Mont Blanc');
+assert.strictEqual(asPeak.links[0].type, 'summit');
+var asSport = logic.normalizeLog({ name: 'Voie', kind: 'route', activity: 'sport', grade: '6a' }, ctx());
+assert.strictEqual(asSport.activityType, 'rock');
+assert.strictEqual(asSport.discipline, 'sport');
+var asHike = logic.normalizeLog({ name: 'TMB', kind: 'hike', distance: 12, stages: [{ name: 'Les Houches', date: '2024-07-01', notes: 'hot' }] }, ctx());
+assert.strictEqual(asHike.activityType, 'hiking');
+assert.strictEqual(asHike.stages[0].name, 'Les Houches');
+var plan = logic.normalizeLog({ name: 'Matterhorn', status: 'planned', routeName: 'Hörnli', fixedDate: '2026-07-01', notes: 'prep secret' }, ctx());
+var finished = logic.markDone([plan], plan.id, {
+  date: '2026-07-02',
+  notes: 'the day itself',
+  routeTaken: 'Hörnli',
+  conditions: { weather: 'clear', snow: 'firm', temp: '5 C' }
+}, ctx());
+assert.strictEqual(finished.length, 1);
+assert.strictEqual(finished[0].id, plan.id);
+assert.strictEqual(finished[0].status, 'done');
+assert.strictEqual(finished[0].routeName, 'Hörnli');
+assert.strictEqual(finished[0].routeTaken, 'Hörnli');
+assert.strictEqual(finished[0].conditions.weather, 'clear');
+var doneView = logic.shareableView(Object.assign({}, finished[0], { visibility: 'community' }));
+assert.strictEqual(doneView.routeTaken, 'Hörnli');
+assert.ok(!JSON.stringify(doneView).includes('prep secret'));
+assert.ok(!JSON.stringify(doneView).includes('the day itself'));
+assert.ok(!JSON.stringify(doneView).includes('clear'));
 assert.strictEqual(migratedRepo.loadItems().length, 2);
 
 var zero = logic.normalizeLog({ id: 1, name: 'Null Island', lat: 0, lng: 0, elevation: 0, date: '2024-01-02' }, ctx());
