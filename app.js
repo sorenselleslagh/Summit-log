@@ -1175,19 +1175,12 @@ function placePopup(place) {
 }
 
 function syncAreas() {
-  if (!map || typeof L === 'undefined') return;
-  if (!areaLayers.length) {
-    areas.forEach(function (area) {
-      var circle = L.circle([area.lat, area.lng], { radius: area.radius, weight: 2 }).addTo(map);
-      areaLayers.push({ area: area, circle: circle });
-    });
-  }
+  if (!map) return;
   areaLayers.forEach(function (layer) {
-    var done = doneItems().some(function (log) { return Lgc.loggedInArea(log, layer.area); });
-    var color = done ? '#22c55e' : '#3b82f6';
-    layer.circle.setStyle({ color: color, fillColor: color, fillOpacity: 0.15, weight: 2 });
-    layer.circle.bindPopup(areaPopup(layer.area, done));
+    if (layer.circle) map.removeLayer(layer.circle);
   });
+  areaLayers = [];
+  if (map.closePopup) map.closePopup();
 }
 
 function configureMarkerIcons() {
@@ -1250,6 +1243,7 @@ function clearMotion(container) {
 function settleTiles() {
   var root = document.documentElement;
   root.classList.add('map-resizing');
+  sizeFullMap();
   if (map) {
     map.invalidateSize({ animate: false, pan: false });
     if (map._keptCenter) map.setView(map._keptCenter, map._keptZoom, { animate: false });
@@ -1282,16 +1276,24 @@ function playTransform(container, next, done) {
   container.style.transform = next;
 }
 
+function viewRect() {
+  var view = window.visualViewport;
+  if (!view) return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+  return { left: view.offsetLeft, top: view.offsetTop, width: view.width, height: view.height };
+}
+
 function growTransform(rect) {
-  var scaleX = window.innerWidth / Math.max(1, rect.width);
-  var scaleY = window.innerHeight / Math.max(1, rect.height);
-  return 'translate(' + (-rect.left) + 'px,' + (-rect.top) + 'px) scale(' + scaleX + ',' + scaleY + ')';
+  var view = viewRect();
+  var scaleX = view.width / Math.max(1, rect.width);
+  var scaleY = view.height / Math.max(1, rect.height);
+  return 'translate(' + (view.left - rect.left) + 'px,' + (view.top - rect.top) + 'px) scale(' + scaleX + ',' + scaleY + ')';
 }
 
 function shrinkTransform(rect) {
-  var scaleX = rect.width / Math.max(1, window.innerWidth);
-  var scaleY = rect.height / Math.max(1, window.innerHeight);
-  return 'translate(' + rect.left + 'px,' + rect.top + 'px) scale(' + scaleX + ',' + scaleY + ')';
+  var view = viewRect();
+  var scaleX = rect.width / Math.max(1, view.width);
+  var scaleY = rect.height / Math.max(1, view.height);
+  return 'translate(' + (rect.left - view.left) + 'px,' + (rect.top - view.top) + 'px) scale(' + scaleX + ',' + scaleY + ')';
 }
 
 function showMapStatus(text) {
@@ -1389,6 +1391,25 @@ function coverMap(container, height) {
   document.documentElement.classList.add('map-cover');
   document.getElementById('map-container').style.height = '';
   clearMotion(container);
+  sizeFullMap();
+}
+
+function sizeFullMap() {
+  var vv = window.visualViewport;
+  var root = document.documentElement;
+  if (!vv) return;
+  root.style.setProperty('--vv-top', vv.offsetTop + 'px');
+  root.style.setProperty('--vv-left', vv.offsetLeft + 'px');
+  root.style.setProperty('--vv-width', vv.width + 'px');
+  root.style.setProperty('--vv-height', vv.height + 'px');
+  if (root.classList.contains('map-cover') && map) map.invalidateSize({ animate: false, pan: false });
+}
+
+function bindViewport() {
+  if (!window.visualViewport || window.visualViewport.__summitBound) return;
+  window.visualViewport.__summitBound = true;
+  window.visualViewport.addEventListener('resize', sizeFullMap);
+  window.visualViewport.addEventListener('scroll', sizeFullMap);
 }
 
 function expandMap() {
@@ -1694,7 +1715,11 @@ function showMemoryOrPlan(item) {
   showMemory(item.id);
 }
 
-function addDivMarker(lat, lng, icon, onClick) {
+var liveMarkers = {};
+var appliedQuery = '';
+var appliedFilter = 'all';
+
+function addDivMarker(lat, lng, icon, onClick, key, animateIn) {
   var marker = L.marker([lat, lng], { icon: icon, keyboard: false });
   marker.on('click', function (event) {
     suppressMapClick = true;
@@ -1702,7 +1727,29 @@ function addDivMarker(lat, lng, icon, onClick) {
     onClick();
   });
   marker.addTo(map);
+  liveMarkers[key] = marker;
   markers.push(marker);
+  var node = marker.getElement();
+  if (node && animateIn && !prefersReducedMotion()) {
+    node.classList.add('pin-enter');
+    requestAnimationFrame(function () { node.classList.add('pin-in'); });
+  }
+  return marker;
+}
+
+function retireMarker(key, animateOut) {
+  var marker = liveMarkers[key];
+  if (!marker) return;
+  delete liveMarkers[key];
+  var node = marker.getElement();
+  if (node && animateOut && !prefersReducedMotion()) {
+    node.classList.add('pin-leave');
+    setTimeout(function () {
+      if (map && marker) map.removeLayer(marker);
+    }, 220);
+    return;
+  }
+  if (map) map.removeLayer(marker);
 }
 
 function updateMapSummary(count, noun) {
@@ -1712,10 +1759,12 @@ function updateMapSummary(count, noun) {
   summary.textContent = count + ' ' + label + ' in view';
 }
 
-function updateMapMarkers() {
-  if (!map) return;
-  markers.forEach(function (marker) { map.removeLayer(marker); });
-  markers = [];
+function featureKey(feature) {
+  if (feature.peak && feature.peak.id) return 'peak:' + feature.peak.id;
+  return feature.type + ':' + feature.name;
+}
+
+function markerSpecs() {
   var features = mapFeatures();
   var visible = featuresInView(features);
   var peakCount = visible.filter(function (feature) { return feature.type !== 'trek'; }).length;
@@ -1723,63 +1772,103 @@ function updateMapMarkers() {
   if (mapFilter === 'treks') updateMapSummary(trailCount, 'trails');
   else updateMapSummary(peakCount, 'peaks');
   var zoom = map.getZoom();
+  var source = zoom <= 6 ? (visible.length ? visible : features) : visible;
+  var specs = [];
   if (zoom <= 6) {
-    drawClusters(visible.length ? visible : features, zoom);
-    return;
+    var cell = zoom <= 5 ? 1.4 : 0.7;
+    var groups = {};
+    source.forEach(function (feature) {
+      var bucket = Math.floor(feature.lat / cell) + ':' + Math.floor(feature.lng / cell);
+      if (!groups[bucket]) groups[bucket] = [];
+      groups[bucket].push(feature);
+    });
+    Object.keys(groups).forEach(function (bucket) {
+      var group = groups[bucket];
+      var lat = 0;
+      var lng = 0;
+      group.forEach(function (feature) { lat += feature.lat; lng += feature.lng; });
+      lat /= group.length;
+      lng /= group.length;
+      if (group.length === 1) {
+        specs.push(dotSpec(group[0], lat, lng, 'dot:' + featureKey(group[0])));
+        return;
+      }
+      specs.push({
+        key: 'cluster:' + bucket + ':' + group.length,
+        lat: lat,
+        lng: lng,
+        icon: L.divIcon({
+          className: 'pin-cluster',
+          html: '<span>' + group.length + '</span>',
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        }),
+        onClick: function () {
+          var bounds = L.latLngBounds(group.map(function (feature) { return [feature.lat, feature.lng]; }));
+          map.fitBounds(bounds.pad(0.4), { maxZoom: zoom + 3 });
+        }
+      });
+    });
+    return specs;
   }
-  visible.forEach(function (feature) {
+  source.forEach(function (feature) {
     if (zoom < 8 || feature.type === 'osm') {
-      addDivMarker(feature.lat, feature.lng, L.divIcon({
-        className: 'pin-dot',
-        html: '<span></span>',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      }), function () { openFeature(feature); });
+      specs.push(dotSpec(feature, feature.lat, feature.lng, 'dot:' + featureKey(feature)));
       return;
     }
-    addDivMarker(feature.lat, feature.lng, L.divIcon({
-      className: 'photo-pin' + markerClass(feature),
-      html: photoFace(feature),
-      iconSize: [44, 44],
-      iconAnchor: [22, 22]
-    }), function () { openFeature(feature); });
-  });
-}
-
-function drawClusters(features, zoom) {
-  var cell = zoom <= 5 ? 1.4 : 0.7;
-  var groups = {};
-  features.forEach(function (feature) {
-    var key = Math.floor(feature.lat / cell) + ':' + Math.floor(feature.lng / cell);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(feature);
-  });
-  Object.keys(groups).forEach(function (key) {
-    var group = groups[key];
-    var lat = 0;
-    var lng = 0;
-    group.forEach(function (feature) { lat += feature.lat; lng += feature.lng; });
-    lat /= group.length;
-    lng /= group.length;
-    if (group.length === 1) {
-      addDivMarker(lat, lng, L.divIcon({
-        className: 'pin-dot',
-        html: '<span></span>',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      }), function () { openFeature(group[0]); });
-      return;
-    }
-    addDivMarker(lat, lng, L.divIcon({
-      className: 'pin-cluster',
-      html: '<span>' + group.length + '</span>',
-      iconSize: [36, 36],
-      iconAnchor: [18, 18]
-    }), function () {
-      var bounds = L.latLngBounds(group.map(function (feature) { return [feature.lat, feature.lng]; }));
-      map.fitBounds(bounds.pad(0.4), { maxZoom: zoom + 3 });
+    specs.push({
+      key: 'photo:' + featureKey(feature),
+      lat: feature.lat,
+      lng: feature.lng,
+      icon: L.divIcon({
+        className: 'photo-pin' + markerClass(feature),
+        html: photoFace(feature),
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
+      }),
+      onClick: function () { openFeature(feature); }
     });
   });
+  return specs;
+}
+
+function dotSpec(feature, lat, lng, key) {
+  return {
+    key: key,
+    lat: lat,
+    lng: lng,
+    icon: L.divIcon({
+      className: 'pin-dot',
+      html: '<span></span>',
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    }),
+    onClick: function () { openFeature(feature); }
+  };
+}
+
+function updateMapMarkers() {
+  if (!map) return;
+  var animate = mapQuery !== appliedQuery || mapFilter !== appliedFilter;
+  appliedQuery = mapQuery;
+  appliedFilter = mapFilter;
+  var specs = markerSpecs();
+  var wanted = {};
+  specs.forEach(function (spec) { wanted[spec.key] = spec; });
+  Object.keys(liveMarkers).forEach(function (key) {
+    if (!wanted[key]) retireMarker(key, animate);
+  });
+  specs.forEach(function (spec) {
+    var existing = liveMarkers[spec.key];
+    if (existing) {
+      existing.setLatLng([spec.lat, spec.lng]);
+      var node = existing.getElement();
+      if (node) node.classList.remove('pin-leave');
+      return;
+    }
+    addDivMarker(spec.lat, spec.lng, spec.icon, spec.onClick, spec.key, animate);
+  });
+  markers = Object.keys(liveMarkers).map(function (key) { return liveMarkers[key]; });
 }
 
 function loadPeaksInView() {
@@ -2291,7 +2380,10 @@ document.getElementById('map-expand').addEventListener('click', function (event)
   event.stopPropagation();
   expandMap();
 });
-document.getElementById('map-close').addEventListener('click', function () { collapseMap(false); });
+document.getElementById('map-close').addEventListener('click', function () {
+  if (mapSheetOpen()) requestCloseSheet();
+  else collapseMap(false);
+});
 bindMapHandle();
 bindSheetDismiss();
 document.getElementById('map-locate').addEventListener('click', function () {
@@ -3729,9 +3821,77 @@ document.getElementById('map-chips').addEventListener('click', function (event) 
   });
   updateMapMarkers();
 });
-document.getElementById('map-query').addEventListener('input', function () {
-  mapQuery = document.getElementById('map-query').value.trim();
+function renderMapSuggestions() {
+  var input = document.getElementById('map-query');
+  var list = document.getElementById('map-suggestions');
+  if (!input || !list) return;
+  var matches = mapQuery ? Partners.searchObjectives(objectiveCatalog, mapQuery, 6) : [];
+  input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+  if (!matches.length) {
+    list.replaceChildren();
+    return;
+  }
+  list.replaceChildren.apply(list, matches.map(function (objective, index) {
+    return el('li', null, el('button', {
+      type: 'button',
+      role: 'option',
+      'data-map-objective': objective.id,
+      'aria-selected': index === 0 ? 'true' : 'false'
+    },
+      el('span', { class: 'suggestion-name', text: objective.name }),
+      el('span', { class: 'badge', text: Partners.kindLabel(objective.kind) })
+    ));
+  }));
+}
+
+function setMapSearch(value, fit) {
+  var input = document.getElementById('map-query');
+  if (input && input.value !== value) input.value = value;
+  mapQuery = String(value || '').trim();
+  var clear = document.getElementById('map-query-clear');
+  if (clear) clear.classList.toggle('hidden', !mapQuery);
+  renderMapSuggestions();
   updateMapMarkers();
+  if (!fit || !map || mapQuery.length < 2) return;
+  var matches = mapFeatures();
+  if (!matches.length) return;
+  var bounds = L.latLngBounds(matches.map(function (feature) { return [feature.lat, feature.lng]; }));
+  map.fitBounds(bounds.pad(0.35), { maxZoom: 9, animate: !prefersReducedMotion() });
+}
+
+function chooseMapSuggestion(id) {
+  var found = null;
+  objectiveCatalog.forEach(function (objective) {
+    if (objective.id === id) found = objective;
+  });
+  if (!found) return;
+  var list = document.getElementById('map-suggestions');
+  if (list) list.replaceChildren();
+  var peak = null;
+  if (collectionData) {
+    collectionData.peaks.forEach(function (item) {
+      if (Col.normName(item.name) === Col.normName(found.name)) peak = item;
+    });
+  }
+  if (peak) {
+    openPeakPage(peak, 'map');
+    return;
+  }
+  var famous = famousByName(found.name);
+  if (famous) openTrekPage(famous, 'map');
+}
+
+document.getElementById('map-query').addEventListener('input', function () {
+  setMapSearch(document.getElementById('map-query').value, true);
+});
+document.getElementById('map-query-clear').addEventListener('click', function () {
+  setMapSearch('', false);
+  document.getElementById('map-query').focus();
+});
+document.getElementById('map-suggestions').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-map-objective]') : null;
+  if (!button) return;
+  chooseMapSuggestion(button.getAttribute('data-map-objective'));
 });
 document.getElementById('map-filter').addEventListener('click', function () {
   var chips = document.getElementById('map-chips');
@@ -3899,6 +4059,8 @@ document.getElementById('logbook-views').addEventListener('click', function (eve
 });
 
 // ---- Init ----
+bindViewport();
+sizeFullMap();
 registerServiceWorker();
 
 document.addEventListener('DOMContentLoaded', function () {
