@@ -204,6 +204,7 @@
     { id: 'sport', label: 'Sport', gradeHint: 'French grade, e.g. 6b' },
     { id: 'trad', label: 'Trad', gradeHint: 'Grade, e.g. 6a or HVS' },
     { id: 'bouldering', label: 'Bouldering', gradeHint: 'Font grade, e.g. 6B+' },
+    { id: 'multipitch', label: 'Multipitch', gradeHint: 'Grade, e.g. 6a' },
     { id: 'alpine', label: 'Alpine', gradeHint: 'Alpine grade, e.g. PD, AD+' },
     { id: 'ice', label: 'Ice', gradeHint: 'Ice grade, e.g. WI4' },
     { id: 'mixed', label: 'Mixed', gradeHint: 'Mixed grade, e.g. M6' },
@@ -285,11 +286,12 @@
     if (!name) return null;
     var coords = pairCoords(raw.lat, raw.lng);
     var kind = inferKind(raw);
+    var activity = inferActivity(raw, kind);
     return applyPlanStage({
       id: raw.id,
       kind: kind,
       name: name,
-      activity: inferActivity(raw, kind),
+      activity: activity,
       date: parseDate(typeof raw.date === 'string' ? raw.date : ''),
       elevation: parseElevation(raw.elevation),
       distance: kind === 'hike' ? parseDistance(raw.distance) : null,
@@ -314,9 +316,84 @@
       shareNote: cleanText(raw.shareNote, 500),
       stageManual: false,
       stage: 'idea',
+      activityType: inferActivityType(raw, kind, activity),
+      discipline: '',
+      links: cleanLinks(raw, kind),
+      stages: cleanStages(raw.stages),
+      routeTaken: cleanText(raw.routeTaken, 200),
+      partnersWith: cleanText(raw.partnersWith, 200),
+      conditions: cleanConditions(raw.conditions),
+      duration: cleanText(raw.duration, 40),
+      elevationGain: parseElevation(raw.elevationGain),
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
     }, raw);
+  }
+
+  function inferActivityType(raw, kind, activity) {
+    if (raw.activityType === 'mountaineering' || raw.activityType === 'rock' || raw.activityType === 'hiking') return raw.activityType;
+    if (kind === 'hike' || activity === 'ski') return 'hiking';
+    if (kind === 'route') {
+      if (activity === 'sport' || activity === 'trad' || activity === 'bouldering' || activity === 'multipitch') return 'rock';
+      return 'mountaineering';
+    }
+    return 'mountaineering';
+  }
+
+  function inferDiscipline(raw, activityType, activity) {
+    if (activityType !== 'rock') return '';
+    var value = raw.discipline || activity || raw.activity;
+    if (value === 'sport' || value === 'trad' || value === 'multipitch' || value === 'bouldering') return value;
+    return 'sport';
+  }
+
+  function cleanLinks(raw, kind) {
+    var out = [];
+    var seen = {};
+    function push(link) {
+      if (!link || !link.name) return;
+      var key = link.type + ':' + link.name.toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push({
+        id: cleanText(link.id, 48) || ('link-' + (out.length + 1)),
+        type: link.type === 'route' ? 'route' : 'summit',
+        name: cleanText(link.name, 200),
+        refId: cleanText(link.refId, 80),
+        source: cleanText(link.source, 40)
+      });
+    }
+    if (Array.isArray(raw.links)) raw.links.forEach(push);
+    if ((kind === 'peak' || raw.kind === 'peak') && raw.name) {
+      push({ id: 'summit', type: 'summit', name: raw.name, refId: raw.collectionId || '', source: raw.collectionId ? 'collection' : '' });
+    }
+    return out.slice(0, 12);
+  }
+
+  function cleanStages(value) {
+    if (!Array.isArray(value)) return [];
+    var out = [];
+    value.forEach(function (stage) {
+      if (!stage || typeof stage !== 'object') return;
+      var name = cleanText(stage.name, 200);
+      if (!name) return;
+      out.push({
+        id: cleanText(stage.id, 48) || ('day-' + (out.length + 1)),
+        name: name,
+        date: parseDate(typeof stage.date === 'string' ? stage.date : ''),
+        notes: cleanText(stage.notes, 500)
+      });
+    });
+    return out.slice(0, 16);
+  }
+
+  function cleanConditions(value) {
+    var source = value && typeof value === 'object' ? value : {};
+    return {
+      weather: cleanText(source.weather, 80),
+      snow: cleanText(source.snow, 80),
+      temp: cleanText(source.temp, 40)
+    };
   }
 
   function cleanVisibility(value) {
@@ -338,6 +415,7 @@
   }
 
   function applyPlanStage(fields, raw) {
+    fields.discipline = inferDiscipline(raw, fields.activityType, fields.activity);
     fields.lookingForPartner = raw.lookingForPartner === true && fields.visibility === 'community';
     fields.stageManual = raw.stageManual === true && !fields.fixedDate;
     fields.stage = fields.stageManual && cleanStage(raw.stage) ? raw.stage : '';
@@ -365,6 +443,12 @@
       lng: item.lng == null ? null : item.lng,
       grade: item.grade || '',
       crag: item.crag || '',
+      activityType: item.activityType || '',
+      discipline: item.discipline || '',
+      date: item.date || '',
+      routeTaken: item.routeTaken || '',
+      distance: item.distance == null ? null : item.distance,
+      elevationGain: item.elevationGain == null ? null : item.elevationGain,
       shareNote: item.shareNote || '',
       visibility: item.visibility,
       lookingForPartner: item.visibility === 'community' && item.lookingForPartner === true
@@ -566,12 +650,16 @@
     if (index < 0) return list;
     var item = list[index];
     var note = fields && Object.prototype.hasOwnProperty.call(fields, 'notes') ? fields.notes : item.notes;
-    var done = updateLog(item, {
+    var patch = {
       status: 'done',
       priority: null,
       date: (fields && fields.date) || item.date || todayISO(),
       notes: note
-    }, ctx);
+    };
+    ['routeTaken', 'partnersWith', 'conditions', 'duration', 'distance', 'elevationGain', 'stages'].forEach(function (key) {
+      if (fields && Object.prototype.hasOwnProperty.call(fields, key)) patch[key] = fields[key];
+    });
+    var done = updateLog(item, patch, ctx);
     list[index] = done;
     (item.peakIds || []).forEach(function (peakId) {
       var peakIndex = -1;
@@ -697,7 +785,7 @@
     createPost: createPost,
     migrateLogs: migrateLogs,
     migratePosts: migratePosts,
-    SCHEMA_VERSION: 4,
+    SCHEMA_VERSION: 5,
     deriveStage: deriveStage,
     shareableView: shareableView,
     unifyLists: unifyLists,

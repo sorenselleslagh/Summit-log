@@ -102,10 +102,16 @@
 
       <div id="add-form" class="card hidden form-card">
         <h3 id="form-title">New entry</h3>
+        <div id="activity-type-picker" class="type-picker hidden">
+          <p class="field-label">What kind of day was it?</p>
+          <button type="button" data-activity-type="mountaineering">Mountaineering</button>
+          <button type="button" data-activity-type="rock">Rock climbing</button>
+          <button type="button" data-activity-type="hiking">Hiking &amp; trekking</button>
+        </div>
         <select id="item-kind" aria-label="Kind">
-          <option value="peak">Peak</option>
-          <option value="route">Route</option>
-          <option value="hike">Hike</option>
+          <option value="peak">Mountaineering</option>
+          <option value="route">Rock climbing</option>
+          <option value="hike">Hiking &amp; trekking</option>
         </select>
         <input type="text" id="name" placeholder="Name" maxlength="200" aria-label="Name" required>
         <button class="secondary hidden" id="form-more" type="button">More details</button>
@@ -120,6 +126,7 @@
         <div id="hike-fields" class="hidden">
           <input type="number" id="distance" placeholder="Distance (km)" min="0" step="0.1" inputmode="decimal" aria-label="Distance in kilometres">
           <input type="text" id="track" placeholder="Track or trail note (optional)" maxlength="500" aria-label="Track note">
+          <textarea id="hike-stages" rows="3" maxlength="2000" placeholder="Stages, one day per line" aria-label="Trek stages"></textarea>
         </div>
         <div class="row">
           <input type="number" step="any" id="lat" placeholder="Latitude (optional)" inputmode="decimal" aria-label="Latitude">
@@ -158,11 +165,22 @@
         <div id="done-prompt" class="card hidden">
           <h3>Mark as done</h3>
           <p id="done-prompt-name"></p>
-          <p class="muted">This becomes a logbook entry. Add the date, a memory, and photos if you have them.</p>
-          <label class="field-label" for="done-date">Date</label>
-          <input type="date" id="done-date" aria-label="Date">
-          <label class="field-label" for="done-note">Memory</label>
-          <textarea id="done-note" rows="3" maxlength="4000" placeholder="What you want to remember" aria-label="Memory"></textarea>
+          <p class="muted">The same plan becomes the logbook entry. The original route and date stay on the record.</p>
+          <label class="field-label" for="done-date">Actual date</label>
+          <input type="date" id="done-date" aria-label="Actual date">
+          <label class="field-label" for="done-note">Journal</label>
+          <textarea id="done-note" rows="3" maxlength="4000" placeholder="What you want to remember" aria-label="Journal"></textarea>
+          <details id="done-more">
+            <summary>More about the day</summary>
+            <input type="text" id="done-route" maxlength="200" placeholder="Route taken" aria-label="Route taken">
+            <input type="text" id="done-partners" maxlength="200" placeholder="Who you went with" aria-label="Who you went with">
+            <input type="text" id="done-weather" maxlength="80" placeholder="Weather" aria-label="Weather">
+            <input type="text" id="done-snow" maxlength="80" placeholder="Snow" aria-label="Snow">
+            <input type="text" id="done-temp" maxlength="40" placeholder="Temperature" aria-label="Temperature">
+            <input type="text" id="done-duration" maxlength="40" placeholder="Duration" aria-label="Duration">
+            <input type="number" id="done-distance" min="0" step="0.1" placeholder="Distance (km)" aria-label="Distance in kilometres">
+            <input type="number" id="done-gain" min="0" max="20000" placeholder="Elevation gain (m)" aria-label="Elevation gain in metres">
+          </details>
           <label class="field-label" for="done-photo">Photos (optional)</label>
           <input type="file" id="done-photo" accept="image/*" multiple aria-label="Photos">
           <p class="muted small">Photos stay on this device. They are scaled down before they are saved.</p>
@@ -253,7 +271,14 @@
       <section id="logbook" class="tab hidden">
         <div id="logbook-home">
           <h2>My logbook</h2>
-          <p class="muted plan-lead">Completed adventures, newest first. Memories and photos stay on this device.</p>
+          <p class="muted plan-lead">The same adventures you planned, newest first.</p>
+          <div class="segments" id="logbook-views" role="tablist" aria-label="Logbook view">
+            <button class="active" type="button" data-view="timeline" aria-selected="true">Timeline</button>
+            <button type="button" data-view="map" aria-selected="false">Map</button>
+            <button type="button" data-view="calendar" aria-selected="false">Calendar</button>
+            <button type="button" data-view="stats" aria-selected="false">Stats</button>
+          </div>
+          <div id="logbook-timeline">
           <div class="stats">
             <div class="stat" title="Done peaks">
               <strong id="peak-count">0</strong><span>Peaks</span>
@@ -267,15 +292,19 @@
           </div>
           <div class="mine-tools">
             <input type="search" id="logbook-search" placeholder="Search your logbook" maxlength="80" aria-label="Search your logbook" autocomplete="off">
-            <div class="chips" role="group" aria-label="Filter by kind">
-              <button class="chip" type="button" data-kind="peak" aria-pressed="false">Peak</button>
-              <button class="chip" type="button" data-kind="route" aria-pressed="false">Route</button>
-              <button class="chip" type="button" data-kind="hike" aria-pressed="false">Hike</button>
+            <div class="chips" role="group" aria-label="Filter by activity">
+              <button class="chip" type="button" data-kind="mountaineering" aria-pressed="false">Mountaineering</button>
+              <button class="chip" type="button" data-kind="rock" aria-pressed="false">Rock</button>
+              <button class="chip" type="button" data-kind="hiking" aria-pressed="false">Hiking</button>
             </div>
           </div>
           <div id="logbook-list" class="list-block"></div>
+          </div>
+          <div id="logbook-map" class="hidden"></div>
+          <div id="logbook-calendar" class="hidden"></div>
+          <div id="logbook-stats" class="hidden"></div>
           <div class="logbook-foot">
-            <button class="secondary" id="add-done-btn" type="button">Log something you already did</button>
+            <button class="secondary" id="add-done-btn" type="button">+ Log activity</button>
             <button class="secondary" id="collection-progress" type="button">Alpine 4000ers progress</button>
           </div>
         </div>
