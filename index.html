@@ -191,7 +191,10 @@
             <button class="secondary" id="done-cancel" type="button">Cancel</button>
           </div>
         </div>
-        <div id="partner-flow" class="hidden">
+      </section>
+
+      <section id="partners" class="tab hidden">
+        <div id="partner-flow">
           <div id="partner-home">
             <h2>Find partners</h2>
             <label class="field-label" for="objective-query">What's your objective?</label>
@@ -200,7 +203,7 @@
               <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
             </div>
             <p class="muted partners-intro">Peaks from the Alpine 4000ers, your planned and done items, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
-            <button class="secondary" id="partner-home-back" type="button">Back to plan</button>
+            <button class="secondary hidden" id="partner-home-back" type="button">Back to plan</button>
           </div>
           <div id="objective-page" class="hidden">
             <button class="secondary" id="objective-back" type="button">Back</button>
@@ -389,9 +392,22 @@
     </div>
 
     <nav aria-label="Sections">
-      <button type="button" data-tab="explore">Explore</button>
-      <button class="active" type="button" data-tab="plan">Plan</button>
-      <button type="button" data-tab="logbook">Logbook</button>
+      <button type="button" data-tab="explore">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18l5-7 4 4 3-4 4 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="16" cy="7" r="1.4" fill="currentColor"/></svg>
+        <span>Explore</span>
+      </button>
+      <button class="active" type="button" data-tab="plan">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 3.5v3M16 3.5v3M4 10h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>Plan</span>
+      </button>
+      <button type="button" data-tab="logbook">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h11a2 2 0 0 1 2 2v14H8a2 2 0 0 0-2 2V4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6 4a2 2 0 0 0-2 2v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>Logbook</span>
+      </button>
+      <button type="button" data-tab="partners">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 18.5c.6-2.4 2.4-3.5 4.5-3.5s3.9 1.1 4.5 3.5M11.5 18.5c.5-2 2-3.2 4.5-3.2 2.4 0 3.9 1.2 4.5 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>Partners</span>
+      </button>
     </nav>
   </div>
 

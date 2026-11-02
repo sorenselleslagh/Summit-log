@@ -28,6 +28,7 @@ var sheetSnap = 'peek';
 var sheetMode = 'home';
 var exploreHist = { collection: false, peak: false };
 var nearNote = '';
+var partnerReturn = 'search';
 var partnerPosts = [];
 var memberships = [];
 var objectiveCatalog = [];
@@ -247,6 +248,7 @@ function selectTab(name) {
   if (name === 'explore') enterExploreMap();
   if (name === 'plan') showPlanHome();
   if (name === 'logbook') showLogbookHome();
+  if (name === 'partners') showPartnerSearch();
 }
 
 function exploreSheetOn() {
@@ -2030,6 +2032,7 @@ function avatarNode(initials, key) {
 function showPartnerSearch() {
   activePerson = null;
   joinFormOpen = false;
+  partnerReturn = 'search';
   showPartnerFlow();
   document.getElementById('partner-home').classList.remove('hidden');
   document.getElementById('objective-page').classList.add('hidden');
@@ -2209,19 +2212,10 @@ function renderJoinPanel(membership) {
   );
 }
 
-function renderObjective() {
-  if (!activeObjective) return;
-  var head = document.getElementById('objective-head');
-  head.replaceChildren(
-    el('h2', { text: activeObjective.name }),
-    el('p', { class: 'objective-meta' },
-      el('span', { class: 'badge', text: Partners.kindLabel(activeObjective.kind) }),
-      el('span', { text: Partners.detailLine(activeObjective) }),
-      activeObjective.range ? el('span', { text: activeObjective.range }) : null
-    )
-  );
-  var membership = Partners.membershipFor(activeObjective, memberships);
+function queuePeopleFor(objective) {
+  if (!objective) return [];
   var people = [];
+  var membership = Partners.membershipFor(objective, memberships);
   if (membership) {
     people.push({
       id: 'you',
@@ -2234,7 +2228,23 @@ function renderObjective() {
       logs: yourSharedLogs(membership)
     });
   }
-  Partners.demoQueue(activeObjective).forEach(function (person) { people.push(person); });
+  Partners.demoQueue(objective).forEach(function (person) { people.push(person); });
+  return people;
+}
+
+function renderObjective() {
+  if (!activeObjective) return;
+  var head = document.getElementById('objective-head');
+  head.replaceChildren(
+    el('h2', { text: activeObjective.name }),
+    el('p', { class: 'objective-meta' },
+      el('span', { class: 'badge', text: Partners.kindLabel(activeObjective.kind) }),
+      el('span', { text: Partners.detailLine(activeObjective) }),
+      activeObjective.range ? el('span', { text: activeObjective.range }) : null
+    )
+  );
+  var people = queuePeopleFor(activeObjective);
+  var membership = Partners.membershipFor(activeObjective, memberships);
   var list = document.getElementById('queue-list');
   if (!people.length) {
     list.replaceChildren(el('p', { class: 'muted', text: 'No one is in this queue yet.' }));
@@ -2333,7 +2343,8 @@ function startPartnerFrom(id) {
   var objective = Partners.resolveObjective(objectiveCatalog, item);
   if (!objective) return;
   activePlanId = id;
-  selectTab('plan');
+  selectTab('partners');
+  partnerReturn = 'plan';
   showObjective(objective);
 }
 
@@ -2377,8 +2388,13 @@ document.getElementById('objective-suggestions').addEventListener('click', funct
 });
 
 document.getElementById('objective-back').addEventListener('click', function () {
-  if (activePlanId) showPlanDetail(activePlanId);
-  else showPlanHome();
+  if (partnerReturn === 'plan' && activePlanId) {
+    var id = activePlanId;
+    selectTab('plan');
+    showPlanDetail(id);
+    return;
+  }
+  showPartnerSearch();
 });
 
 document.getElementById('partner-home-back').addEventListener('click', function () {
@@ -3330,6 +3346,7 @@ function planDetailNode(item) {
     if (updated) syncPlanQueue(updated);
     startPartnerFrom(item.id);
   });
+  var partnerBlock = planPartnersNode(item, partners);
   var done = el('button', { class: 'primary plan-done', type: 'button', text: 'Mark as done' });
   done.addEventListener('click', function () { openDonePrompt(item.id); });
   return el('div', { class: 'plan-sheet' },
@@ -3362,11 +3379,57 @@ function planDetailNode(item) {
     notes,
     saveNotes,
     checklistNode(item),
-    el('h3', { text: 'Partners' }),
-    el('p', { class: 'muted', text: 'The queue is the community view. Sample people wear a Demo badge.' }),
-    partners,
+    partnerBlock,
     done
   );
+}
+
+function planPartnersNode(item, findButton) {
+  rebuildObjectives();
+  var objective = Partners.resolveObjective(objectiveCatalog, item);
+  var shared = item.visibility === 'community' && item.lookingForPartner;
+  var nodes = [el('h3', { text: 'Partners' })];
+  if (!shared) {
+    nodes.push(el('p', { class: 'muted', text: 'This plan is not in the community queue. Private notes stay on this device.' }));
+    nodes.push(findButton);
+    return el('div', { class: 'plan-partners' }, nodes);
+  }
+  nodes.push(el('p', { class: 'muted', text: 'Same queue as the Partners tab. Sample people wear a Demo badge. Private notes are not included.' }));
+  var people = queuePeopleFor(objective);
+  if (!people.length) nodes.push(el('p', { class: 'muted', text: 'No one is in this queue yet.' }));
+  else {
+    var list = el('div', { class: 'plan-queue' });
+    people.forEach(function (person) {
+      var card = personCard(person);
+      card.addEventListener('click', function () {
+        if (!objective) return;
+        activeObjective = objective;
+        activePlanId = item.id;
+        selectTab('partners');
+        partnerReturn = 'plan';
+        showPerson(person);
+      });
+      list.appendChild(card);
+    });
+    nodes.push(list);
+  }
+  var membership = objective ? Partners.membershipFor(objective, memberships) : null;
+  var join = el('button', {
+    class: 'secondary',
+    type: 'button',
+    text: membership ? 'Edit your place' : 'Join the queue'
+  });
+  join.addEventListener('click', function () {
+    if (!objective) return;
+    activePlanId = item.id;
+    selectTab('partners');
+    partnerReturn = 'plan';
+    showObjective(objective);
+    joinFormOpen = !membership;
+    renderObjective();
+  });
+  nodes.push(join);
+  return el('div', { class: 'plan-partners' }, nodes);
 }
 
 function showPlanDetail(id) {
