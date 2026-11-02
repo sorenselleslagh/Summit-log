@@ -158,7 +158,7 @@ assert.strictEqual(migratedItems[1].id, wish.id);
 assert.strictEqual(migratedItems[1].status, 'planned');
 assert.strictEqual(legacyStore.getItem('summitlogs'), legacyLog);
 assert.strictEqual(legacyStore.getItem('summitbacklog'), legacyBack);
-assert.strictEqual(legacyStore.getItem('summitlog_schema'), '5');
+assert.strictEqual(legacyStore.getItem('summitlog_schema'), '6');
 assert.deepStrictEqual(migratedItems[0].checklist, []);
 assert.strictEqual(migratedItems[0].planDates, '');
 var withSteps = logic.normalizeLog({
@@ -222,6 +222,19 @@ assert.strictEqual(doneView.routeTaken, 'Hörnli');
 assert.ok(!JSON.stringify(doneView).includes('prep secret'));
 assert.ok(!JSON.stringify(doneView).includes('the day itself'));
 assert.ok(!JSON.stringify(doneView).includes('clear'));
+var mountainOnly = logic.normalizeLog({ name: 'Matterhorn', kind: 'peak', grade: 'AD', status: 'planned' }, ctx());
+assert.strictEqual(mountainOnly.grade, '');
+assert.strictEqual(mountainOnly.routeGrade, '');
+assert.strictEqual(mountainOnly.routeName, '');
+var chosenRoute = logic.normalizeLog({
+  name: 'Matterhorn',
+  kind: 'peak',
+  routeName: 'Arête du Lion',
+  routeGrade: 'AD',
+  routeSource: 'https://www.camptocamp.org/routes/57744'
+}, ctx());
+assert.strictEqual(chosenRoute.routeGrade, 'AD');
+assert.strictEqual(chosenRoute.routeSource, 'https://www.camptocamp.org/routes/57744');
 assert.strictEqual(migratedRepo.loadItems().length, 2);
 
 var zero = logic.normalizeLog({ id: 1, name: 'Null Island', lat: 0, lng: 0, elevation: 0, date: '2024-01-02' }, ctx());

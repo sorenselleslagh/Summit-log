@@ -123,7 +123,7 @@
         if (stored.state !== 'ok') return [];
         var migrated = persistMigration(ITEM_KEY, stored.items, logic.migrateItems(stored.items, context()));
         migrated = alignPlansWithQueues(migrated);
-        if (schemaVersion() < (logic.SCHEMA_VERSION || 5)) writeSchema();
+        if (schemaVersion() < (logic.SCHEMA_VERSION || 6)) writeSchema();
         return migrated;
       }
       var logRead = readArray(LOG_KEY);
