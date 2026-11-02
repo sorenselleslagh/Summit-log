@@ -228,6 +228,7 @@ function watchChrome() {
 }
 
 function selectTab(name) {
+  dismissPeakPage();
   if (name !== 'explore' && document.documentElement.classList.contains('map-expanded')) collapseMap(false);
   if (name !== 'plan' && name !== 'logbook' && form) form.classList.add('hidden');
   document.querySelectorAll('#app > nav button').forEach(function (item) {
@@ -973,11 +974,13 @@ function alreadyPlanned(name) {
   return plannedItems().some(function (item) { return item.name.toLowerCase() === key; });
 }
 
+function alreadyLogged(name) {
+  var key = String(name || '').trim().toLowerCase();
+  return doneItems().some(function (item) { return item.name.toLowerCase() === key; });
+}
+
 function addCatalogItem(place) {
-  if (alreadyPlanned(place.name)) {
-    alert(place.name + ' is already planned.');
-    return;
-  }
+  if (alreadyPlanned(place.name)) return null;
   items = items.map(function (item) {
     if (item.status !== 'planned') return item;
     return Object.assign({}, item, { priority: (item.priority || 0) + 1 });
@@ -997,7 +1000,111 @@ function addCatalogItem(place) {
   items.push(entry);
   saveItems();
   renderMine();
-  setMapNote(place.name + ' added to your plan.');
+  return entry;
+}
+
+var toastUndoId = '';
+var peakPagePeak = null;
+var peakPageStack = [];
+
+function showToast(message, actions) {
+  var toast = document.getElementById('plan-toast');
+  if (!toast) return;
+  var buttons = (actions || []).map(function (action) {
+    var button = el('button', { type: 'button', text: action.label });
+    button.addEventListener('click', function () {
+      hideToast();
+      action.run();
+    });
+    return button;
+  });
+  toast.replaceChildren(el('p', { text: message }), el('div', { class: 'plan-toast-actions' }, buttons));
+  toast.classList.remove('hidden');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(hideToast, 4200);
+}
+
+function hideToast() {
+  var toast = document.getElementById('plan-toast');
+  if (toast) toast.classList.add('hidden');
+}
+
+function undoPlan(id) {
+  if (!id) return;
+  items = items.filter(function (item) { return item.id !== id; });
+  saveItems();
+  renderMine();
+  if (peakPagePeak) renderPeakPage(peakPagePeak);
+  showToast('Removed from your plan', []);
+}
+
+function confirmPlan(place, options) {
+  options = options || {};
+  if (alreadyPlanned(place.name)) {
+    showToast(place.name + ' is already in your plan', [{
+      label: 'View plan',
+      run: function () { openPlanByName(place.name); }
+    }]);
+    return null;
+  }
+  if (!options.again && alreadyLogged(place.name)) {
+    showToast('You have logged ' + place.name, [{
+      label: 'Plan it again',
+      run: function () { confirmPlan(place, { again: true, extra: options.extra }); }
+    }]);
+    return null;
+  }
+  var entry = addCatalogItem(place);
+  if (!entry) return null;
+  if (options.extra) entry = patchItem(entry.id, options.extra) || entry;
+  toastUndoId = entry.id;
+  showToast(place.name + ' added to your plan', [
+    { label: 'View plan', run: function () { openPlanByName(place.name); } },
+    { label: 'Undo', run: function () { undoPlan(toastUndoId); } }
+  ]);
+  if (peakPagePeak && Col.normName(peakPagePeak.name) === Col.normName(place.name)) renderPeakPage(peakPagePeak);
+  renderExplore();
+  return entry;
+}
+
+function placeForPeak(peak) {
+  return {
+    name: peak.name,
+    kind: 'peak',
+    lat: peak.lat,
+    lng: peak.lng,
+    elevation: peak.elevation,
+    note: '',
+    collectionId: collectionData ? collectionData.id : ''
+  };
+}
+
+function openQuickPlan(place) {
+  var sheet = document.getElementById('plan-quick');
+  if (!sheet) {
+    confirmPlan(place, { again: true });
+    return;
+  }
+  document.getElementById('plan-quick-name').textContent = place.name;
+  document.getElementById('plan-quick-stage').value = 'idea';
+  document.getElementById('plan-quick-time').value = '';
+  sheet.classList.remove('hidden');
+  sheet._place = place;
+}
+
+function finishQuickPlan(useFields) {
+  var sheet = document.getElementById('plan-quick');
+  var place = sheet && sheet._place;
+  if (sheet) sheet.classList.add('hidden');
+  if (!place) return;
+  var extra = {};
+  if (useFields) {
+    extra.stage = document.getElementById('plan-quick-stage').value;
+    extra.stageManual = true;
+    extra.timeframe = document.getElementById('plan-quick-time').value;
+    extra.planDates = extra.timeframe;
+  }
+  confirmPlan(place, { again: true, extra: extra });
 }
 
 function renderFamous() {
@@ -2367,19 +2474,10 @@ function showPeakDetail(peak) {
   var backlogBtn = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(peak.name) ? 'In your plan' : 'Add to plan' });
   backlogBtn.addEventListener('click', function () {
     if (alreadyPlanned(peak.name)) {
-      openPlanByName(peak.name);
+      showToast(peak.name + ' is already in your plan', [{ label: 'View plan', run: function () { openPlanByName(peak.name); } }]);
       return;
     }
-    addCatalogItem({
-      name: peak.name,
-      kind: 'peak',
-      lat: peak.lat,
-      lng: peak.lng,
-      elevation: peak.elevation,
-      note: '',
-      collectionId: collectionData ? collectionData.id : ''
-    });
-    selectTab('plan');
+    confirmPlan(placeForPeak(peak));
   });
   var steps = plan.steps.map(function (step) {
     var button = el('button', { class: 'linkish', type: 'button', text: step.name });
@@ -2398,21 +2496,26 @@ function showPeakDetail(peak) {
       if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
     });
     if (!existing) {
-      addCatalogItem({
-        name: peak.name, kind: 'peak', lat: peak.lat, lng: peak.lng,
-        elevation: peak.elevation, note: '', collectionId: collectionData ? collectionData.id : ''
-      });
+      confirmPlan(placeForPeak(peak));
       plannedItems().forEach(function (item) {
         if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
       });
     }
     if (existing) startPartnerFrom(existing.id);
   });
+  var hero = summitHero(peak);
+  hero.classList.add('sheet-open');
+  hero.addEventListener('click', function (event) {
+    if (event.target.closest && event.target.closest('a')) return;
+    openPeakPage(peak, 'map');
+  });
+  var sheetTitle = el('button', { class: 'summit-name sheet-title', type: 'button', text: peak.name });
+  sheetTitle.addEventListener('click', function () { openPeakPage(peak, 'map'); });
   var children = [
     grab,
     sheetCloseButton(),
-    summitHero(peak),
-    el('h3', { class: 'summit-name', text: peak.name }),
+    hero,
+    sheetTitle,
     el('p', { class: 'sheet-meta' },
       el('span', { text: peak.elevation + ' m' }),
       el('span', { text: peak.subrange || 'Alps' }),
@@ -3233,8 +3336,9 @@ function bookmarkButton(name, place) {
   }, bookmarkIcon(saved));
   button.addEventListener('click', function (event) {
     event.stopPropagation();
-    if (alreadyPlanned(name)) openPlanByName(name);
-    else addCatalogItem(place);
+    if (alreadyPlanned(name)) {
+      showToast(name + ' is already in your plan', [{ label: 'View plan', run: function () { openPlanByName(name); } }]);
+    } else confirmPlan(place);
   });
   return button;
 }
@@ -3259,9 +3363,7 @@ function peakCard(peak) {
   );
   card.addEventListener('click', function (event) {
     if (event.target.closest && event.target.closest('.bookmark, .photo-credit')) return;
-    showPeakDetail(peak);
-    var box = document.getElementById('peak-detail');
-    if (box) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    openPeakPage(peak, 'explore');
   });
   return card;
 }
@@ -3298,7 +3400,7 @@ function trekCard(place) {
   );
   card.addEventListener('click', function (event) {
     if (event.target.closest && event.target.closest('.bookmark, .photo-credit')) return;
-    showTrekDetail(place);
+    openTrekPage(place, 'explore');
   });
   return card;
 }
@@ -3414,20 +3516,203 @@ function placeFromObjective(objective) {
   return { name: objective.name, kind: objective.kind || 'peak', elevation: objective.elevation, note: objective.note || '' };
 }
 
+var peakMini = null;
+
+function dismissPeakPage() {
+  peakPageStack = [];
+  peakPagePeak = null;
+  var page = document.getElementById('peak-page');
+  if (page) page.classList.add('hidden');
+  if (peakMini) {
+    peakMini.remove();
+    peakMini = null;
+  }
+}
+
+function closePeakPage() {
+  peakPageStack.pop();
+  var top = peakPageStack[peakPageStack.length - 1];
+  if (top && top.name) {
+    if (top.kind === 'hike' && !top.elevation) renderTrekPage(top);
+    else renderPeakPage(top);
+    return;
+  }
+  dismissPeakPage();
+}
+
+function openPeakPage(peak, from) {
+  if (!peak) return;
+  if (from) peakPageStack = [{ from: from }];
+  var last = peakPageStack[peakPageStack.length - 1];
+  if (!last || last.id !== peak.id) peakPageStack.push(peak);
+  renderPeakPage(peak);
+}
+
+function openTrekPage(place, from) {
+  if (!place) return;
+  if (from) peakPageStack = [{ from: from }];
+  peakPageStack.push(place);
+  renderTrekPage(place);
+}
+
+function openPlacePage(place, from) {
+  if (!place) return;
+  openTrekPage(place, from);
+}
+
+function mountMiniMap(peak) {
+  var box = document.getElementById('peak-mini');
+  if (peakMini) {
+    peakMini.remove();
+    peakMini = null;
+  }
+  if (!box || typeof L === 'undefined' || !Number.isFinite(peak.lat) || !Number.isFinite(peak.lng)) return;
+  peakMini = L.map(box, {
+    zoomControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    attributionControl: true
+  }).setView([peak.lat, peak.lng], 12);
+  mutedTiles().addTo(peakMini);
+  L.circleMarker([peak.lat, peak.lng], { radius: 7, color: '#1f6b45', fillColor: '#1f6b45', fillOpacity: 0.9 }).addTo(peakMini);
+  setTimeout(function () { if (peakMini) peakMini.invalidateSize(); }, 60);
+}
+
+function peakStatusLine(peak) {
+  if (Col.isSummited(peak, doneItems())) return 'Alpine 4000er · In your logbook';
+  if (alreadyPlanned(peak.name)) return 'Alpine 4000er · In your plan';
+  return 'Alpine 4000er · Not yet';
+}
+
+function renderPeakPage(peak) {
+  var page = document.getElementById('peak-page');
+  if (!page || !collectionData) return;
+  peakPagePeak = peak;
+  var planned = alreadyPlanned(peak.name);
+  var logged = Col.isSummited(peak, doneItems());
+  var level = Col.estimateLevel(doneItems(), collectionData.peaks, Store.getLevel());
+  var build = Col.suggestBuildUp(peak, collectionData.peaks, level);
+  var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+  back.addEventListener('click', closePeakPage);
+  var add = el('button', {
+    class: 'primary',
+    type: 'button',
+    text: planned ? 'In your plan' : logged ? 'Plan it again' : 'Add to plan'
+  });
+  add.addEventListener('click', function () {
+    if (alreadyPlanned(peak.name)) {
+      showToast(peak.name + ' is already in your plan', [{ label: 'View plan', run: function () { openPlanByName(peak.name); } }]);
+      openPlanByName(peak.name);
+      return;
+    }
+    openQuickPlan(placeForPeak(peak));
+  });
+  var steps = (build.steps || []).map(function (step) {
+    var button = el('button', { class: 'linkish', type: 'button', text: step.name });
+    button.addEventListener('click', function () { openPeakPage(step); });
+    return el('div', { class: 'build-step' }, button, el('p', { class: 'entry-meta', text: peakLine(step) }));
+  });
+  page.replaceChildren(el('div', { class: 'peak-page-inner' },
+    back,
+    summitHero(peak),
+    el('h2', { class: 'summit-name', text: peak.name }),
+    el('p', { class: 'sheet-meta' },
+      el('span', { text: peak.elevation + ' m' }),
+      el('span', { text: peak.subrange || 'Alps' }),
+      el('span', { text: Col.countryLabel(peak) })
+    ),
+    el('p', { text: peakStatusLine(peak) }),
+    logged && !planned ? el('p', { class: 'muted', text: 'You have logged this peak. You can plan it again.' }) : null,
+    el('div', { class: 'reference-data' },
+      el('p', { class: 'field-label', text: 'Known route' }),
+      el('p', null,
+        el('span', { text: peak.normalRoute || 'No sourced normal route' }),
+        peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
+      ),
+      el('p', { class: 'muted', text: 'The grade belongs to this route, not to the mountain by itself.' }),
+      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null
+    ),
+    el('div', { id: 'peak-mini', class: 'peak-mini' }),
+    el('h3', { text: 'Build up to this peak' }),
+    el('p', { text: build.note }),
+    steps,
+    el('div', { class: 'log-actions' }, add)
+  ));
+  page.classList.remove('hidden');
+  page.scrollTop = 0;
+  mountMiniMap(peak);
+}
+
+function renderTrekPage(place) {
+  var page = document.getElementById('peak-page');
+  if (!page) return;
+  peakPagePeak = null;
+  var planned = alreadyPlanned(place.name);
+  var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+  back.addEventListener('click', closePeakPage);
+  var add = el('button', { class: 'primary', type: 'button', text: planned ? 'In your plan' : 'Add to plan' });
+  add.addEventListener('click', function () {
+    if (alreadyPlanned(place.name)) {
+      showToast(place.name + ' is already in your plan', [{ label: 'View plan', run: function () { openPlanByName(place.name); } }]);
+      openPlanByName(place.name);
+      return;
+    }
+    openQuickPlan(place);
+  });
+  var photo = peakPhotos['place:' + place.name];
+  var hero = el('div', { class: 'summit-hero' });
+  var src = safePhotoUrl(photo && photo.thumb);
+  if (src) {
+    var img = el('img', { alt: '', src: src });
+    hero.appendChild(img);
+    if (photo.page) hero.appendChild(el('a', { class: 'photo-credit', href: photo.page, target: '_blank', rel: 'noopener noreferrer', text: photo.license || 'Photo' }));
+  } else {
+    hero.appendChild(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
+  }
+  page.replaceChildren(el('div', { class: 'peak-page-inner' },
+    back,
+    hero,
+    el('h2', { class: 'summit-name', text: place.name }),
+    el('p', { class: 'sheet-meta' },
+      el('span', { text: place.area || 'Trail' }),
+      el('span', { text: place.note || '' })
+    ),
+    el('div', { class: 'log-actions' }, add)
+  ));
+  page.classList.remove('hidden');
+  page.scrollTop = 0;
+}
+
 function addExploreObjective(id) {
   var found = null;
   objectiveCatalog.forEach(function (objective) {
     if (objective.id === id) found = objective;
   });
   if (!found) return;
-  var place = placeFromObjective(found);
-  document.getElementById('explore-query').value = '';
-  renderExploreSuggestions();
-  if (alreadyPlanned(place.name)) openPlanByName(place.name);
-  else addCatalogItem(place);
+  var peak = null;
+  if (collectionData) {
+    collectionData.peaks.forEach(function (item) {
+      if (Col.normName(item.name) === Col.normName(found.name)) peak = item;
+    });
+  }
+  if (peak) {
+    openPeakPage(peak, 'search');
+    return;
+  }
+  var famous = famousByName(found.name);
+  if (famous) {
+    openTrekPage(famous, 'search');
+    return;
+  }
+  openPlacePage(placeFromObjective(found), 'search');
 }
 
 document.getElementById('explore-query').addEventListener('input', renderExploreSuggestions);
+document.getElementById('plan-quick-add').addEventListener('click', function () { finishQuickPlan(true); });
+document.getElementById('plan-quick-skip').addEventListener('click', function () { finishQuickPlan(false); });
 document.getElementById('explore-suggestions').addEventListener('click', function (event) {
   var button = event.target.closest ? event.target.closest('[data-explore]') : null;
   if (!button) return;

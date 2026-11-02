@@ -500,9 +500,10 @@ html.map-expanded #peak-detail p {
 
 html.map-expanded #peak-detail .primary { background: #1f6b45; border-color: #1f6b45; }
 
+.grade-badge,
 html.map-expanded #peak-detail .grade-badge {
   display: inline-block;
-  margin-left: 0.35rem;
+  margin-left: 0.45rem;
   padding: 0.12rem 0.45rem;
   border-radius: 999px;
   background: #e7efe4;
@@ -1590,3 +1591,82 @@ p { margin: 0.25rem 0; }
   .stat strong { font-size: 1.3rem; }
   .stat { padding: 0.7rem 0.25rem; }
 }
+
+.peak-page {
+  position: fixed;
+  inset: 0;
+  z-index: 1800;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--text);
+  padding: calc(0.8rem + env(safe-area-inset-top, 0px)) 1rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
+}
+
+.peak-page-inner { max-width: 720px; margin: 0 auto; }
+.peak-page .summit-name { font-size: 2.1rem; line-height: 1.05; margin: 0.6rem 0 0.35rem; }
+.peak-mini { height: 180px; margin: 0.8rem 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+
+button.sheet-title {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-open { cursor: pointer; }
+
+.plan-toast {
+  position: fixed;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px));
+  z-index: 1900;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 16px;
+  background: #1c1915;
+  color: #f7f4ef;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.plan-toast.hidden { display: none; }
+.plan-toast p { margin: 0; }
+.plan-toast-actions { display: flex; gap: 0.4rem; }
+.plan-toast button {
+  min-height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #f7f4ef;
+  color: #1c1915;
+  font-weight: 650;
+  padding: 0.3rem 0.75rem;
+}
+
+.plan-quick {
+  position: fixed;
+  inset: 0;
+  z-index: 1950;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(11, 17, 32, 0.45);
+  padding: 1rem;
+}
+
+.plan-quick.hidden { display: none; }
+.plan-quick-card {
+  width: min(420px, 100%);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 20px;
+  padding: 1rem;
+}
+.plan-quick-card > * + * { margin-top: 0.55rem; }
