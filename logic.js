@@ -285,7 +285,7 @@
     if (!name) return null;
     var coords = pairCoords(raw.lat, raw.lng);
     var kind = inferKind(raw);
-    return {
+    return applyPlanStage({
       id: raw.id,
       kind: kind,
       name: name,
@@ -306,8 +306,68 @@
       season: cleanSeason(raw.season),
       planDates: cleanText(raw.planDates, 120),
       checklist: cleanChecklist(raw.checklist),
+      routeName: cleanText(raw.routeName, 200),
+      timeframe: cleanText(raw.timeframe != null && String(raw.timeframe).trim() !== '' ? raw.timeframe : raw.planDates, 120),
+      fixedDate: parseDate(typeof raw.fixedDate === 'string' ? raw.fixedDate : ''),
+      visibility: cleanVisibility(raw.visibility),
+      lookingForPartner: false,
+      shareNote: cleanText(raw.shareNote, 500),
+      stageManual: false,
+      stage: 'idea',
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt
+    }, raw);
+  }
+
+  function cleanVisibility(value) {
+    return value === 'people' || value === 'community' ? value : 'private';
+  }
+
+  function cleanStage(value) {
+    return value === 'idea' || value === 'objective' || value === 'scheduled' ? value : '';
+  }
+
+  // A fixed date is Scheduled. A route, timeframe, or partner search is an Objective.
+  // Otherwise it is an Idea. An explicit stage sticks until a fixed date is set.
+  function deriveStage(item) {
+    if (!item) return 'idea';
+    if (item.fixedDate) return 'scheduled';
+    if (item.stageManual && cleanStage(item.stage)) return item.stage;
+    if (item.routeName || item.timeframe || item.lookingForPartner) return 'objective';
+    return 'idea';
+  }
+
+  function applyPlanStage(fields, raw) {
+    fields.lookingForPartner = raw.lookingForPartner === true && fields.visibility === 'community';
+    fields.stageManual = raw.stageManual === true && !fields.fixedDate;
+    fields.stage = fields.stageManual && cleanStage(raw.stage) ? raw.stage : '';
+    fields.stage = deriveStage(fields);
+    return fields;
+  }
+
+  // What another person is allowed to receive. Private plans share nothing.
+  // Preparation notes and the checklist are never included.
+  function shareableView(item) {
+    if (!item || item.visibility === 'private') return null;
+    var stage = deriveStage(item);
+    return {
+      id: item.id,
+      name: item.name,
+      kind: item.kind,
+      activity: item.activity || '',
+      routeName: item.routeName || '',
+      timeframe: item.timeframe || '',
+      fixedDate: item.fixedDate || '',
+      stage: stage,
+      season: item.season || '',
+      elevation: item.elevation == null ? null : item.elevation,
+      lat: item.lat == null ? null : item.lat,
+      lng: item.lng == null ? null : item.lng,
+      grade: item.grade || '',
+      crag: item.crag || '',
+      shareNote: item.shareNote || '',
+      visibility: item.visibility,
+      lookingForPartner: item.visibility === 'community' && item.lookingForPartner === true
     };
   }
 
@@ -637,7 +697,9 @@
     createPost: createPost,
     migrateLogs: migrateLogs,
     migratePosts: migratePosts,
-    SCHEMA_VERSION: 3,
+    SCHEMA_VERSION: 4,
+    deriveStage: deriveStage,
+    shareableView: shareableView,
     unifyLists: unifyLists,
     migrateItems: migrateItems,
     plannedOrder: plannedOrder,

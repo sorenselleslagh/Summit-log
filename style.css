@@ -855,7 +855,29 @@ p { margin: 0.25rem 0; }
 
 .plan-lead { margin: 0.35rem 0 0.85rem; }
 
-.plan-add { width: 100%; margin-bottom: 0.9rem; }
+.plan-add { width: 100%; margin-bottom: 0.75rem; }
+
+#plan-stages { margin-bottom: 0.85rem; }
+
+#add-form.form-brief #route-fields,
+#add-form.form-brief #hike-fields,
+#add-form.form-brief #peak-fields,
+#add-form.form-brief .row,
+#add-form.form-brief #date,
+#add-form.form-brief #season-fields,
+#add-form.form-brief #peak-links,
+#add-form.form-brief #notes { display: none !important; }
+
+.plan-record { display: grid; grid-template-columns: 96px 1fr; gap: 0.35rem 0.75rem; align-items: start; }
+.plan-thumb { width: 96px; height: 112px; object-fit: cover; border-radius: 12px; grid-row: span 1; }
+.plan-record .log-actions { grid-column: 1 / -1; }
+.plan-status { color: #93c5fd; font-weight: 650; margin: 0.15rem 0; }
+.share-preview {
+  margin-top: 0.65rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+}
 
 .plan-sheet > * + * { margin-top: 0.65rem; }
 

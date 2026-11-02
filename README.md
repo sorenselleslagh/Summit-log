@@ -59,7 +59,7 @@ No pace, speed, ranking, or leaderboard is shown. There is no file import.
 
 ## Item model
 
-One list (`summititems`, schema 3). Planned items are Plan and done items are the logbook. Older `summitlogs` and `summitbacklog` entries are copied in once, with the same ids and timestamps, and those keys are left on the device. A plan can also keep `planDates` and a `checklist`. Photos are not in localStorage; they live in IndexedDB (`summitlog` / `photos`) after the page scales them down. The form is one short card; the kind changes the hints.
+One list (`summititems`, schema 4). Planned items are Plan and done items are the logbook. Older `summitlogs` and `summitbacklog` entries are copied in once, with the same ids and timestamps, and those keys are left on the device. A plan keeps a stage (idea, objective, or scheduled), a visibility (private by default, people, or community), and a private checklist. Preparation notes are not part of the shareable view. Photos are not in localStorage; they live in IndexedDB (`summitlog` / `photos`) after the page scales them down. The form is one short card; the kind changes the hints.
 
 - **Peak** — name, summit elevation, map pin.
 - **Route** — name, grade, crag or mountain, activity (sport, trad, bouldering, alpine, ice, mixed, ski). The grade hint follows the activity (Font, French, AD/PD, and so on).

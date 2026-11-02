@@ -108,6 +108,7 @@
           <option value="hike">Hike</option>
         </select>
         <input type="text" id="name" placeholder="Name" maxlength="200" aria-label="Name" required>
+        <button class="secondary hidden" id="form-more" type="button">More details</button>
         <div id="route-fields" class="hidden">
           <select id="activity" aria-label="Activity"></select>
           <input type="text" id="grade" placeholder="Grade" maxlength="40" aria-label="Grade">
@@ -144,8 +145,13 @@
       <section id="plan" class="tab">
         <div id="plan-home">
           <h2>Plan</h2>
-          <p class="muted plan-lead">Save an idea, look up the route, find partners, and get ready.</p>
-          <button class="primary plan-add" id="add-planned-btn" type="button">Add an idea</button>
+          <p class="muted plan-lead">Save an idea, then add a route, a timeframe, or a date when you know them.</p>
+          <button class="primary plan-add" id="add-planned-btn" type="button">+ Add an objective</button>
+          <div class="chips" id="plan-stages" role="group" aria-label="Filter by stage">
+            <button class="chip" type="button" data-stage="idea" aria-pressed="false">Idea</button>
+            <button class="chip" type="button" data-stage="objective" aria-pressed="false">Objective</button>
+            <button class="chip" type="button" data-stage="scheduled" aria-pressed="false">Scheduled</button>
+          </div>
           <div id="plan-list" class="list-block"></div>
         </div>
         <div id="plan-detail" class="hidden"></div>

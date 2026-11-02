@@ -9,6 +9,7 @@ var Photos = window.SummitPhotos;
 var items = [];
 var mineSegment = 'planned';
 var mineKinds = {};
+var planStages = {};
 var donePromptId = '';
 var activePlanId = '';
 var peakPhotos = {};
@@ -451,14 +452,81 @@ function renderResume() {
   );
 }
 
+function planThumb(item) {
+  var peak = collectionPeakByName(item);
+  var photo = peak ? photoRecord(peak) : null;
+  if (!photo || !photo.thumb) {
+    return el('div', { class: 'plan-thumb peak-photo-empty', role: 'img', 'aria-label': 'Illustrated placeholder' });
+  }
+  var img = el('img', { class: 'plan-thumb', alt: '', loading: 'lazy', src: photo.thumb });
+  img.addEventListener('error', function () {
+    img.replaceWith(el('div', { class: 'plan-thumb peak-photo-empty', role: 'img', 'aria-label': 'Illustrated placeholder' }));
+  });
+  return img;
+}
+
+function queueCount(item) {
+  if (!item || item.visibility !== 'community' || !item.lookingForPartner) return 0;
+  var objective = Partners.resolveObjective(objectiveCatalog, item);
+  if (!objective || !Partners.demoQueue) return 0;
+  return Partners.demoQueue(objective).length;
+}
+
+function planStatusLine(item) {
+  var stage = Lgc.deriveStage(item);
+  var label = stage === 'scheduled' ? 'Scheduled' : stage === 'objective' ? 'Objective' : 'Idea';
+  var count = queueCount(item);
+  if (item.visibility !== 'community' || !item.lookingForPartner) {
+    if (item.visibility === 'private' && stage === 'idea') return 'Personal idea';
+    return label;
+  }
+  if (!count) return 'Looking for a partner';
+  return count + (count === 1 ? ' in the queue · ' : ' in the queue · ') + label;
+}
+
+function renderPlanCard(item) {
+  var when = item.fixedDate ? prettyDate(item.fixedDate) : (item.timeframe || 'Date not set');
+  var card = el('article', { class: 'card plan-record', draggable: 'true', 'data-id': item.id },
+    planThumb(item),
+    el('div', { class: 'plan-record-body' },
+      el('h3', { text: item.name }),
+      el('p', { class: 'entry-meta', text: kindLabel(item.kind) }),
+      el('p', { text: item.routeName || 'Route TBD' }),
+      el('p', { class: 'entry-meta', text: when }),
+      el('p', { class: 'plan-status', text: planStatusLine(item) })
+    ),
+    el('div', { class: 'log-actions' },
+      el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'up', 'data-id': item.id, 'aria-label': 'Move up', text: '↑' }),
+      el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'down', 'data-id': item.id, 'aria-label': 'Move down', text: '↓' }),
+      el('button', { class: 'primary', type: 'button', 'data-action': 'open', 'data-id': item.id, text: 'Open' })
+    )
+  );
+  card.addEventListener('dragstart', function (event) {
+    event.dataTransfer.setData('text/plain', item.id);
+    event.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragover', function (event) { event.preventDefault(); });
+  card.addEventListener('drop', function (event) {
+    event.preventDefault();
+    reorderPlannedTo(event.dataTransfer.getData('text/plain'), item.id);
+  });
+  return card;
+}
+
 function renderMine() {
   var planList = document.getElementById('plan-list');
   var bookList = document.getElementById('logbook-list');
   if (planList) {
-    var plans = Lgc.plannedOrder(items);
+    var stages = Object.keys(planStages).filter(function (stage) { return planStages[stage]; });
+    var plans = Lgc.plannedOrder(items).filter(function (item) {
+      return !stages.length || stages.indexOf(Lgc.deriveStage(item)) >= 0;
+    });
+    var emptyPlan = stages.length
+      ? 'Nothing in this stage.'
+      : 'Nothing planned yet. Add an objective, or bookmark one in Explore.';
     planList.replaceChildren.apply(planList, plans.length
-      ? plans.map(renderItemCard)
-      : [el('p', { class: 'muted', text: 'Nothing planned yet. Explore a peak, or add an idea.' })]);
+      ? plans.map(renderPlanCard)
+      : [el('p', { class: 'muted', text: emptyPlan })]);
   }
   if (bookList) {
     var done = Lgc.doneOrder(items).filter(matchesLogbook);
@@ -520,9 +588,23 @@ function onItemClick(event) {
 document.getElementById('plan-list').addEventListener('click', onItemClick);
 document.getElementById('logbook-list').addEventListener('click', onItemClick);
 document.getElementById('logbook-search').addEventListener('input', renderMine);
+document.getElementById('plan-stages').addEventListener('click', function (event) {
+  var chip = event.target.closest ? event.target.closest('[data-stage]') : null;
+  if (!chip) return;
+  var stage = chip.getAttribute('data-stage');
+  planStages[stage] = !planStages[stage];
+  chip.setAttribute('aria-pressed', planStages[stage] ? 'true' : 'false');
+  chip.classList.toggle('active', !!planStages[stage]);
+  renderMine();
+});
+document.getElementById('form-more').addEventListener('click', function () {
+  form.classList.remove('form-brief');
+  document.getElementById('form-more').classList.add('hidden');
+});
 document.querySelectorAll('.chip').forEach(function (chip) {
   chip.addEventListener('click', function () {
     var kind = chip.getAttribute('data-kind');
+    if (!kind) return;
     mineKinds[kind] = !mineKinds[kind];
     chip.setAttribute('aria-pressed', mineKinds[kind] ? 'true' : 'false');
     chip.classList.toggle('active', !!mineKinds[kind]);
@@ -587,7 +669,9 @@ function syncStatusFields() {
 function resetEntryForm(listName) {
   editingId = null;
   editingList = listName === 'done' ? 'done' : 'planned';
-  document.getElementById('form-title').textContent = editingList === 'planned' ? 'Add an idea' : 'Log an ascent';
+  document.getElementById('form-title').textContent = editingList === 'planned' ? 'Add an objective' : 'Log an ascent';
+  form.classList.toggle('form-brief', editingList === 'planned');
+  document.getElementById('form-more').classList.toggle('hidden', editingList !== 'planned');
   document.getElementById('item-kind').value = 'peak';
   document.getElementById('name').value = '';
   document.getElementById('grade').value = '';
@@ -613,6 +697,7 @@ function openEntryForm(listName) {
   }
   resetEntryForm(listName);
   form.classList.remove('hidden');
+  form.classList.toggle('form-brief', listName !== 'done' && !editingId);
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -693,7 +778,8 @@ function editItem(id) {
   syncKindFields();
   syncStatusFields();
   renderPeakLinks(item.peakIds || []);
-  form.classList.remove('hidden');
+  form.classList.remove('hidden', 'form-brief');
+  document.getElementById('form-more').classList.add('hidden');
   form.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -1710,7 +1796,7 @@ document.getElementById('join-panel').addEventListener('click', function (event)
 // ---- Export / Import ----
 document.getElementById('export-btn').addEventListener('click', function () {
   var data = {
-    schema: 3,
+    schema: 4,
     items: items,
     logs: doneItems(),
     backlog: plannedItems(),
@@ -1791,7 +1877,7 @@ function loadCollections() {
     updateMapMarkers();
     rebuildObjectives();
     refreshActiveObjective();
-    renderExplore();
+    renderMine();
   }).catch(function () {
     var box = document.getElementById('collections');
     if (box) box.textContent = 'The peak list could not be loaded.';
@@ -2141,6 +2227,7 @@ function patchItem(id, fields) {
   if (!next) return null;
   items[index] = next;
   saveItems();
+  renderMine();
   return next;
 }
 
@@ -2204,10 +2291,122 @@ function checklistNode(item) {
   return el('div', null, list, el('div', { class: 'check-add' }, addInput, add));
 }
 
+function syncPlanQueue(item) {
+  if (!item) return;
+  rebuildObjectives();
+  var objective = Partners.resolveObjective(objectiveCatalog, item);
+  if (!objective) return;
+  var existing = null;
+  memberships.forEach(function (row) {
+    if (row && (row.objectiveId === objective.id || Partners.fold(row.objectiveName) === Partners.fold(objective.name))) existing = row;
+  });
+  if (item.visibility === 'community' && item.lookingForPartner) {
+    memberships = Store.saveMemberships(Partners.upsertMembership(memberships, {
+      objectiveId: objective.id,
+      objectiveName: objective.name,
+      dates: item.fixedDate || item.timeframe || 'Flexible',
+      note: item.shareNote || (existing && existing.note) || '',
+      attachedIds: existing && existing.attachedIds || []
+    }, { now: new Date().toISOString(), mint: Lgc.mintId }));
+    return;
+  }
+  if (existing) memberships = Store.saveMemberships(Partners.removeMembership(memberships, objective));
+}
+
+function sharePreviewNode(item) {
+  var view = Lgc.shareableView(item);
+  if (!view) return el('p', { class: 'share-preview', text: 'Nothing is shared. Only you can see this plan.' });
+  var lines = [
+    view.name,
+    kindLabel(view.kind),
+    view.routeName || 'Route TBD',
+    view.fixedDate ? prettyDate(view.fixedDate) : (view.timeframe || 'Date not set'),
+    view.lookingForPartner ? 'Looking for a partner' : ''
+  ].filter(Boolean);
+  var heading = view.visibility === 'people' ? 'People you choose would see' : 'The community queue would see';
+  return el('div', { class: 'share-preview' },
+    el('p', { class: 'field-label', text: heading }),
+    el('p', { text: lines.join(' · ') }),
+    view.shareNote ? el('p', { text: view.shareNote }) : null,
+    view.visibility === 'people' ? el('p', { class: 'muted', text: 'Sharing with specific people needs an account, which SummitLog does not have yet. Nothing is sent.' }) : null
+  );
+}
+
 function planDetailNode(item) {
   var peak = collectionPeakByName(item);
   var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
   back.addEventListener('click', showPlanHome);
+  var stage = el('select', { id: 'plan-stage', 'aria-label': 'Stage' });
+  [['idea', 'Idea'], ['objective', 'Objective'], ['scheduled', 'Scheduled']].forEach(function (pair) {
+    var option = document.createElement('option');
+    option.value = pair[0];
+    option.textContent = pair[1];
+    stage.appendChild(option);
+  });
+  stage.value = Lgc.deriveStage(item);
+  stage.addEventListener('change', function () {
+    var fields = { stage: stage.value, stageManual: true };
+    if (stage.value !== 'scheduled') fields.fixedDate = '';
+    var updated = patchItem(item.id, fields);
+    if (updated) showPlanDetail(updated.id);
+  });
+  var route = el('input', {
+    type: 'text', id: 'plan-route', maxlength: '200', placeholder: 'Route, if you know it',
+    'aria-label': 'Route', value: item.routeName || ''
+  });
+  route.addEventListener('change', function () {
+    var updated = patchItem(item.id, { routeName: route.value, stageManual: false });
+    if (updated) showPlanDetail(updated.id);
+  });
+  var timeframe = el('input', {
+    type: 'text', id: 'plan-timeframe', maxlength: '120', placeholder: 'Timeframe, such as July',
+    'aria-label': 'Timeframe', value: item.timeframe || ''
+  });
+  timeframe.addEventListener('change', function () {
+    var updated = patchItem(item.id, { timeframe: timeframe.value, planDates: timeframe.value, stageManual: false });
+    if (updated) showPlanDetail(updated.id);
+  });
+  var fixed = el('input', { type: 'date', id: 'plan-fixed', 'aria-label': 'Fixed date', value: item.fixedDate || '' });
+  fixed.addEventListener('change', function () {
+    var updated = patchItem(item.id, { fixedDate: fixed.value, stageManual: false });
+    if (updated) showPlanDetail(updated.id);
+  });
+  var visibility = el('select', { id: 'plan-visibility', 'aria-label': 'Who can see this' });
+  [['private', 'Private'], ['people', 'Shared with people'], ['community', 'Community']].forEach(function (pair) {
+    var option = document.createElement('option');
+    option.value = pair[0];
+    option.textContent = pair[1];
+    visibility.appendChild(option);
+  });
+  visibility.value = item.visibility || 'private';
+  var looking = el('input', { type: 'checkbox', id: 'plan-looking', 'aria-label': 'Looking for a partner' });
+  looking.checked = item.lookingForPartner === true;
+  var lookingRow = el('label', { class: 'check-row' }, looking, el('span', { text: 'Looking for a partner' }));
+  if (visibility.value !== 'community') lookingRow.classList.add('hidden');
+  function saveVisibility() {
+    var vis = visibility.value;
+    var look = vis === 'community' && looking.checked;
+    var updated = patchItem(item.id, { visibility: vis, lookingForPartner: look, stageManual: false });
+    if (updated) {
+      syncPlanQueue(updated);
+      showPlanDetail(updated.id);
+    }
+  }
+  visibility.addEventListener('change', saveVisibility);
+  looking.addEventListener('change', function () {
+    if (looking.checked) visibility.value = 'community';
+    saveVisibility();
+  });
+  var shareNote = el('textarea', { id: 'plan-share-note', rows: '2', maxlength: '500', placeholder: 'A note you are willing to share', 'aria-label': 'Note you would share' });
+  shareNote.value = item.shareNote || '';
+  var saveShare = el('button', { class: 'secondary', type: 'button', text: 'Save shared note' });
+  saveShare.addEventListener('click', function () {
+    var updated = patchItem(item.id, { shareNote: shareNote.value });
+    if (updated) {
+      syncPlanQueue(updated);
+      showPlanDetail(updated.id);
+    }
+  });
   var season = el('select', { id: 'plan-season', 'aria-label': 'Season' });
   [['', 'Any time'], ['winter', 'Winter'], ['spring', 'Spring'], ['summer', 'Summer'], ['autumn', 'Autumn']].forEach(function (pair) {
     var option = document.createElement('option');
@@ -2217,16 +2416,7 @@ function planDetailNode(item) {
   });
   season.value = item.season || '';
   season.addEventListener('change', function () { patchItem(item.id, { season: season.value }); });
-  var dates = el('input', {
-    type: 'text',
-    id: 'plan-dates',
-    maxlength: '120',
-    placeholder: 'Dates, if you have them',
-    'aria-label': 'Dates',
-    value: item.planDates || ''
-  });
-  dates.addEventListener('change', function () { patchItem(item.id, { planDates: dates.value }); });
-  var notes = el('textarea', { id: 'plan-notes', rows: '4', maxlength: '4000', placeholder: 'Route notes', 'aria-label': 'Research notes' });
+  var notes = el('textarea', { id: 'plan-notes', rows: '4', maxlength: '4000', placeholder: 'Private preparation notes', 'aria-label': 'Private preparation notes' });
   notes.value = item.notes || '';
   var saveNotes = el('button', { class: 'secondary', type: 'button', text: 'Save notes' });
   saveNotes.addEventListener('click', function () {
@@ -2245,26 +2435,45 @@ function planDetailNode(item) {
     research.push(el('p', { class: 'muted', text: 'Add a note for the route, the grade, or where you read about it.' }));
   }
   var partners = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
-  partners.addEventListener('click', function () { startPartnerFrom(item.id); });
+  partners.addEventListener('click', function () {
+    var updated = patchItem(item.id, { visibility: 'community', lookingForPartner: true, stageManual: false });
+    if (updated) syncPlanQueue(updated);
+    startPartnerFrom(item.id);
+  });
   var done = el('button', { class: 'primary plan-done', type: 'button', text: 'Mark as done' });
   done.addEventListener('click', function () { openDonePrompt(item.id); });
   return el('div', { class: 'plan-sheet' },
     back,
     el('h2', { text: item.name }),
+    el('p', { class: 'plan-status', text: planStatusLine(item) }),
     el('p', { class: 'entry-meta', text: [kindLabel(item.kind), item.elevation ? item.elevation + ' m' : '', seasonLabel(item.season)].filter(Boolean).join(' · ') }),
+    el('label', { class: 'field-label', for: 'plan-stage', text: 'Stage' }),
+    stage,
+    el('label', { class: 'field-label', for: 'plan-route', text: 'Route' }),
+    route,
+    el('label', { class: 'field-label', for: 'plan-timeframe', text: 'Timeframe' }),
+    timeframe,
+    el('label', { class: 'field-label', for: 'plan-fixed', text: 'Fixed date' }),
+    fixed,
     el('label', { class: 'field-label', for: 'plan-season', text: 'Season' }),
     season,
-    el('label', { class: 'field-label', for: 'plan-dates', text: 'Dates' }),
-    dates,
     research[0],
     research[1],
     research[2] || false,
+    el('h3', { text: 'Who can see this' }),
+    el('p', { class: 'muted', text: 'Private is the default. Preparation stays on this device.' }),
+    visibility,
+    lookingRow,
+    shareNote,
+    saveShare,
+    sharePreviewNode(item),
+    el('h3', { text: 'Private preparation' }),
+    el('p', { class: 'muted', text: 'These notes are not included when this plan is shared.' }),
     notes,
     saveNotes,
-    el('h3', { text: 'Prepare' }),
     checklistNode(item),
     el('h3', { text: 'Partners' }),
-    el('p', { class: 'muted', text: 'The queue is for this objective. Sample people wear a Demo badge.' }),
+    el('p', { class: 'muted', text: 'The queue is the community view. Sample people wear a Demo badge.' }),
     partners,
     done
   );
@@ -2364,7 +2573,7 @@ function loadPeakPhotos() {
     return response.json();
   }).then(function (doc) {
     peakPhotos = doc || {};
-    renderExplore();
+    renderMine();
   }).catch(function () { peakPhotos = peakPhotos || {}; });
 }
 
