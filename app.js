@@ -1095,6 +1095,9 @@ function configureMarkerIcons() {
 
 var mapExpanded = false;
 var mapHistoryPushed = false;
+var sheetHistoryPushed = false;
+var mapHistoryLock = false;
+var suppressMapClick = false;
 var mapAnimating = false;
 var MAP_MS = 380;
 var MAP_EASE = 'cubic-bezier(0.22, 1.18, 0.36, 1)';
@@ -1192,11 +1195,58 @@ function showMapStatus(text) {
   setTimeout(function () { status.classList.add('hidden'); }, 3200);
 }
 
-function showMapSheet(name) {
+function mapSheetOpen() {
   var root = document.documentElement;
+  return root.classList.contains('map-show-peak') || root.classList.contains('map-show-layers') || root.classList.contains('map-show-collections');
+}
+
+function showMapSheet(name, fromPop) {
+  var root = document.documentElement;
+  var wasOpen = mapSheetOpen();
   ['layers', 'collections', 'peak'].forEach(function (sheet) {
     root.classList.toggle('map-show-' + sheet, sheet === name);
   });
+  if (!name) {
+    root.classList.remove('map-sheet-tall');
+    var detail = document.getElementById('peak-detail');
+    if (detail && root.classList.contains('map-expanded')) detail.classList.add('hidden');
+    clearSheetMotion();
+    if (!fromPop && sheetHistoryPushed) {
+      sheetHistoryPushed = false;
+      try { history.back(); } catch (err) { sheetHistoryPushed = false; }
+      return;
+    }
+    sheetHistoryPushed = false;
+    return;
+  }
+  if (!wasOpen && !sheetHistoryPushed && root.classList.contains('map-expanded')) {
+    try {
+      history.pushState({ summitlogMap: true, summitlogSheet: true }, '');
+      sheetHistoryPushed = true;
+    } catch (err) {
+      sheetHistoryPushed = false;
+    }
+  }
+}
+
+function requestCloseSheet() {
+  if (mapSheetOpen()) {
+    showMapSheet('', false);
+    return;
+  }
+  var detail = document.getElementById('peak-detail');
+  if (detail) detail.classList.add('hidden');
+}
+
+function clearSheetMotion() {
+  var detail = document.getElementById('peak-detail');
+  if (!detail) return;
+  detail.style.transition = '';
+  detail.style.transform = '';
+}
+
+function sheetMotionOff() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 function setMapGestures(enabled) {
@@ -1274,14 +1324,26 @@ function expandMap() {
 }
 
 function collapseMap(fromPop) {
+  if (mapHistoryLock) return;
   if (!mapExpanded && !mapAnimating) return;
   var container = mapBox();
   var root = document.documentElement;
   var covered = root.classList.contains('map-cover');
+  var steps = 0;
+  if (!fromPop && sheetHistoryPushed) steps += 1;
+  if (!fromPop && mapHistoryPushed) steps += 1;
+  sheetHistoryPushed = false;
   mapExpanded = false;
   root.classList.remove('map-settled', 'map-show-layers', 'map-show-collections', 'map-show-peak', 'map-sheet-tall');
+  clearSheetMotion();
   setMapGestures(false);
-  popMapHistory(fromPop);
+  if (fromPop) {
+    mapHistoryPushed = false;
+  } else if (steps) {
+    mapHistoryPushed = false;
+    mapHistoryLock = true;
+    try { history.go(-steps); } catch (err) { mapHistoryLock = false; }
+  }
   if (!container) return;
   if (prefersReducedMotion()) {
     root.classList.remove('map-expanded', 'map-cover');
@@ -1381,6 +1443,28 @@ function initMap() {
         showMapStatus('Location is unavailable on this device.');
       });
       map.on('zoomend moveend', function () { updateMapMarkers(); });
+      map.on('click', function () {
+        if (suppressMapClick) {
+          suppressMapClick = false;
+          return;
+        }
+        if (mapSheetOpen()) requestCloseSheet();
+      });
+      var mapTap = null;
+      var mapEl = document.getElementById('map-container');
+      mapEl.addEventListener('pointerdown', function (event) {
+        if (event.target.closest && event.target.closest('.leaflet-control, .leaflet-marker-icon, .photo-pin, .pin-dot, .pin-cluster')) return;
+        mapTap = { id: event.pointerId, x: event.clientX, y: event.clientY, t: Date.now() };
+      });
+      mapEl.addEventListener('pointerup', function (event) {
+        if (!mapTap || event.pointerId !== mapTap.id) return;
+        var dx = event.clientX - mapTap.x;
+        var dy = event.clientY - mapTap.y;
+        mapTap = null;
+        if (dx * dx + dy * dy > 64) return;
+        if (mapSheetOpen()) requestCloseSheet();
+      });
+      mapEl.addEventListener('pointercancel', function () { mapTap = null; });
       syncAreas();
     }
     updateMapMarkers();
@@ -1506,6 +1590,7 @@ function showMemoryOrPlan(item) {
 function addDivMarker(lat, lng, icon, onClick) {
   var marker = L.marker([lat, lng], { icon: icon, keyboard: false });
   marker.on('click', function (event) {
+    suppressMapClick = true;
     if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
     onClick();
   });
@@ -2101,6 +2186,7 @@ document.getElementById('map-expand').addEventListener('click', function (event)
 });
 document.getElementById('map-close').addEventListener('click', function () { collapseMap(false); });
 bindMapHandle();
+bindSheetDismiss();
 document.getElementById('map-locate').addEventListener('click', function () {
   if (!mapExpanded) expandMap();
   if (map) map.locate({ setView: true, maxZoom: 12 });
@@ -2109,15 +2195,32 @@ document.getElementById('map-layers-btn').addEventListener('click', function () 
   if (document.documentElement.classList.contains('map-show-layers')) showMapSheet('');
   else showMapSheet('layers');
 });
+document.getElementById('collections-close').addEventListener('click', requestCloseSheet);
+document.getElementById('layers-close').addEventListener('click', requestCloseSheet);
 document.getElementById('map-sheet-btn').addEventListener('click', function () {
   if (document.documentElement.classList.contains('map-show-collections')) showMapSheet('');
   else showMapSheet('collections');
 });
-window.addEventListener('popstate', function () {
-  if (mapExpanded) collapseMap(true);
+window.addEventListener('popstate', function (event) {
+  if (mapHistoryLock) {
+    mapHistoryLock = false;
+    return;
+  }
+  var state = event.state || {};
+  if (sheetHistoryPushed && !state.summitlogSheet) {
+    sheetHistoryPushed = false;
+    showMapSheet('', true);
+    return;
+  }
+  if (mapExpanded && !state.summitlogMap) collapseMap(true);
 });
 document.addEventListener('keydown', function (event) {
-  if (event.key === 'Escape' && mapExpanded) collapseMap(false);
+  if (event.key !== 'Escape') return;
+  if (mapSheetOpen()) {
+    requestCloseSheet();
+    return;
+  }
+  if (mapExpanded) collapseMap(false);
 });
 
 function collectionPeakByName(item) {
@@ -2287,10 +2390,7 @@ function showPeakDetail(peak) {
     );
   });
   var progress = collectionData ? Col.progress(collectionData.peaks, doneItems()) : null;
-  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Expand or collapse details' });
-  grab.addEventListener('click', function () {
-    document.documentElement.classList.toggle('map-sheet-tall');
-  });
+  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' });
   var partnersBtn = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
   partnersBtn.addEventListener('click', function () {
     var existing = null;
@@ -2310,6 +2410,7 @@ function showPeakDetail(peak) {
   });
   var children = [
     grab,
+    sheetCloseButton(),
     summitHero(peak),
     el('h3', { class: 'summit-name', text: peak.name }),
     el('p', { class: 'sheet-meta' },
@@ -2344,6 +2445,77 @@ function showPeakDetail(peak) {
   }
 }
 
+function sheetCloseButton() {
+  return el('button', { class: 'sheet-close', type: 'button', 'aria-label': 'Close', text: '×' });
+}
+
+function bindSheetDismiss() {
+  var box = document.getElementById('peak-detail');
+  if (!box || box.dataset.dismissBound) return;
+  box.dataset.dismissBound = '1';
+  var swipe = null;
+  box.addEventListener('pointerdown', function (event) {
+    if (!document.documentElement.classList.contains('map-show-peak')) return;
+    if (event.target.closest && event.target.closest('.sheet-close, a, input, textarea, select, button:not(.sheet-grab)')) return;
+    var onGrab = event.target.closest && event.target.closest('.sheet-grab');
+    if (!onGrab && box.scrollTop > 0) return;
+    swipe = { id: event.pointerId, y: event.clientY, lastY: event.clientY, lastT: Date.now(), dy: 0, vy: 0, onGrab: !!onGrab };
+    box.setPointerCapture(event.pointerId);
+  });
+  box.addEventListener('pointermove', function (event) {
+    if (!swipe || event.pointerId !== swipe.id) return;
+    var now = Date.now();
+    swipe.vy = (event.clientY - swipe.lastY) / Math.max(1, now - swipe.lastT);
+    swipe.lastY = event.clientY;
+    swipe.lastT = now;
+    swipe.dy = event.clientY - swipe.y;
+    if (swipe.dy < 0) return;
+    if (sheetMotionOff()) return;
+    box.style.transition = 'none';
+    box.style.transform = 'translateY(' + swipe.dy + 'px)';
+  });
+  function endSwipe(event) {
+    if (!swipe || event.pointerId !== swipe.id) return;
+    var drag = swipe;
+    swipe = null;
+    if (drag.dy > 88 || drag.vy > 0.55) {
+      if (sheetMotionOff()) {
+        requestCloseSheet();
+        return;
+      }
+      box.style.transition = 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)';
+      box.style.transform = 'translateY(120%)';
+      var closed = false;
+      function finish() {
+        if (closed) return;
+        closed = true;
+        requestCloseSheet();
+      }
+      box.addEventListener('transitionend', function onEnd(ev) {
+        if (ev.propertyName !== 'transform') return;
+        box.removeEventListener('transitionend', onEnd);
+        finish();
+      });
+      setTimeout(finish, 280);
+      return;
+    }
+    if (drag.onGrab && Math.abs(drag.dy) < 10) {
+      document.documentElement.classList.toggle('map-sheet-tall');
+    } else if (drag.dy < -40) {
+      document.documentElement.classList.add('map-sheet-tall');
+    }
+    if (!sheetMotionOff()) box.style.transition = 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)';
+    box.style.transform = '';
+  }
+  box.addEventListener('pointerup', endSwipe);
+  box.addEventListener('pointercancel', endSwipe);
+  box.addEventListener('click', function (event) {
+    var close = event.target.closest ? event.target.closest('.sheet-close') : null;
+    if (!close || !box.contains(close)) return;
+    requestCloseSheet();
+  });
+}
+
 function summitHero(peak) {
   var photo = photoRecord(peak);
   var frame = el('div', { class: 'summit-hero' });
@@ -2374,10 +2546,7 @@ function showTrailSheet(place) {
   var box = document.getElementById('peak-detail');
   if (!box || !place) return;
   document.documentElement.classList.remove('map-sheet-tall');
-  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Expand or collapse details' });
-  grab.addEventListener('click', function () {
-    document.documentElement.classList.toggle('map-sheet-tall');
-  });
+  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' });
   var add = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(place.name) ? 'In your plan' : 'Add to plan' });
   add.addEventListener('click', function () {
     if (alreadyPlanned(place.name)) openPlanByName(place.name);
@@ -2398,6 +2567,7 @@ function showTrailSheet(place) {
   }
   box.replaceChildren(el('div', null,
     grab,
+    sheetCloseButton(),
     hero,
     el('h3', { class: 'summit-name', text: place.name }),
     el('p', { class: 'sheet-meta' },
