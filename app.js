@@ -19,6 +19,12 @@ var donePromptId = '';
 var activePlanId = '';
 var peakPhotos = {};
 var userLocation = null;
+var sourcedLists = [];
+var activeCollectionId = '';
+var sheetSnap = 'peek';
+var sheetMode = 'home';
+var exploreHist = { collection: false, peak: false };
+var nearNote = '';
 var partnerPosts = [];
 var memberships = [];
 var objectiveCatalog = [];
@@ -208,12 +214,8 @@ document.getElementById('logout-btn').addEventListener('click', function () {
 
 // ---- Tabs ----
 function fitMap() {
-  var section = document.getElementById('explore');
-  var box = document.getElementById('map-container');
-  if (!section || !box || section.classList.contains('hidden')) return;
-  if (mapAnimating || document.documentElement.classList.contains('map-cover')) return;
-  if (box.style.height !== '168px') box.style.height = '168px';
-  if (map) map.invalidateSize();
+  if (!document.documentElement.classList.contains('explore-map')) return;
+  sizeExploreMap();
 }
 
 function watchChrome() {
@@ -229,7 +231,7 @@ function watchChrome() {
 
 function selectTab(name) {
   dismissPeakPage();
-  if (name !== 'explore' && document.documentElement.classList.contains('map-expanded')) collapseMap(false);
+  if (name !== 'explore') leaveExploreMap();
   if (name !== 'plan' && name !== 'logbook' && form) form.classList.add('hidden');
   document.querySelectorAll('#app > nav button').forEach(function (item) {
     item.classList.toggle('active', item.dataset.tab === name);
@@ -239,12 +241,28 @@ function selectTab(name) {
   });
   var mainEl = document.querySelector('#app main');
   if (mainEl) mainEl.scrollTop = 0;
-  if (name === 'explore') {
-    fitMap();
-    setTimeout(fitMap, 100);
-  }
+  if (name === 'explore') enterExploreMap();
   if (name === 'plan') showPlanHome();
   if (name === 'logbook') showLogbookHome();
+}
+
+function enterExploreMap() {
+  document.documentElement.classList.add('explore-map');
+  initMap();
+  setMapGestures(true);
+  sizeExploreMap();
+  renderExploreSheet();
+  setTimeout(sizeExploreMap, 80);
+}
+
+function leaveExploreMap() {
+  document.documentElement.classList.remove('explore-map', 'explore-peak');
+  var app = document.getElementById('app');
+  if (app) {
+    app.style.marginTop = '';
+    app.style.height = '';
+  }
+  setMapGestures(false);
 }
 
 document.querySelectorAll('#app > nav button').forEach(function (btn) {
@@ -1339,12 +1357,16 @@ function showMapSheet(name, fromPop) {
 }
 
 function requestCloseSheet() {
+  if (document.documentElement.classList.contains('explore-map') && sheetMode === 'peak') {
+    closeExplorePeak(false);
+    return;
+  }
   if (mapSheetOpen()) {
     showMapSheet('', false);
     return;
   }
   var detail = document.getElementById('peak-detail');
-  if (detail) detail.classList.add('hidden');
+  if (detail && !document.documentElement.classList.contains('explore-map')) detail.classList.add('hidden');
 }
 
 function clearSheetMotion() {
@@ -1402,7 +1424,21 @@ function sizeFullMap() {
   root.style.setProperty('--vv-left', vv.offsetLeft + 'px');
   root.style.setProperty('--vv-width', vv.width + 'px');
   root.style.setProperty('--vv-height', vv.height + 'px');
+  if (root.classList.contains('explore-map')) {
+    var app = document.getElementById('app');
+    if (app) {
+      app.style.marginTop = vv.offsetTop + 'px';
+      app.style.height = vv.height + 'px';
+    }
+    if (map) map.invalidateSize({ animate: false, pan: false });
+    return;
+  }
   if (root.classList.contains('map-cover') && map) map.invalidateSize({ animate: false, pan: false });
+}
+
+function sizeExploreMap() {
+  sizeFullMap();
+  applySheetSnap(false);
 }
 
 function bindViewport() {
@@ -1576,7 +1612,7 @@ function initMap() {
           suppressMapClick = false;
           return;
         }
-        if (mapSheetOpen()) requestCloseSheet();
+        if (sheetMode === 'peak' || mapSheetOpen()) requestCloseSheet();
       });
       var mapTap = null;
       var mapEl = document.getElementById('map-container');
@@ -1590,7 +1626,7 @@ function initMap() {
         var dy = event.clientY - mapTap.y;
         mapTap = null;
         if (dx * dx + dy * dy > 64) return;
-        if (mapSheetOpen()) requestCloseSheet();
+        if (sheetMode === 'peak' || mapSheetOpen()) requestCloseSheet();
       });
       mapEl.addEventListener('pointercancel', function () { mapTap = null; });
       syncAreas();
@@ -1635,10 +1671,27 @@ function featureMatchesQuery(name) {
 
 function mapFeatures() {
   var list = [];
+  var active = activeCollectionRecord();
   var showPeaks = mapFilter === 'all' || mapFilter === '4000' || mapFilter === 'planned' || mapFilter === 'done';
   var showTreks = mapFilter === 'all' || mapFilter === 'treks';
+  if (active && active.kind === 'treks') {
+    showPeaks = false;
+    showTreks = true;
+  } else if (active && active.peaks) {
+    showTreks = false;
+    active.peaks.forEach(function (peak) {
+      if (!featureMatchesQuery(peak.name)) return;
+      var planned = alreadyPlanned(peak.name);
+      var done = Col.isSummited(peak, doneItems());
+      if (mapFilter === 'planned' && !planned) return;
+      if (mapFilter === 'done' && !done) return;
+      list.push({ type: 'peak', name: peak.name, lat: peak.lat, lng: peak.lng, peak: peak, planned: planned, done: done });
+    });
+    return list.filter(function (feature) { return Number.isFinite(feature.lat) && Number.isFinite(feature.lng); });
+  }
   if (showPeaks && collectionData) {
-    collectionData.peaks.forEach(function (peak) {
+    var pool = mapFilter === '4000' ? collectionData.peaks : dedupedMapPeaks();
+    pool.forEach(function (peak) {
       if (!featureMatchesQuery(peak.name)) return;
       var planned = alreadyPlanned(peak.name);
       var done = Col.isSummited(peak, doneItems());
@@ -1918,7 +1971,7 @@ var AVATAR_COLORS = ['#1e3a5f', '#3f2d12', '#1f3d32', '#3b1d3a', '#243044', '#3a
 
 function rebuildObjectives() {
   objectiveCatalog = Partners.buildCatalog({
-    peaks: collectionData ? collectionData.peaks : [],
+    peaks: dedupedMapPeaks(),
     famous: Lgc.FAMOUS,
     logs: doneItems(),
     backlog: plannedItems(),
@@ -2371,23 +2424,10 @@ document.getElementById('famous-list').addEventListener('click', function (event
 document.getElementById('osm-layer').addEventListener('change', updateMapMarkers);
 document.getElementById('load-peaks-btn').addEventListener('click', loadPeaksInView);
 
-document.getElementById('map-container').addEventListener('click', function (event) {
-  if (mapExpanded) return;
-  if (event.target.closest && event.target.closest('.leaflet-control, .map-expand, .map-close, .map-fabs, .map-chrome, .photo-pin, .pin-dot, .pin-cluster')) return;
-  expandMap();
-});
-document.getElementById('map-expand').addEventListener('click', function (event) {
-  event.stopPropagation();
-  expandMap();
-});
-document.getElementById('map-close').addEventListener('click', function () {
-  if (mapSheetOpen()) requestCloseSheet();
-  else collapseMap(false);
-});
 bindMapHandle();
 bindSheetDismiss();
+bindExploreSheet();
 document.getElementById('map-locate').addEventListener('click', function () {
-  if (!mapExpanded) expandMap();
   if (map) map.locate({ setView: true, maxZoom: 12 });
 });
 document.getElementById('map-layers-btn').addEventListener('click', function () {
@@ -2396,16 +2436,20 @@ document.getElementById('map-layers-btn').addEventListener('click', function () 
 });
 document.getElementById('collections-close').addEventListener('click', requestCloseSheet);
 document.getElementById('layers-close').addEventListener('click', requestCloseSheet);
-document.getElementById('map-sheet-btn').addEventListener('click', function () {
-  if (document.documentElement.classList.contains('map-show-collections')) showMapSheet('');
-  else showMapSheet('collections');
-});
 window.addEventListener('popstate', function (event) {
   if (mapHistoryLock) {
     mapHistoryLock = false;
     return;
   }
   var state = event.state || {};
+  if (exploreHist.peak && !state.explorePeak) {
+    closeExplorePeak(true);
+    return;
+  }
+  if (exploreHist.collection && !state.exploreCollection) {
+    clearCollection(true);
+    return;
+  }
   if (sheetHistoryPushed && !state.summitlogSheet) {
     sheetHistoryPushed = false;
     showMapSheet('', true);
@@ -2415,6 +2459,14 @@ window.addEventListener('popstate', function (event) {
 });
 document.addEventListener('keydown', function (event) {
   if (event.key !== 'Escape') return;
+  if (sheetMode === 'peak') {
+    closeExplorePeak(false);
+    return;
+  }
+  if (activeCollectionId) {
+    clearCollection(false);
+    return;
+  }
   if (mapSheetOpen()) {
     requestCloseSheet();
     return;
@@ -2435,14 +2487,23 @@ function collectionPeakByName(item) {
 function loadCollections() {
   if (collectionData) {
     renderCollections();
+    renderExploreSheet();
     return;
   }
-  fetch('data/collections/uiaa-alps-4000.json').then(function (response) {
-    if (!response.ok) throw new Error('collections');
-    return response.json();
-  }).then(function (doc) {
-    collectionData = doc.collections && doc.collections[0];
+  Promise.all([
+    fetch('data/collections/uiaa-alps-4000.json').then(function (response) {
+      if (!response.ok) throw new Error('collections');
+      return response.json();
+    }),
+    fetch('data/collections/sourced-lists.json').then(function (response) {
+      if (!response.ok) throw new Error('sourced');
+      return response.json();
+    })
+  ]).then(function (docs) {
+    collectionData = docs[0].collections && docs[0].collections[0];
+    sourcedLists = (docs[1].collections || []).slice();
     renderCollections();
+    renderExploreSheet();
     updateMapMarkers();
     rebuildObjectives();
     refreshActiveObjective();
@@ -2579,7 +2640,8 @@ function showPeakDetail(peak) {
       el('p', { class: 'entry-meta', text: peakLine(step) })
     );
   });
-  var progress = collectionData ? Col.progress(collectionData.peaks, doneItems()) : null;
+  var progressHost = progressHostFor(peak);
+  var progress = progressHost ? Col.progress(progressHost.peaks, doneItems()) : null;
   var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' });
   var partnersBtn = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
   partnersBtn.addEventListener('click', function () {
@@ -2617,13 +2679,13 @@ function showPeakDetail(peak) {
       el('span', { text: peak.normalRoute ? 'Normal route ' + peak.normalRoute : 'No sourced normal route' }),
       peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
     ),
-    progress ? el('p', { class: 'muted', text: progress.done + ' of ' + progress.total + ' Alpine 4000ers' }) : null,
+    progress ? el('p', { class: 'muted', text: progress.done + ' of ' + progress.total + ' · ' + progressHost.name }) : null,
     el('div', { class: 'log-actions' }, backlogBtn, partnersBtn),
     el('div', { class: 'reference-data' },
       el('p', { class: 'field-label', text: 'Known route' }),
       el('p', { text: peak.normalRoute ? peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') : 'No sourced route is stored for this summit.' }),
       el('p', { class: 'muted', text: 'The grade, when there is one, belongs to that route. Adding the mountain does not add the route.' }),
-      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null,
+      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: peak.normalRoute ? 'Route source' : 'Source' }) : null,
       peak.normalRoute ? useRouteButton(peak) : null
     ),
     el('div', { class: 'log-actions' }, summited, backlogBtn),
@@ -2633,10 +2695,11 @@ function showPeakDetail(peak) {
   if (!plan.steps.length) children.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
   box.replaceChildren.apply(box, children.concat(steps));
   box.classList.remove('hidden');
-  if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
+  if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
+  else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
   else box.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'nearest' });
   if (map) {
-    map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10));
+    map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10), { animate: !prefersReducedMotion() });
   }
 }
 
@@ -2744,8 +2807,11 @@ function showTrailSheet(place) {
   var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' });
   var add = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(place.name) ? 'In your plan' : 'Add to plan' });
   add.addEventListener('click', function () {
-    if (alreadyPlanned(place.name)) openPlanByName(place.name);
-    else addCatalogItem(place);
+    if (alreadyPlanned(place.name)) {
+      showToast(place.name + ' is already in your plan', [{ label: 'View plan', run: function () { openPlanByName(place.name); } }]);
+      return;
+    }
+    confirmPlan(place);
   });
   var photo = peakPhotos['place:' + place.name];
   var hero = el('div', { class: 'summit-hero' });
@@ -2772,7 +2838,8 @@ function showTrailSheet(place) {
     el('div', { class: 'log-actions' }, add)
   ));
   box.classList.remove('hidden');
-  if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
+  if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
+  else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
 }
 
 function collectionPopup(peak) {
@@ -3228,7 +3295,7 @@ function planDetailNode(item) {
       el('p', { class: 'field-label', text: 'Known route' }),
       el('p', { text: peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') }),
       el('p', { class: 'muted', text: 'This is the sourced normal route. It is not applied until you use it.' }),
-      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null,
+      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: peak.normalRoute ? 'Route source' : 'Source' }) : null,
       useRoute
     ));
   } else if (!item.routeName) {
@@ -3335,8 +3402,7 @@ function showMemory(id) {
   var progress = el('button', { class: 'secondary', type: 'button', text: 'Alpine 4000ers progress' });
   progress.addEventListener('click', function () {
     selectTab('explore');
-    var rail = document.getElementById('rail-4000');
-    if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    selectBrowseCollection('uiaa-alps-4000');
   });
   var plannedBits = [
     'Planned: ' + (item.routeName || 'Route TBD'),
@@ -3526,38 +3592,371 @@ function kmBetween(from, peak) {
 }
 
 function requestNear() {
-  if (!navigator.geolocation) return;
+  if (!navigator.geolocation) {
+    nearNote = 'This browser cannot share a location, so nearby peaks stay hidden.';
+    renderExploreSheet();
+    return;
+  }
   navigator.geolocation.getCurrentPosition(function (pos) {
     userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    renderExplore();
+    nearNote = '';
+    selectBrowseCollection('near-you');
   }, function () {
-    setMapNote('Location is unavailable, so the training peaks stay as they are.');
+    nearNote = 'Location is off, so nearby peaks stay hidden.';
+    renderExploreSheet();
   }, { maximumAge: 600000, timeout: 8000 });
 }
 
-function renderExplore() {
-  var root = document.getElementById('explore-rails');
-  if (!root || !collectionData) return;
-  var peaks = collectionData.peaks.slice();
-  var progress = Col.progress(peaks, doneItems());
-  var highest = peaks.slice().sort(function (a, b) { return b.elevation - a.elevation; }).slice(0, 8);
-  var training = peaks.filter(function (peak) {
-    return peak.grade === 'F' || peak.grade === 'F+' || peak.grade === 'PD-' || peak.grade === 'PD';
-  }).sort(function (a, b) { return a.elevation - b.elevation; }).slice(0, 12);
-  var treks = Lgc.FAMOUS.filter(function (place) { return place.kind === 'hike'; });
-  var rails = [
-    exploreRail('Highest Peaks', null, highest.map(peakCard)),
-    exploreRail('Alpine 4000ers', progress.done + ' of ' + progress.total, peaks.map(peakCard), 'rail-4000'),
-    exploreRail('Famous treks', null, treks.map(trekCard))
-  ];
-  if (userLocation) {
-    var near = peaks.slice().sort(function (a, b) {
-      return kmBetween(userLocation, a) - kmBetween(userLocation, b);
-    }).slice(0, 8);
-    rails.push(exploreRail('Near you', null, near.map(peakCard)));
+function dedupedMapPeaks() {
+  var seen = {};
+  var list = [];
+  function add(peak) {
+    if (!peak || !Number.isFinite(peak.lat) || !Number.isFinite(peak.lng)) return;
+    var key = peak.wikidata || Col.normName(peak.name);
+    if (!key || seen[key]) return;
+    seen[key] = true;
+    list.push(peak);
   }
-  rails.push(exploreRail('Suggested training peaks', null, training.map(peakCard)));
-  root.replaceChildren.apply(root, rails);
+  if (collectionData) collectionData.peaks.forEach(add);
+  sourcedLists.forEach(function (collection) {
+    (collection.peaks || []).forEach(add);
+  });
+  return list;
+}
+
+function famousTreks() {
+  return Lgc.FAMOUS.filter(function (place) { return place.kind === 'hike'; });
+}
+
+function progressHostFor(peak) {
+  var active = activeCollectionRecord();
+  if (active && active.peaks && active.peaks.some(function (item) { return item.id === peak.id; })) return active;
+  if (collectionData && collectionData.peaks.some(function (item) { return item.id === peak.id || item.wikidata === peak.wikidata; })) return collectionData;
+  var found = null;
+  sourcedLists.forEach(function (collection) {
+    if (found || !collection.peaks) return;
+    if (collection.peaks.some(function (item) { return item.id === peak.id; })) found = collection;
+  });
+  return found || collectionData;
+}
+
+function collectionProgressText(collection) {
+  if (!collection) return '';
+  if (collection.kind === 'treks') {
+    var treks = famousTreks();
+    var done = 0;
+    treks.forEach(function (place) {
+      if (doneItems().some(function (item) { return Col.normName(item.name) === Col.normName(place.name); })) done += 1;
+    });
+    return done + '/' + treks.length;
+  }
+  if (collection.kind === 'near') return nearNote || (userLocation ? 'Around you' : 'Uses your location');
+  if (collection.kind === 'next') {
+    var steps = nextStepPeaks();
+    return steps.length ? steps.length + ' steps' : 'From your log';
+  }
+  var progress = Col.progress(collection.peaks || [], doneItems());
+  return progress.done + '/' + progress.total;
+}
+
+function browseCollections() {
+  var list = [];
+  if (collectionData) list.push(collectionData);
+  sourcedLists.forEach(function (collection) { list.push(collection); });
+  list.push({ id: 'famous-treks', name: 'Famous treks', kind: 'treks', region: 'Trails' });
+  list.push({ id: 'near-you', name: 'Peaks near you', kind: 'near', region: 'Location' });
+  list.push({ id: 'next-steps', name: 'Next steps from your logbook', kind: 'next', region: 'Your log' });
+  return list;
+}
+
+function activeCollectionRecord() {
+  if (!activeCollectionId) return null;
+  if (activeCollectionId === 'famous-treks') return { id: 'famous-treks', name: 'Famous treks', kind: 'treks', peaks: famousTreks() };
+  if (activeCollectionId === 'near-you') return { id: 'near-you', name: 'Peaks near you', kind: 'near', peaks: nearPeaks() };
+  if (activeCollectionId === 'next-steps') return { id: 'next-steps', name: 'Next steps from your logbook', kind: 'next', peaks: nextStepPeaks() };
+  if (collectionData && collectionData.id === activeCollectionId) return collectionData;
+  var found = null;
+  sourcedLists.forEach(function (collection) {
+    if (collection.id === activeCollectionId) found = collection;
+  });
+  return found;
+}
+
+function nearPeaks() {
+  if (!userLocation) return [];
+  var pool = dedupedMapPeaks().slice().sort(function (a, b) {
+    return kmBetween(userLocation, a) - kmBetween(userLocation, b);
+  });
+  var close = pool.filter(function (peak) { return kmBetween(userLocation, peak) <= 250; });
+  return close.length ? close : pool.slice(0, 8);
+}
+
+function nextStepPeaks() {
+  if (!collectionData) return [];
+  var level = Col.estimateLevel(doneItems(), collectionData.peaks, Store.getLevel());
+  var pending = collectionData.peaks.filter(function (peak) { return !Col.isSummited(peak, doneItems()); });
+  if (!pending.length) return [];
+  pending.sort(function (a, b) {
+    var rankA = Col.gradeRank(a.grade);
+    var rankB = Col.gradeRank(b.grade);
+    if (rankA != null && rankB != null && rankA !== rankB) return rankA - rankB;
+    return a.elevation - b.elevation;
+  });
+  var target = pending[0];
+  if (level && (level.grade || typeof level.elevation === 'number')) {
+    var above = pending.filter(function (peak) {
+      var higherGrade = level.grade && Col.gradeRank(peak.grade) != null && Col.gradeRank(peak.grade) > Col.gradeRank(level.grade);
+      var higherElev = typeof level.elevation === 'number' && peak.elevation > level.elevation;
+      return higherGrade || higherElev;
+    });
+    if (above.length) target = above[0];
+  }
+  var plan = Col.suggestBuildUp(target, collectionData.peaks, level);
+  return plan.steps.length ? plan.steps : [target];
+}
+
+function snapHeights() {
+  var frame = document.getElementById('map-frame');
+  var height = frame ? frame.clientHeight : window.innerHeight;
+  var peek = 88;
+  var full = Math.max(peek + 80, height - 132);
+  var half = Math.round(height * 0.46);
+  if (half > full - 28) half = Math.round((peek + full) / 2);
+  if (half < peek + 40) half = peek + 40;
+  return { peek: peek, half: half, full: full };
+}
+
+function applySheetSnap(animate) {
+  var sheet = document.getElementById('explore-sheet');
+  if (!sheet) return;
+  var limits = snapHeights();
+  var height = limits[sheetSnap] || limits.peek;
+  var motion = animate && !prefersReducedMotion();
+  sheet.style.transition = motion ? 'height 280ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+  sheet.style.height = height + 'px';
+  document.documentElement.style.setProperty('--sheet-h', height + 'px');
+  sheet.classList.toggle('is-peek', sheetSnap === 'peek');
+  sheet.classList.toggle('is-half', sheetSnap === 'half');
+  sheet.classList.toggle('is-full', sheetSnap === 'full');
+}
+
+function fitFeatures(features) {
+  if (!map || !features.length) return;
+  var bounds = L.latLngBounds(features.map(function (feature) { return [feature.lat, feature.lng]; }));
+  map.fitBounds(bounds.pad(0.3), { maxZoom: 8, animate: !prefersReducedMotion() });
+}
+
+function selectBrowseCollection(id) {
+  if (id === 'near-you' && !userLocation) {
+    requestNear();
+    return;
+  }
+  activeCollectionId = id;
+  sheetMode = 'collection';
+  sheetSnap = 'half';
+  if (!exploreHist.collection) {
+    try {
+      history.pushState({ exploreCollection: id }, '');
+      exploreHist.collection = true;
+    } catch (err) {
+      exploreHist.collection = false;
+    }
+  }
+  renderExploreSheet();
+  applySheetSnap(true);
+  updateMapMarkers();
+  var active = activeCollectionRecord();
+  if (active && active.kind === 'treks') fitFeatures(famousTreks());
+  else if (active && active.peaks) fitFeatures(active.peaks);
+}
+
+function clearCollection(fromPop) {
+  activeCollectionId = '';
+  nearNote = userLocation ? '' : nearNote;
+  if (sheetMode !== 'peak') sheetMode = 'home';
+  if (!fromPop && exploreHist.collection) {
+    exploreHist.collection = false;
+    try { history.back(); } catch (err) { exploreHist.collection = false; }
+  } else {
+    exploreHist.collection = false;
+  }
+  renderExploreSheet();
+  updateMapMarkers();
+}
+
+function openExplorePeak() {
+  sheetMode = 'peak';
+  document.documentElement.classList.add('explore-peak');
+  sheetSnap = 'full';
+  if (!exploreHist.peak) {
+    try {
+      history.pushState({ exploreCollection: activeCollectionId || '', explorePeak: true }, '');
+      exploreHist.peak = true;
+    } catch (err) {
+      exploreHist.peak = false;
+    }
+  }
+  applySheetSnap(true);
+}
+
+function closeExplorePeak(fromPop) {
+  sheetMode = activeCollectionId ? 'collection' : 'home';
+  document.documentElement.classList.remove('explore-peak');
+  var detail = document.getElementById('peak-detail');
+  if (detail) {
+    detail.classList.add('hidden');
+    clearSheetMotion();
+  }
+  if (!fromPop && exploreHist.peak) {
+    exploreHist.peak = false;
+    try { history.back(); } catch (err) { exploreHist.peak = false; }
+  } else {
+    exploreHist.peak = false;
+  }
+  renderExploreSheet();
+  applySheetSnap(true);
+}
+
+function collectionCard(collection) {
+  var button = el('button', { class: 'collection-card', type: 'button' },
+    el('strong', { text: collection.name }),
+    el('span', { text: collectionProgressText(collection) })
+  );
+  button.addEventListener('click', function () { selectBrowseCollection(collection.id); });
+  return button;
+}
+
+function renderCollectionPeaks(collection) {
+  if (collection.kind === 'near' && nearNote && !collection.peaks.length) {
+    return [el('p', { text: nearNote })];
+  }
+  if (collection.kind === 'next' && !collection.peaks.length) {
+    return [el('p', { text: 'Log a summit and the next steps come from the peaks you have already done.' })];
+  }
+  if (collection.kind === 'treks') {
+    return famousTreks().map(function (place) {
+      var button = el('button', { class: 'peak-list-row', type: 'button' },
+        el('strong', { text: place.name }),
+        el('span', { text: place.area || 'Trek' })
+      );
+      button.addEventListener('click', function () { showTrailSheet(place); });
+      return button;
+    });
+  }
+  return (collection.peaks || []).map(function (peak) {
+    var meta = peak.elevation + ' m';
+    if (peak.grade) meta += ' · ' + peak.grade;
+    if (Col.isSummited(peak, doneItems())) meta += ' · done';
+    var button = el('button', { class: 'peak-list-row', type: 'button' },
+      el('strong', { text: peak.name }),
+      el('span', { text: meta })
+    );
+    button.addEventListener('click', function () { showPeakDetail(peak); });
+    return button;
+  });
+}
+
+function renderExploreSheet() {
+  var head = document.getElementById('explore-sheet-head');
+  var body = document.getElementById('explore-sheet-body');
+  if (!head || !body) return;
+  if (sheetMode === 'peak') return;
+  var active = activeCollectionRecord();
+  if (active) {
+    var back = el('button', { class: 'sheet-back', type: 'button', 'aria-label': 'All collections', text: '‹' });
+    back.addEventListener('click', function () { clearCollection(false); });
+    head.replaceChildren(back, el('p', { class: 'sheet-kicker' },
+      document.createTextNode(active.name),
+      el('small', { text: collectionProgressText(active) })
+    ));
+    var nodes = renderCollectionPeaks(active);
+    body.replaceChildren.apply(body, nodes.length ? nodes : [el('p', { text: 'Nothing in this collection matches.' })]);
+    return;
+  }
+  head.replaceChildren(el('p', { class: 'sheet-kicker', text: 'Find your next peak' }));
+  var sourced = browseCollections().filter(function (collection) { return collection.kind !== 'near' && collection.kind !== 'next'; });
+  var personal = browseCollections().filter(function (collection) { return collection.kind === 'near' || collection.kind === 'next'; });
+  var rows = el('div', { class: 'sheet-rows' },
+    el('div', { class: 'collection-row' }, sourced.map(collectionCard)),
+    el('div', { class: 'collection-row' }, personal.map(collectionCard))
+  );
+  var list = el('div', { class: 'sheet-list' });
+  browseCollections().forEach(function (collection) { list.appendChild(collectionCard(collection)); });
+  if (sheetSnap === 'full') body.replaceChildren(list);
+  else body.replaceChildren(rows);
+  if (nearNote && !userLocation) body.appendChild(el('p', { class: 'muted', text: nearNote }));
+}
+
+function bindExploreSheet() {
+  var sheet = document.getElementById('explore-sheet');
+  var grab = document.getElementById('explore-grab');
+  var head = document.getElementById('explore-sheet-head');
+  if (!sheet || !grab || sheet.dataset.bound) return;
+  sheet.dataset.bound = '1';
+  var drag = null;
+  function canDrag(event) {
+    if (event.target.closest && event.target.closest('a, input, textarea, select, .sheet-close, .sheet-back, .collection-card, .peak-list-row')) return false;
+    return event.target === grab || (head && head.contains(event.target)) || event.target === sheet;
+  }
+  function start(event) {
+    if (!document.documentElement.classList.contains('explore-map') || !canDrag(event)) return;
+    drag = {
+      id: event.pointerId,
+      y: event.clientY,
+      lastY: event.clientY,
+      lastT: Date.now(),
+      vy: 0,
+      h: sheet.getBoundingClientRect().height
+    };
+    sheet.setPointerCapture(event.pointerId);
+  }
+  grab.addEventListener('pointerdown', start);
+  head.addEventListener('pointerdown', start);
+  sheet.addEventListener('pointermove', function (event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    var now = Date.now();
+    drag.vy = (event.clientY - drag.lastY) / Math.max(1, now - drag.lastT);
+    drag.lastY = event.clientY;
+    drag.lastT = now;
+    if (prefersReducedMotion()) return;
+    var limits = snapHeights();
+    var next = drag.h - (event.clientY - drag.y);
+    next = Math.max(limits.peek - 16, Math.min(limits.full, next));
+    sheet.style.transition = 'none';
+    sheet.style.height = next + 'px';
+    document.documentElement.style.setProperty('--sheet-h', next + 'px');
+  });
+  function end(event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    var height = sheet.getBoundingClientRect().height;
+    var vy = drag.vy;
+    drag = null;
+    var limits = snapHeights();
+    var names = ['peek', 'half', 'full'];
+    var projected = prefersReducedMotion() ? height : height - vy * 160;
+    if (sheetMode === 'peak' && (vy > 0.75 || projected < limits.peek + 8)) {
+      closeExplorePeak(false);
+      return;
+    }
+    var best = 0;
+    var bestDist = Infinity;
+    names.forEach(function (name, index) {
+      var dist = Math.abs(projected - limits[name]);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = index;
+      }
+    });
+    sheetSnap = names[best];
+    renderExploreSheet();
+    applySheetSnap(true);
+  }
+  sheet.addEventListener('pointerup', end);
+  sheet.addEventListener('pointercancel', function (event) { end(event); });
+}
+
+function renderExplore() {
+  renderExploreSheet();
 }
 
 function renderExploreSuggestions() {
@@ -3802,18 +4201,13 @@ function addExploreObjective(id) {
   openPlacePage(placeFromObjective(found), 'search');
 }
 
-document.getElementById('explore-query').addEventListener('input', renderExploreSuggestions);
 document.getElementById('plan-quick-add').addEventListener('click', function () { finishQuickPlan(true); });
 document.getElementById('plan-quick-skip').addEventListener('click', function () { finishQuickPlan(false); });
-document.getElementById('explore-suggestions').addEventListener('click', function (event) {
-  var button = event.target.closest ? event.target.closest('[data-explore]') : null;
-  if (!button) return;
-  addExploreObjective(button.getAttribute('data-explore'));
-});
 document.getElementById('map-chips').addEventListener('click', function (event) {
   var button = event.target.closest ? event.target.closest('[data-map-filter]') : null;
   if (!button) return;
   mapFilter = button.getAttribute('data-map-filter');
+  if (activeCollectionId) clearCollection(false);
   document.querySelectorAll('#map-chips .map-chip').forEach(function (chip) {
     var on = chip === button;
     chip.classList.toggle('active', on);
@@ -3873,12 +4267,19 @@ function chooseMapSuggestion(id) {
       if (Col.normName(item.name) === Col.normName(found.name)) peak = item;
     });
   }
+  dedupedMapPeaks().forEach(function (item) {
+    if (!peak && Col.normName(item.name) === Col.normName(found.name)) peak = item;
+  });
+  setMapSearch('', false);
+  var input = document.getElementById('map-query');
+  if (input) input.value = '';
   if (peak) {
-    openPeakPage(peak, 'map');
+    showPeakDetail(peak);
     return;
   }
   var famous = famousByName(found.name);
-  if (famous) openTrekPage(famous, 'map');
+  if (famous && famous.kind === 'hike') showTrailSheet(famous);
+  else if (famous) showPeakDetail(famous);
 }
 
 document.getElementById('map-query').addEventListener('input', function () {
@@ -3905,14 +4306,9 @@ document.getElementById('map-search-form').addEventListener('submit', function (
   openFeature(hit);
 });
 
-document.getElementById('open-map').addEventListener('click', function () {
-  if (document.getElementById('explore').classList.contains('hidden')) selectTab('explore');
-  requestAnimationFrame(function () { expandMap(); });
-});
 document.getElementById('collection-progress').addEventListener('click', function () {
   selectTab('explore');
-  var rail = document.getElementById('rail-4000');
-  if (rail) rail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  selectBrowseCollection(collectionData ? collectionData.id : 'uiaa-alps-4000');
 });
 
 function refreshLogbookView(done) {

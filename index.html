@@ -217,26 +217,13 @@
         </div>
       </section>
 
-      <!-- Explore: discovery first, map grows from the preview. -->
+      <!-- Explore is the map. The tab bar stays; the header steps aside. -->
       <section id="explore" class="tab hidden">
-        <h2>Find your next peak</h2>
-        <div class="discover-bar">
-          <div class="objective-search">
-            <input type="search" id="explore-query" placeholder="Search peaks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="explore-suggestions" aria-label="Search peaks">
-            <ul id="explore-suggestions" class="objective-suggestions" role="listbox"></ul>
-          </div>
-          <button class="map-go" id="open-map" type="button">Map</button>
-        </div>
         <div id="map-frame">
           <div id="map-spacer" hidden></div>
           <div id="map-scaler">
             <div id="map-container"></div>
           </div>
-          <button class="map-expand hidden" id="map-expand" type="button">Expand map</button>
-          <button class="map-handle" id="map-handle" type="button" aria-label="Drag down to close the map"></button>
-          <button class="map-close" id="map-close" type="button" aria-label="Close map">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
           <div class="map-chrome" id="map-chrome">
             <form class="map-search" id="map-search-form" role="search">
               <input type="search" id="map-query" placeholder="Search peaks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks">
@@ -262,27 +249,17 @@
             <button type="button" id="map-layers-btn" aria-label="Layers">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
             </button>
-            <button type="button" id="map-sheet-btn" aria-label="Collection list">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </button>
           </div>
           <p id="map-status" class="map-status hidden" role="status"></p>
-        </div>
-        <p class="map-gesture">The Map button grows this preview to full screen. Scrolling the page is not taken over by the map.</p>
-        <div id="explore-rails"></div>
-        <div id="peak-detail" class="card hidden"></div>
-        <p class="muted map-caption">Blue is done, amber is planned. A check mark on a range means you have logged something there.</p>
-        <div class="legend">
-          <span class="swatch swatch-log"></span> Done
-          <span class="swatch swatch-backlog"></span> Planned
-          <span class="swatch swatch-osm"></span> OSM
-          <span class="swatch swatch-done"></span> Collection, done
-          <span class="swatch swatch-todo"></span> Collection, not yet
+          <div id="explore-sheet" class="explore-sheet is-peek">
+            <button class="sheet-grab" id="explore-grab" type="button" aria-label="Drag the collections sheet"></button>
+            <div id="explore-sheet-head"><p class="sheet-kicker">Find your next peak</p></div>
+            <div id="explore-sheet-body"></div>
+            <div id="peak-detail" class="hidden"></div>
+          </div>
         </div>
         <div class="card" id="collections-card">
           <button class="sheet-close" id="collections-close" type="button" aria-label="Close">×</button>
-          <h3>Collections</h3>
-          <p class="muted suggestion-intro">Personal progress only. A grade is shown only when a cited normal route gives one.</p>
           <div id="collections"></div>
         </div>
         <div class="card" id="layers-card">

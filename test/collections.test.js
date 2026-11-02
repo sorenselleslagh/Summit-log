@@ -70,4 +70,28 @@ assert.ok(html.includes('Build up') === false);
 assert.ok(html.includes('Your level'));
 assert.ok(!html.includes('Pyrenees'));
 
+var sourced = require('../data/collections/sourced-lists.json');
+var lists = {};
+sourced.collections.forEach(function (item) { lists[item.id] = item; });
+assert.strictEqual(lists['seven-summits'].peaks.length, 7);
+assert.strictEqual(lists['alps-north-faces'].peaks.length, 6);
+assert.ok(lists['europe-high-points'].peaks.length >= 40);
+sourced.collections.forEach(function (item) {
+  assert.ok(item.listSource);
+  item.peaks.forEach(function (peak) {
+    assert.ok(peak.name);
+    assert.ok(typeof peak.elevation === 'number' && peak.elevation > 0);
+    assert.ok(Math.abs(peak.lat) <= 90 && Math.abs(peak.lng) <= 180);
+    assert.ok(peak.sourceUrl && peak.sourceUrl.indexOf('https://') === 0);
+    if (peak.grade) assert.ok(peak.sourceUrl);
+    else assert.strictEqual(peak.grade, null);
+  });
+});
+var dru = lists['alps-north-faces'].peaks.filter(function (peak) { return peak.name === 'Petit Dru'; })[0];
+var cima = lists['alps-north-faces'].peaks.filter(function (peak) { return peak.name === 'Cima Grande di Lavaredo'; })[0];
+assert.strictEqual(dru.elevation, 3733);
+assert.strictEqual(cima.elevation, 2999);
+assert.strictEqual(dru.grade, null);
+assert.ok(sw.includes('./data/collections/sourced-lists.json'));
+
 console.log('collections tests ok', graded.length, 'of 82 graded');

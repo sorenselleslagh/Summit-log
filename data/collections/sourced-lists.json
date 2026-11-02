@@ -1,0 +1,1204 @@
+{
+  "format": 1,
+  "collections": [
+    {
+      "id": "seven-summits",
+      "name": "Seven Summits",
+      "region": "World",
+      "kind": "peaks",
+      "listSource": "Wikipedia, “Seven Summits”, the Messner (Carstensz) version: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, and Puncak Jaya. Elevations are the preferred Wikidata P2044 value. Coordinates are Wikidata P625 (CC0). No route grades are stored.",
+      "listLicence": "Wikipedia text is CC BY-SA 4.0. Wikidata facts are CC0.",
+      "peaks": [
+        {
+          "id": "seven-q513",
+          "name": "Mount Everest",
+          "elevation": 8848.86,
+          "lat": 27.98806,
+          "lng": 86.925,
+          "countries": [
+            "Nepal",
+            "People's Republic of China"
+          ],
+          "subrange": "Asia",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q513",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q513.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored."
+        },
+        {
+          "id": "seven-q39739",
+          "name": "Aconcagua",
+          "elevation": 6962,
+          "lat": -32.65306,
+          "lng": -70.01167,
+          "countries": [
+            "Argentina"
+          ],
+          "subrange": "South America",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q39739",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q39739.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored."
+        },
+        {
+          "id": "seven-q130018",
+          "name": "Denali",
+          "elevation": 6190,
+          "lat": 63.06917,
+          "lng": -151.00639,
+          "countries": [
+            "United States"
+          ],
+          "subrange": "North America",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q130018",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q130018.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored."
+        },
+        {
+          "id": "seven-q7296",
+          "name": "Mount Kilimanjaro",
+          "elevation": 5895,
+          "lat": -3.06667,
+          "lng": 37.35917,
+          "countries": [
+            "Tanzania"
+          ],
+          "subrange": "Africa",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q7296",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q7296.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored."
+        },
+        {
+          "id": "seven-q163758",
+          "name": "Vinson Massif",
+          "elevation": 4892,
+          "lat": -78.52556,
+          "lng": -85.61722,
+          "countries": [
+            "Antarctica"
+          ],
+          "subrange": "Antarctica",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q163758",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q163758.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored."
+        },
+        {
+          "id": "seven-q43105",
+          "name": "Mount Elbrus",
+          "elevation": 5642,
+          "lat": 43.35254,
+          "lng": 42.43787,
+          "countries": [
+            "Russia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q43105",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q43105.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored. Country is the preferred Wikidata P17 value."
+        },
+        {
+          "id": "seven-q1045888",
+          "name": "Puncak Jaya",
+          "elevation": 4884,
+          "lat": -4.08333,
+          "lng": 137.18333,
+          "countries": [
+            "Indonesia"
+          ],
+          "subrange": "Australia",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1045888",
+          "coordSource": "Wikidata coordinate (P625), CC0, for Q1045888.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Seven_Summits",
+          "sourceNote": "Messner list, as named in the Wikipedia article Seven Summits: Everest, Aconcagua, Denali, Kilimanjaro, Vinson, Elbrus, Puncak Jaya. Elevation is the preferred Wikidata P2044 value. No route grade is stored."
+        }
+      ]
+    },
+    {
+      "id": "europe-high-points",
+      "name": "Highest peaks of Europe by country",
+      "region": "Europe",
+      "kind": "peaks",
+      "listSource": "Wikipedia, “List of highest points of European countries” (the List section). Elevations are the metres in that table. Coordinates are the English Wikipedia map pin for each linked peak. Where the article gives a border caveat, it is copied onto that peak. No route grades are stored.",
+      "listLicence": "Wikipedia article text and table are CC BY-SA 4.0.",
+      "peaks": [
+        {
+          "id": "eu-mount-elbrus",
+          "name": "Mount Elbrus",
+          "elevation": 5642,
+          "lat": 43.355,
+          "lng": 42.43917,
+          "countries": [
+            "Russia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q43105",
+          "coordSource": "English Wikipedia coordinates for “Mount Elbrus”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-shkhara",
+          "name": "Shkhara",
+          "elevation": 5193,
+          "lat": 43.00056,
+          "lng": 43.11222,
+          "countries": [
+            "Georgia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q217457",
+          "coordSource": "English Wikipedia coordinates for “Shkhara”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Shkhara is placed in geographical Europe by one convention on the Greater Caucasus border. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mount-ararat",
+          "name": "Mount Ararat",
+          "elevation": 5137,
+          "lat": 39.7019,
+          "lng": 44.2983,
+          "countries": [
+            "Turkey"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q72303",
+          "coordSource": "English Wikipedia coordinates for “Mount Ararat”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Mount Ararat is in the Asian part of Turkey. Mahya Dağı is the highest peak it lists for European Turkey. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mont-blanc",
+          "name": "Mont Blanc",
+          "elevation": 4808,
+          "lat": 45.83278,
+          "lng": 6.865,
+          "countries": [
+            "Italy",
+            "France"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q583",
+          "coordSource": "English Wikipedia coordinates for “Mont Blanc”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-dufourspitze",
+          "name": "Dufourspitze",
+          "elevation": 4634,
+          "lat": 45.93683,
+          "lng": 7.86706,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q3403",
+          "coordSource": "English Wikipedia coordinates for “Dufourspitze”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-bazard-z",
+          "name": "Bazardüzü",
+          "elevation": 4466,
+          "lat": 41.22444,
+          "lng": 47.85833,
+          "countries": [
+            "Azerbaijan"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q725591",
+          "coordSource": "English Wikipedia coordinates for “Bazardüzü”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Bazardüzü is referred to geographical Europe by one convention on the Greater Caucasus border. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mount-aragats",
+          "name": "Mount Aragats",
+          "elevation": 4090,
+          "lat": 40.53333,
+          "lng": 44.2,
+          "countries": [
+            "Armenia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q203568",
+          "coordSource": "English Wikipedia coordinates for “Mount Aragats”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says that physiographically, Armenia falls entirely in Western Asia. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-grossglockner",
+          "name": "Grossglockner",
+          "elevation": 3798,
+          "lat": 47.07487,
+          "lng": 12.69525,
+          "countries": [
+            "Austria"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q3388",
+          "coordSource": "English Wikipedia coordinates for “Grossglockner”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-teide",
+          "name": "Teide",
+          "elevation": 3718,
+          "lat": 28.27306,
+          "lng": -16.63944,
+          "countries": [
+            "Spain"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q38954",
+          "coordSource": "English Wikipedia coordinates for “Teide”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Mulhacén is the highest point of Spain on mainland Europe, while Teide, in the Canary Islands, is usually considered part of Africa. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-gunnbj-rn-fjeld",
+          "name": "Gunnbjørn Fjeld",
+          "elevation": 3694,
+          "lat": 68.9195,
+          "lng": -29.89853,
+          "countries": [
+            "Denmark",
+            "Greenland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q825709",
+          "coordSource": "English Wikipedia coordinates for “Gunnbjørn Fjeld”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Gunnbjørn Fjeld, in Greenland, is the highest point of the Kingdom of Denmark. Møllehøj is the highest point listed for Denmark itself. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mulhac-n",
+          "name": "Mulhacén",
+          "elevation": 3482,
+          "lat": 37.05333,
+          "lng": -3.31139,
+          "countries": [
+            "Spain"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q209528",
+          "coordSource": "English Wikipedia coordinates for “Mulhacén”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-zugspitze",
+          "name": "Zugspitze",
+          "elevation": 2962,
+          "lat": 47.42111,
+          "lng": 10.98528,
+          "countries": [
+            "Germany"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q3375",
+          "coordSource": "English Wikipedia coordinates for “Zugspitze”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-coma-pedrosa",
+          "name": "Coma Pedrosa",
+          "elevation": 2942,
+          "lat": 42.59056,
+          "lng": 1.44478,
+          "countries": [
+            "Andorra"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q62467",
+          "coordSource": "English Wikipedia coordinates for “Coma Pedrosa”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-musala",
+          "name": "Musala",
+          "elevation": 2925,
+          "lat": 42.17972,
+          "lng": 23.58667,
+          "countries": [
+            "Bulgaria"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q209341",
+          "coordSource": "English Wikipedia coordinates for “Musala”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mount-olympus",
+          "name": "Mount Olympus",
+          "elevation": 2917,
+          "lat": 40.08556,
+          "lng": 22.35861,
+          "countries": [
+            "Greece"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q80344",
+          "coordSource": "English Wikipedia coordinates for “Mount Olympus”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-triglav",
+          "name": "Triglav",
+          "elevation": 2864,
+          "lat": 46.37833,
+          "lng": 13.83667,
+          "countries": [
+            "Slovenia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1024",
+          "coordSource": "English Wikipedia coordinates for “Triglav”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mount-korab",
+          "name": "Mount Korab",
+          "elevation": 2764,
+          "lat": 41.79111,
+          "lng": 20.54778,
+          "countries": [
+            "Albania",
+            "North Macedonia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q912579",
+          "coordSource": "English Wikipedia coordinates for “Mount Korab”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-velika-rudoka",
+          "name": "Velika Rudoka",
+          "elevation": 2660,
+          "lat": 41.91861,
+          "lng": 20.77667,
+          "countries": [
+            "Kosovo"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q20568528",
+          "coordSource": "English Wikipedia coordinates for “Velika Rudoka”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-gerlachovsk-t-t",
+          "name": "Gerlachovský štít",
+          "elevation": 2655,
+          "lat": 49.16403,
+          "lng": 20.13403,
+          "countries": [
+            "Slovakia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q81213",
+          "coordSource": "English Wikipedia coordinates for “Gerlachovský štít”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-vorder-grauspitz",
+          "name": "Vorder Grauspitz",
+          "elevation": 2599,
+          "lat": 47.05278,
+          "lng": 9.58194,
+          "countries": [
+            "Liechtenstein"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q665000",
+          "coordSource": "English Wikipedia coordinates for “Vorder Grauspitz”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-moldoveanu-peak",
+          "name": "Moldoveanu Peak",
+          "elevation": 2544,
+          "lat": 45.6,
+          "lng": 24.73778,
+          "countries": [
+            "Romania"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q746524",
+          "coordSource": "English Wikipedia coordinates for “Moldoveanu Peak”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-zla-kolata",
+          "name": "Zla Kolata",
+          "elevation": 2534,
+          "lat": 42.485,
+          "lng": 19.89722,
+          "countries": [
+            "Montenegro"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q2720697",
+          "coordSource": "English Wikipedia coordinates for “Zla Kolata”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-rysy",
+          "name": "Rysy (NW summit)",
+          "elevation": 2499,
+          "lat": 49.17944,
+          "lng": 20.08806,
+          "countries": [
+            "Poland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q672936",
+          "coordSource": "English Wikipedia coordinates for “Rysy”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-galdh-piggen",
+          "name": "Galdhøpiggen",
+          "elevation": 2469,
+          "lat": 61.63644,
+          "lng": 8.31248,
+          "countries": [
+            "Norway"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q203942",
+          "coordSource": "English Wikipedia coordinates for “Galdhøpiggen”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-magli-mountain",
+          "name": "Maglić",
+          "elevation": 2386,
+          "lat": 43.28111,
+          "lng": 18.73694,
+          "countries": [
+            "Bosnia and Herzegovina"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q837723",
+          "coordSource": "English Wikipedia coordinates for “Maglić (mountain)”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mount-pico",
+          "name": "Mount Pico",
+          "elevation": 2351,
+          "lat": 38.46889,
+          "lng": -28.39889,
+          "countries": [
+            "Portugal"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q928681",
+          "coordSource": "English Wikipedia coordinates for “Mount Pico”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Serra da Estrela is the highest point of Portugal on mainland Europe, and Mount Pico in the Azores is usually considered part of Europe. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mid-or",
+          "name": "Midžor",
+          "elevation": 2169,
+          "lat": 43.39389,
+          "lng": 22.68167,
+          "countries": [
+            "Serbia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q962856",
+          "coordSource": "English Wikipedia coordinates for “Midžor”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-hvannadalshn-kur",
+          "name": "Hvannadalshnúkur",
+          "elevation": 2110,
+          "lat": 64.01583,
+          "lng": -16.67472,
+          "countries": [
+            "Iceland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q140084",
+          "coordSource": "English Wikipedia coordinates for “Hvannadalshnúkur”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-kebnekaise",
+          "name": "Kebnekaise",
+          "elevation": 2097,
+          "lat": 67.90444,
+          "lng": 18.52833,
+          "countries": [
+            "Sweden"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q214011",
+          "coordSource": "English Wikipedia coordinates for “Kebnekaise”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-hoverla",
+          "name": "Hoverla",
+          "elevation": 2061,
+          "lat": 48.16,
+          "lng": 24.50028,
+          "countries": [
+            "Ukraine"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q627508",
+          "coordSource": "English Wikipedia coordinates for “Hoverla”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-serra-da-estrela",
+          "name": "Serra da Estrela",
+          "elevation": 1993,
+          "lat": 40.32187,
+          "lng": -7.61297,
+          "countries": [
+            "Portugal"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q738004",
+          "coordSource": "English Wikipedia coordinates for “Serra da Estrela”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mount-olympus-cyprus",
+          "name": "Mount Olympus (Cyprus)",
+          "elevation": 1952,
+          "lat": 34.93639,
+          "lng": 32.86333,
+          "countries": [
+            "Cyprus"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q819979",
+          "coordSource": "English Wikipedia coordinates for “Mount Olympus (Cyprus)”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says that physiographically, Cyprus falls entirely in Western Asia. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-dinara",
+          "name": "Dinara",
+          "elevation": 1831,
+          "lat": 43.94509,
+          "lng": 16.59693,
+          "countries": [
+            "Croatia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q736047",
+          "coordSource": "English Wikipedia coordinates for “Dinara”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-sn-ka",
+          "name": "Sněžka",
+          "elevation": 1603,
+          "lat": 50.73611,
+          "lng": 15.74028,
+          "countries": [
+            "Czechia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q617511",
+          "coordSource": "English Wikipedia coordinates for “Sněžka”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-ben-nevis",
+          "name": "Ben Nevis",
+          "elevation": 1345,
+          "lat": 56.79685,
+          "lng": -5.00351,
+          "countries": [
+            "United Kingdom",
+            "Scotland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q104674",
+          "coordSource": "English Wikipedia coordinates for “Ben Nevis”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-halti",
+          "name": "Halti",
+          "elevation": 1324,
+          "lat": 69.32278,
+          "lng": 21.27889,
+          "countries": [
+            "Finland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q216035",
+          "coordSource": "English Wikipedia coordinates for “Halti”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-snowdon",
+          "name": "Snowdon (Yr Wyddfa)",
+          "elevation": 1085,
+          "lat": 53.0685,
+          "lng": -4.07623,
+          "countries": [
+            "Wales"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q217142",
+          "coordSource": "English Wikipedia coordinates for “Snowdon”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-carrauntoohil",
+          "name": "Carrauntoohil",
+          "elevation": 1039,
+          "lat": 51.99945,
+          "lng": -9.74269,
+          "countries": [
+            "Ireland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q503368",
+          "coordSource": "English Wikipedia coordinates for “Carrauntoohil”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-mahya-da",
+          "name": "Mahya Dağı",
+          "elevation": 1031,
+          "lat": 41.78333,
+          "lng": 27.61667,
+          "countries": [
+            "Turkey"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1402638",
+          "coordSource": "English Wikipedia coordinates for “Mahya Dağı”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "The article says Mahya Dağı is the highest peak in the European part of Turkey. Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-k-kes",
+          "name": "Kékes",
+          "elevation": 1014,
+          "lat": 47.87889,
+          "lng": 20.01028,
+          "countries": [
+            "Hungary"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q747618",
+          "coordSource": "English Wikipedia coordinates for “Kékes”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-scafell-pike",
+          "name": "Scafell Pike",
+          "elevation": 978,
+          "lat": 54.45424,
+          "lng": -3.2116,
+          "countries": [
+            "England"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1146222",
+          "coordSource": "English Wikipedia coordinates for “Scafell Pike”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-slieve-donard",
+          "name": "Slieve Donard (Sliabh Dónairt)",
+          "elevation": 852,
+          "lat": 54.18024,
+          "lng": -5.9209,
+          "countries": [
+            "Northern Ireland"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q550163",
+          "coordSource": "English Wikipedia coordinates for “Slieve Donard”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-monte-titano",
+          "name": "Monte Titano",
+          "elevation": 749,
+          "lat": 43.935,
+          "lng": 12.45,
+          "countries": [
+            "San Marino"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q158526",
+          "coordSource": "English Wikipedia coordinates for “Monte Titano”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-signal-de-botrange",
+          "name": "Signal de Botrange",
+          "elevation": 694,
+          "lat": 50.50167,
+          "lng": 6.09278,
+          "countries": [
+            "Belgium"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q322824",
+          "coordSource": "English Wikipedia coordinates for “Signal de Botrange”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-kneiff",
+          "name": "Kneiff",
+          "elevation": 560,
+          "lat": 50.15769,
+          "lng": 6.03717,
+          "countries": [
+            "Luxembourg"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q24457",
+          "coordSource": "English Wikipedia coordinates for “Kneiff”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-b-l-ne-ti-hill",
+          "name": "Bălănești Hill",
+          "elevation": 430,
+          "lat": 47.21722,
+          "lng": 28.08306,
+          "countries": [
+            "Moldova"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q47940",
+          "coordSource": "English Wikipedia coordinates for “Bălănești Hill”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-dzyarzhynskaya-hara",
+          "name": "Dzyarzhynskaya Hara",
+          "elevation": 345,
+          "lat": 53.84861,
+          "lng": 27.06528,
+          "countries": [
+            "Belarus"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q921447",
+          "coordSource": "English Wikipedia coordinates for “Dzyarzhynskaya Hara”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-vaalserberg",
+          "name": "Vaalserberg",
+          "elevation": 321,
+          "lat": 50.75472,
+          "lng": 6.02083,
+          "countries": [
+            "Netherlands"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q159860",
+          "coordSource": "English Wikipedia coordinates for “Vaalserberg”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-suur-munam-gi",
+          "name": "Suur Munamägi",
+          "elevation": 318,
+          "lat": 57.71444,
+          "lng": 27.05917,
+          "countries": [
+            "Estonia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q504991",
+          "coordSource": "English Wikipedia coordinates for “Suur Munamägi”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-gaizi-kalns",
+          "name": "Gaiziņkalns",
+          "elevation": 312,
+          "lat": 56.87026,
+          "lng": 25.95936,
+          "countries": [
+            "Latvia"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1122342",
+          "coordSource": "English Wikipedia coordinates for “Gaiziņkalns”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-auk-tojas-hill",
+          "name": "Aukštojas Hill",
+          "elevation": 294,
+          "lat": 54.52708,
+          "lng": 25.62606,
+          "countries": [
+            "Lithuania"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q771431",
+          "coordSource": "English Wikipedia coordinates for “Aukštojas Hill”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-ta-dmejrek",
+          "name": "Ta' Dmejrek",
+          "elevation": 253,
+          "lat": 35.84583,
+          "lng": 14.39694,
+          "countries": [
+            "Malta"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1850604",
+          "coordSource": "English Wikipedia coordinates for “Ta' Dmejrek”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-m-lleh-j",
+          "name": "Møllehøj",
+          "elevation": 171,
+          "lat": 55.97719,
+          "lng": 9.82623,
+          "countries": [
+            "Denmark"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q689106",
+          "coordSource": "English Wikipedia coordinates for “Møllehøj”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-chemin-des-r-voires",
+          "name": "Chemin des Révoires",
+          "elevation": 163,
+          "lat": 43.73457,
+          "lng": 7.41286,
+          "countries": [
+            "Monaco"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1069352",
+          "coordSource": "English Wikipedia coordinates for “Chemin des Révoires”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        },
+        {
+          "id": "eu-vatican-hill",
+          "name": "Vatican Hill",
+          "elevation": 75,
+          "lat": 41.90361,
+          "lng": 12.45028,
+          "countries": [
+            "Vatican City"
+          ],
+          "subrange": "Europe",
+          "grade": null,
+          "normalRoute": null,
+          "wikidata": "Q1053000",
+          "coordSource": "English Wikipedia coordinates for “Vatican Hill”.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/List_of_highest_points_of_European_countries",
+          "sourceNote": "Elevation and country are from that article’s list. No route grade is published there, so none is stored."
+        }
+      ]
+    },
+    {
+      "id": "alps-north-faces",
+      "name": "Iconic north faces",
+      "region": "Alps",
+      "kind": "peaks",
+      "listSource": "Wikipedia, “Great north faces of the Alps”: Matterhorn, Cima Grande di Lavaredo, Petit Dru, Piz Badile, Eiger, and Grandes Jorasses. Elevations are cited per peak. The article names the faces and does not give route grades, so none are stored.",
+      "listLicence": "Wikipedia article text is CC BY-SA 4.0. Wikidata facts are CC0.",
+      "peaks": [
+        {
+          "id": "face-matterhorn",
+          "name": "Matterhorn",
+          "elevation": 4478,
+          "lat": 45.97639,
+          "lng": 7.65861,
+          "countries": [
+            "Switzerland",
+            "Italy"
+          ],
+          "subrange": "Pennine Alps",
+          "wikidata": "Q1374",
+          "elevationSource": "https://en.wikipedia.org/wiki/List_of_mountains_of_the_Alps_over_4000_metres",
+          "sourceNote": "Named in Wikipedia “Great north faces of the Alps”. Elevation is the UIAA table figure for this summit (4,478 m). That article does not give a grade for the face, so none is stored.",
+          "grade": null,
+          "normalRoute": "North face",
+          "coordSource": "Wikipedia map pin for the cited article, via Wikidata P625.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Great_north_faces_of_the_Alps"
+        },
+        {
+          "id": "face-jorasses",
+          "name": "Grandes Jorasses",
+          "elevation": 4208,
+          "lat": 45.86808,
+          "lng": 6.98892,
+          "countries": [
+            "Italy",
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "wikidata": "Q30453",
+          "elevationSource": "https://www.wikidata.org/wiki/Q30453",
+          "sourceNote": "Named in Wikipedia “Great north faces of the Alps”. Elevation is Wikidata P2044, 4,208 m. The article does not give a grade for the face, so none is stored.",
+          "grade": null,
+          "normalRoute": "North face",
+          "coordSource": "Wikipedia map pin for the cited article, via Wikidata P625.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Great_north_faces_of_the_Alps"
+        },
+        {
+          "id": "face-eiger",
+          "name": "Eiger",
+          "elevation": 3967,
+          "lat": 46.57761,
+          "lng": 8.00529,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bernese Alps",
+          "wikidata": "Q4425",
+          "elevationSource": "https://www.wikidata.org/wiki/Q4425",
+          "sourceNote": "Named in Wikipedia “Great north faces of the Alps”. Elevation is Wikidata P2044, 3,967 m. The article does not give a grade for the face, so none is stored.",
+          "grade": null,
+          "normalRoute": "North face",
+          "coordSource": "Wikipedia map pin for the cited article, via Wikidata P625.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Great_north_faces_of_the_Alps"
+        },
+        {
+          "id": "face-dru",
+          "name": "Petit Dru",
+          "elevation": 3733,
+          "lat": 45.93278,
+          "lng": 6.95639,
+          "countries": [
+            "France"
+          ],
+          "subrange": "Mont Blanc Group",
+          "wikidata": "Q404702",
+          "elevationSource": "https://en.wikipedia.org/wiki/Aiguille_du_Dru",
+          "sourceNote": "Wikipedia “Aiguille du Dru” states the Petit Dru is 3,733 m. Coordinates are that article’s map pin for the Drus. Wikipedia “Great north faces of the Alps” names Petit Dru and does not give a grade.",
+          "grade": null,
+          "normalRoute": "North face",
+          "coordSource": "Wikipedia map pin for the cited article, via Wikidata P625.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Great_north_faces_of_the_Alps"
+        },
+        {
+          "id": "face-badile",
+          "name": "Piz Badile",
+          "elevation": 3308,
+          "lat": 46.29472,
+          "lng": 9.58611,
+          "countries": [
+            "Switzerland"
+          ],
+          "subrange": "Bregaglia",
+          "wikidata": "Q668321",
+          "elevationSource": "https://www.wikidata.org/wiki/Q668321",
+          "sourceNote": "Named in Wikipedia “Great north faces of the Alps”. Elevation is Wikidata P2044 for Pizzo Badile, 3,308 m. The article does not give a grade for the face, so none is stored.",
+          "grade": null,
+          "normalRoute": "North face",
+          "coordSource": "Wikipedia map pin for the cited article, via Wikidata P625.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Great_north_faces_of_the_Alps"
+        },
+        {
+          "id": "face-cima-grande",
+          "name": "Cima Grande di Lavaredo",
+          "elevation": 2999,
+          "lat": 46.61861,
+          "lng": 12.30556,
+          "countries": [
+            "Italy"
+          ],
+          "subrange": "Sexten Dolomites",
+          "wikidata": "Q1257207",
+          "elevationSource": "https://en.wikipedia.org/wiki/Tre_Cime_di_Lavaredo",
+          "sourceNote": "Wikipedia “Tre Cime di Lavaredo” states: “The Cima Grande has an elevation of 2,999 m.” Coordinates are that article’s map pin. Wikipedia “Great north faces of the Alps” names Cima Grande di Lavaredo and does not give a grade.",
+          "grade": null,
+          "normalRoute": "North face",
+          "coordSource": "Wikipedia map pin for the cited article, via Wikidata P625.",
+          "sourceUrl": "https://en.wikipedia.org/wiki/Great_north_faces_of_the_Alps"
+        }
+      ]
+    }
+  ]
+}
