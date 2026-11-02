@@ -115,14 +115,15 @@
       try { storage.setItem(SCHEMA_KEY, String(logic.SCHEMA_VERSION || 2)); } catch (err) { fail('Could not save on this device. Storage may be full or blocked.'); }
     }
 
-    // Schema 3 is one list: planned items are Plan, done items are the logbook.
+    // Schema 4 keeps one list. A plan's stage and visibility are on that record.
     // The old log and backlog keys are left in place so the copy does not destroy them.
     function loadItems() {
       if (schemaVersion() >= 2) {
         var stored = readArray(ITEM_KEY);
         if (stored.state !== 'ok') return [];
         var migrated = persistMigration(ITEM_KEY, stored.items, logic.migrateItems(stored.items, context()));
-        if (schemaVersion() < (logic.SCHEMA_VERSION || 3)) writeSchema();
+        migrated = alignPlansWithQueues(migrated);
+        if (schemaVersion() < (logic.SCHEMA_VERSION || 4)) writeSchema();
         return migrated;
       }
       var logRead = readArray(LOG_KEY);
@@ -135,7 +136,32 @@
       var unified = logic.unifyLists(logs, backlog, context());
       write(ITEM_KEY, unified);
       writeSchema();
-      return unified;
+      return alignPlansWithQueues(unified);
+    }
+
+    // A queue place means that plan is community and looking for a partner.
+    function alignPlansWithQueues(items) {
+      var memberships = loadMemberships();
+      var names = {};
+      memberships.forEach(function (row) {
+        if (row && row.objectiveName) names[String(row.objectiveName).toLowerCase()] = true;
+      });
+      var changed = false;
+      var next = items.map(function (item) {
+        if (!item || item.status !== 'planned') return item;
+        if (!names[String(item.name || '').toLowerCase()]) return item;
+        if (item.visibility === 'community' && item.lookingForPartner === true) return item;
+        changed = true;
+        return Object.assign({}, item, { visibility: 'community', lookingForPartner: true, stageManual: false });
+      });
+      if (!changed) return items;
+      var cleaned = logic.migrateItems(next, context());
+      write(ITEM_KEY, cleaned);
+      return cleaned;
+    }
+
+    function shareableItems() {
+      return loadItems().map(function (item) { return logic.shareableView(item); }).filter(Boolean);
     }
 
     function saveItems(items) {
@@ -279,6 +305,7 @@
       saveBacklog: saveBacklog,
       loadItems: loadItems,
       saveItems: saveItems,
+      shareableItems: shareableItems,
       readCache: readCache,
       writeCache: writeCache,
       loadPosts: loadPosts,

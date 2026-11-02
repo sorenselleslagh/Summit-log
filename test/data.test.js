@@ -158,7 +158,7 @@ assert.strictEqual(migratedItems[1].id, wish.id);
 assert.strictEqual(migratedItems[1].status, 'planned');
 assert.strictEqual(legacyStore.getItem('summitlogs'), legacyLog);
 assert.strictEqual(legacyStore.getItem('summitbacklog'), legacyBack);
-assert.strictEqual(legacyStore.getItem('summitlog_schema'), '3');
+assert.strictEqual(legacyStore.getItem('summitlog_schema'), '4');
 assert.deepStrictEqual(migratedItems[0].checklist, []);
 assert.strictEqual(migratedItems[0].planDates, '');
 var withSteps = logic.normalizeLog({
@@ -171,6 +171,29 @@ assert.strictEqual(withSteps.planDates, 'June');
 assert.strictEqual(withSteps.checklist.length, 1);
 assert.strictEqual(withSteps.checklist[0].text, 'Crampons');
 assert.strictEqual(withSteps.checklist[0].done, false);
+assert.strictEqual(withSteps.timeframe, 'June');
+assert.strictEqual(withSteps.stage, 'objective');
+assert.strictEqual(withSteps.visibility, 'private');
+assert.strictEqual(logic.shareableView(withSteps), null);
+var shared = logic.normalizeLog({
+  name: 'Matterhorn',
+  status: 'planned',
+  visibility: 'community',
+  lookingForPartner: true,
+  routeName: 'Hörnli',
+  notes: 'secret rope beta',
+  checklist: [{ id: 'a', text: 'secret step', done: false }]
+}, ctx());
+assert.strictEqual(shared.stage, 'objective');
+var view = logic.shareableView(shared);
+assert.strictEqual(view.routeName, 'Hörnli');
+assert.strictEqual(view.lookingForPartner, true);
+assert.ok(!Object.prototype.hasOwnProperty.call(view, 'notes'));
+assert.ok(!Object.prototype.hasOwnProperty.call(view, 'checklist'));
+assert.ok(!JSON.stringify(view).includes('secret'));
+var booked = logic.normalizeLog({ name: 'X', status: 'planned', fixedDate: '2026-07-01', notes: 'private' }, ctx());
+assert.strictEqual(booked.stage, 'scheduled');
+assert.strictEqual(logic.deriveStage(logic.normalizeLog({ name: 'Y', status: 'planned', stage: 'idea', stageManual: true, routeName: 'Lion' }, ctx())), 'idea');
 assert.strictEqual(migratedRepo.loadItems().length, 2);
 
 var zero = logic.normalizeLog({ id: 1, name: 'Null Island', lat: 0, lng: 0, elevation: 0, date: '2024-01-02' }, ctx());
