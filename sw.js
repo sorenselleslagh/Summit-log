@@ -1,9 +1,10 @@
 // App-shell cache plus on-demand map tiles. Paths are relative to this file
 // so the same worker works at / and under /Summit-log/ on GitHub Pages.
-var VERSION = 'v4';
+var VERSION = 'v6';
 var SHELL_CACHE = 'summitlog-shell-' + VERSION;
 var CDN_CACHE = 'summitlog-cdn-' + VERSION;
 var TILE_CACHE = 'summitlog-tiles-' + VERSION;
+var MEDIA_CACHE = 'summitlog-media-' + VERSION;
 
 var SHELL = [
   './',
@@ -16,6 +17,9 @@ var SHELL = [
   './storage.js',
   './overpass.js',
   './collections.js',
+  './photos.js',
+  './data/peak-photos.json',
+  './illustrations/peak-card.svg',
   './data/collections/uiaa-alps-4000.json',
   './manifest.webmanifest',
   './icons/icon-192.png',
@@ -50,6 +54,10 @@ function scopeUrl(path) {
 
 function isTile(url) {
   return /(^|\.)tile\.openstreetmap\.org$/.test(url.hostname) && /\.png$/i.test(url.pathname);
+}
+
+function isCommons(url) {
+  return url.hostname === 'upload.wikimedia.org' || url.hostname === 'thumb.wikimedia.org' || url.hostname === 'commons.wikimedia.org';
 }
 
 function offlineTileResponse() {
@@ -105,6 +113,7 @@ self.addEventListener('activate', function (event) {
   keep[SHELL_CACHE] = true;
   keep[CDN_CACHE] = true;
   keep[TILE_CACHE] = true;
+  keep[MEDIA_CACHE] = true;
   event.waitUntil(caches.keys().then(function (keys) {
     return Promise.all(keys.map(function (key) {
       if (key.indexOf('summitlog-') === 0 && !keep[key]) return caches.delete(key);
@@ -147,6 +156,20 @@ async function cdnResponse(request) {
   }
 }
 
+async function mediaResponse(request) {
+  var cache = await caches.open(MEDIA_CACHE);
+  var cached = await cache.match(request);
+  if (cached) return cached;
+  try {
+    var response = await fetch(request);
+    await putIfCacheable(cache, request, response);
+    return response;
+  } catch (err) {
+    if (cached) return cached;
+    return new Response('', { status: 503 });
+  }
+}
+
 async function tileResponse(request) {
   var cache = await caches.open(TILE_CACHE);
   try {
@@ -176,6 +199,10 @@ self.addEventListener('fetch', function (event) {
 
   if (isTile(url)) {
     event.respondWith(tileResponse(request));
+    return;
+  }
+  if (isCommons(url)) {
+    event.respondWith(mediaResponse(request));
     return;
   }
   if (url.origin === self.location.origin) {

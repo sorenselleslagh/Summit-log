@@ -38,29 +38,29 @@
       <div class="intro-carousel">
         <div id="intro-cards" class="intro-cards" tabindex="0" aria-roledescription="carousel" aria-label="About SummitLog">
           <article class="intro-slide" id="intro-slide-0">
-            <h2>Private log</h2>
-            <p>Your climbs, notes, and stats stay on this device.</p>
+            <h2>Explore</h2>
+            <p>Discover mountains, routes, and treks. When something sparks an idea, add it to a plan.</p>
           </article>
           <article class="intro-slide" id="intro-slide-1">
-            <h2>Backlog</h2>
-            <p>Keep the climbs you want to do beside the ones you’ve already logged.</p>
+            <h2>Plan</h2>
+            <p>Save the idea, look up the route, find partners, and get ready. This is where an outing starts.</p>
           </article>
           <article class="intro-slide" id="intro-slide-2">
-            <h2>You choose what you share</h2>
-            <p>A queue shows only the logs you tick. That is context, not a safety guarantee.</p>
+            <h2>My logbook</h2>
+            <p>Mark a plan done and it becomes a memory: the date, a note, and photos that stay on this device.</p>
           </article>
         </div>
         <div class="intro-nav">
           <button class="secondary intro-arrow" id="intro-prev" type="button" aria-label="Previous card">‹</button>
           <div class="intro-dots" role="tablist" aria-label="Intro cards">
-            <button class="intro-dot active" type="button" role="tab" aria-selected="true" aria-label="Private log" data-slide="0"></button>
-            <button class="intro-dot" type="button" role="tab" aria-selected="false" aria-label="Backlog" data-slide="1"></button>
-            <button class="intro-dot" type="button" role="tab" aria-selected="false" aria-label="You choose what you share" data-slide="2"></button>
+            <button class="intro-dot active" type="button" role="tab" aria-selected="true" aria-label="Explore" data-slide="0"></button>
+            <button class="intro-dot" type="button" role="tab" aria-selected="false" aria-label="Plan" data-slide="1"></button>
+            <button class="intro-dot" type="button" role="tab" aria-selected="false" aria-label="My logbook" data-slide="2"></button>
           </div>
           <button class="secondary intro-arrow" id="intro-next" type="button" aria-label="Next card">›</button>
         </div>
       </div>
-      <button class="primary btn-block intro-start" id="start-logging" type="button">Start logging</button>
+      <button class="primary btn-block intro-start" id="start-logging" type="button">Start planning</button>
     </div>
   </div>
 
@@ -92,8 +92,8 @@
     <header>
       <h1>SummitLog</h1>
       <div class="header-tools">
-        <span id="user-display" class="muted"></span>
-        <button class="secondary" id="profile-btn" type="button">Profile</button>
+        <span id="user-display" class="visually-hidden"></span>
+        <button class="avatar-btn" id="profile-btn" type="button" aria-label="Profile">You</button>
       </div>
     </header>
 
@@ -140,55 +140,85 @@
         <button class="primary" id="save-btn" type="button">Save</button>
       </div>
 
-      <!-- Backlog: planned wishlist and done log in one list -->
-      <section id="mine" class="tab">
-        <h2>Backlog</h2>
-        <div class="stats">
-          <div class="stat" title="Done peaks">
-            <strong id="peak-count">0</strong><span>Peaks</span>
-          </div>
-          <div class="stat" title="Done routes">
-            <strong id="route-count">0</strong><span>Routes</span>
-          </div>
-          <div class="stat" title="Done hikes">
-            <strong id="hike-count">0</strong><span>Hikes</span>
-          </div>
+      <!-- Plan is home: ideas, research, partners, then mark as done. -->
+      <section id="plan" class="tab">
+        <div id="plan-home">
+          <h2>Plan</h2>
+          <p class="muted plan-lead">Save an idea, look up the route, find partners, and get ready.</p>
+          <button class="primary plan-add" id="add-planned-btn" type="button">Add an idea</button>
+          <div id="plan-list" class="list-block"></div>
         </div>
-        <p class="stat-hint">Counts are what you have done. A planned item becomes a log entry when you mark it done.</p>
-        <div class="segments" role="tablist" aria-label="Planned or done">
-          <button class="active" id="seg-planned" type="button" role="tab" aria-selected="true">Planned</button>
-          <button id="seg-done" type="button" role="tab" aria-selected="false">Done</button>
-        </div>
-        <div class="mine-tools">
-          <input type="search" id="mine-search" placeholder="Search" maxlength="80" aria-label="Search your backlog" autocomplete="off">
-          <div class="chips" role="group" aria-label="Filter by kind">
-            <button class="chip" type="button" data-kind="peak" aria-pressed="false">Peak</button>
-            <button class="chip" type="button" data-kind="route" aria-pressed="false">Route</button>
-            <button class="chip" type="button" data-kind="hike" aria-pressed="false">Hike</button>
-          </div>
-        </div>
-        <div class="mine-actions">
-          <button class="primary" id="add-planned-btn" type="button">+ Plan</button>
-          <button class="secondary" id="add-done-btn" type="button">+ Log done</button>
-        </div>
+        <div id="plan-detail" class="hidden"></div>
         <div id="done-prompt" class="card hidden">
           <h3>Mark as done</h3>
           <p id="done-prompt-name"></p>
+          <p class="muted">This becomes a logbook entry. Add the date, a memory, and photos if you have them.</p>
           <label class="field-label" for="done-date">Date</label>
           <input type="date" id="done-date" aria-label="Date">
-          <label class="field-label" for="done-note">Short note</label>
-          <textarea id="done-note" rows="3" maxlength="4000" placeholder="Short note" aria-label="Short note"></textarea>
+          <label class="field-label" for="done-note">Memory</label>
+          <textarea id="done-note" rows="3" maxlength="4000" placeholder="What you want to remember" aria-label="Memory"></textarea>
+          <label class="field-label" for="done-photo">Photos (optional)</label>
+          <input type="file" id="done-photo" accept="image/*" multiple aria-label="Photos">
+          <p class="muted small">Photos stay on this device. They are scaled down before they are saved.</p>
           <div class="join-actions">
-            <button class="primary" id="done-save" type="button">Save</button>
+            <button class="primary" id="done-save" type="button">Save to logbook</button>
             <button class="secondary" id="done-cancel" type="button">Cancel</button>
           </div>
         </div>
-        <div id="mine-list" class="list-block"></div>
+        <div id="partner-flow" class="hidden">
+          <div id="partner-home">
+            <h2>Find partners</h2>
+            <label class="field-label" for="objective-query">What's your objective?</label>
+            <div class="objective-search">
+              <input type="search" id="objective-query" placeholder="Peak, route, or trek" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="objective-suggestions" aria-label="What's your objective?">
+              <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
+            </div>
+            <p class="muted partners-intro">Peaks from the Alpine 4000ers, your planned and done items, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
+            <button class="secondary" id="partner-home-back" type="button">Back to plan</button>
+          </div>
+          <div id="objective-page" class="hidden">
+            <button class="secondary" id="objective-back" type="button">Back</button>
+            <div id="objective-head"></div>
+            <h3 class="queue-title">Queue</h3>
+            <p class="muted small" id="queue-demo-note">People with a Demo badge are sample profiles, not real users. The list is not ordered by level.</p>
+            <div id="queue-list"></div>
+            <div id="join-panel" class="card"></div>
+          </div>
+          <div id="partner-profile" class="hidden">
+            <button class="secondary" id="partner-profile-back" type="button">Back to queue</button>
+            <div id="partner-profile-body"></div>
+          </div>
+        </div>
       </section>
 
-      <!-- MAP -->
-      <section id="map" class="tab hidden">
-        <div id="map-container"></div>
+      <!-- Explore: discovery first, map grows from the preview. -->
+      <section id="explore" class="tab hidden">
+        <h2>Find your next peak</h2>
+        <div class="discover-bar">
+          <div class="objective-search">
+            <input type="search" id="explore-query" placeholder="Search peaks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="explore-suggestions" aria-label="Search peaks">
+            <ul id="explore-suggestions" class="objective-suggestions" role="listbox"></ul>
+          </div>
+          <button class="map-go" id="open-map" type="button">Map</button>
+        </div>
+        <div id="map-frame">
+          <div id="map-spacer" hidden></div>
+          <div id="map-scaler">
+            <div id="map-container"></div>
+          </div>
+          <button class="map-expand hidden" id="map-expand" type="button">Expand map</button>
+          <button class="map-handle" id="map-handle" type="button" aria-label="Drag down to close the map"></button>
+          <button class="map-close" id="map-close" type="button" aria-label="Close map">×</button>
+          <div class="map-fabs" id="map-fabs">
+            <button type="button" id="map-locate">Locate</button>
+            <button type="button" id="map-layers-btn">Layers</button>
+            <button type="button" id="map-sheet-btn">List</button>
+          </div>
+          <p id="map-status" class="map-status hidden" role="status"></p>
+        </div>
+        <p class="map-gesture">The Map button grows this preview to full screen. Scrolling the page is not taken over by the map.</p>
+        <div id="explore-rails"></div>
+        <div id="peak-detail" class="card hidden"></div>
         <p class="muted map-caption">Blue is done, amber is planned. A check mark on a range means you have logged something there.</p>
         <div class="legend">
           <span class="swatch swatch-log"></span> Done
@@ -197,13 +227,12 @@
           <span class="swatch swatch-done"></span> Collection, done
           <span class="swatch swatch-todo"></span> Collection, not yet
         </div>
-        <div id="peak-detail" class="card hidden"></div>
         <div class="card" id="collections-card">
           <h3>Collections</h3>
           <p class="muted suggestion-intro">Personal progress only. A grade is shown only when a cited normal route gives one.</p>
           <div id="collections"></div>
         </div>
-        <div class="card">
+        <div class="card" id="layers-card">
           <h3>Routes and peaks</h3>
           <label class="check-row">
             <input type="checkbox" id="osm-layer">
@@ -215,31 +244,36 @@
         </div>
       </section>
 
-      <!-- PARTNERS -->
-      <section id="partners" class="tab hidden">
-        <div id="partner-home">
-          <h2>Find partners</h2>
-          <label class="field-label" for="objective-query">What's your objective?</label>
-          <div class="objective-search">
-            <input type="search" id="objective-query" placeholder="Peak, route, or trek" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="objective-suggestions" aria-label="What's your objective?">
-            <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
+      <section id="logbook" class="tab hidden">
+        <div id="logbook-home">
+          <h2>My logbook</h2>
+          <p class="muted plan-lead">Completed adventures, newest first. Memories and photos stay on this device.</p>
+          <div class="stats">
+            <div class="stat" title="Done peaks">
+              <strong id="peak-count">0</strong><span>Peaks</span>
+            </div>
+            <div class="stat" title="Done routes">
+              <strong id="route-count">0</strong><span>Routes</span>
+            </div>
+            <div class="stat" title="Done hikes">
+              <strong id="hike-count">0</strong><span>Hikes</span>
+            </div>
           </div>
-          <p class="muted partners-intro">Peaks from the Alpine 4000ers, your planned and done items, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
+          <div class="mine-tools">
+            <input type="search" id="logbook-search" placeholder="Search your logbook" maxlength="80" aria-label="Search your logbook" autocomplete="off">
+            <div class="chips" role="group" aria-label="Filter by kind">
+              <button class="chip" type="button" data-kind="peak" aria-pressed="false">Peak</button>
+              <button class="chip" type="button" data-kind="route" aria-pressed="false">Route</button>
+              <button class="chip" type="button" data-kind="hike" aria-pressed="false">Hike</button>
+            </div>
+          </div>
+          <div id="logbook-list" class="list-block"></div>
+          <div class="logbook-foot">
+            <button class="secondary" id="add-done-btn" type="button">Log something you already did</button>
+            <button class="secondary" id="collection-progress" type="button">Alpine 4000ers progress</button>
+          </div>
         </div>
-
-        <div id="objective-page" class="hidden">
-          <button class="secondary" id="objective-back" type="button">Back</button>
-          <div id="objective-head"></div>
-          <h3 class="queue-title">Queue</h3>
-          <p class="muted small" id="queue-demo-note">People with a Demo badge are sample profiles, not real users. The list is not ordered by level.</p>
-          <div id="queue-list"></div>
-          <div id="join-panel" class="card"></div>
-        </div>
-
-        <div id="partner-profile" class="hidden">
-          <button class="secondary" id="partner-profile-back" type="button">Back to queue</button>
-          <div id="partner-profile-body"></div>
-        </div>
+        <div id="logbook-detail" class="hidden"></div>
       </section>
 
       <!-- PROFILE -->
@@ -292,9 +326,9 @@
     </main>
 
     <nav aria-label="Sections">
-      <button class="active" type="button" data-tab="mine">Backlog</button>
-      <button type="button" data-tab="map">Map</button>
-      <button type="button" data-tab="partners">Partners</button>
+      <button type="button" data-tab="explore">Explore</button>
+      <button class="active" type="button" data-tab="plan">Plan</button>
+      <button type="button" data-tab="logbook">Logbook</button>
     </nav>
   </div>
 
@@ -303,6 +337,7 @@
   <script src="storage.js"></script>
   <script src="overpass.js"></script>
   <script src="collections.js"></script>
+  <script src="photos.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>

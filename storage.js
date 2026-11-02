@@ -115,13 +115,15 @@
       try { storage.setItem(SCHEMA_KEY, String(logic.SCHEMA_VERSION || 2)); } catch (err) { fail('Could not save on this device. Storage may be full or blocked.'); }
     }
 
-    // Schema 2 keeps one list. The old log and backlog keys are left in place
-    // so the copy does not destroy what was already stored.
+    // Schema 3 is one list: planned items are Plan, done items are the logbook.
+    // The old log and backlog keys are left in place so the copy does not destroy them.
     function loadItems() {
       if (schemaVersion() >= 2) {
         var stored = readArray(ITEM_KEY);
         if (stored.state !== 'ok') return [];
-        return persistMigration(ITEM_KEY, stored.items, logic.migrateItems(stored.items, context()));
+        var migrated = persistMigration(ITEM_KEY, stored.items, logic.migrateItems(stored.items, context()));
+        if (schemaVersion() < (logic.SCHEMA_VERSION || 3)) writeSchema();
+        return migrated;
       }
       var logRead = readArray(LOG_KEY);
       var backRead = readArray(BACKLOG_KEY);
