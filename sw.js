@@ -1,6 +1,6 @@
 // App-shell cache plus on-demand map tiles. Paths are relative to this file
 // so the same worker works at / and under /Summit-log/ on GitHub Pages.
-var VERSION = 'v13';
+var VERSION = 'v14';
 var SHELL_CACHE = 'summitlog-shell-' + VERSION;
 var CDN_CACHE = 'summitlog-cdn-' + VERSION;
 var TILE_CACHE = 'summitlog-tiles-' + VERSION;
@@ -21,6 +21,7 @@ var SHELL = [
   './data/peak-photos.json',
   './illustrations/peak-card.svg',
   './data/collections/uiaa-alps-4000.json',
+  './data/collections/sourced-lists.json',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
