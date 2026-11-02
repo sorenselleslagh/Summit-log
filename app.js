@@ -1782,6 +1782,7 @@ function addDivMarker(lat, lng, icon, onClick, key, animateIn) {
   marker.addTo(map);
   liveMarkers[key] = marker;
   markers.push(marker);
+  syncMarkerState(marker, icon && icon.options && icon.options.className);
   var node = marker.getElement();
   if (node && animateIn && !prefersReducedMotion()) {
     node.classList.add('pin-enter');
@@ -1846,12 +1847,14 @@ function markerSpecs() {
         specs.push(dotSpec(group[0], lat, lng, 'dot:' + featureKey(group[0])));
         return;
       }
+      var clusterPeaks = group.filter(function (feature) { return feature.type !== 'trek'; });
+      var clusterDone = clusterPeaks.length > 0 && clusterPeaks.every(function (feature) { return feature.done; });
       specs.push({
         key: 'cluster:' + bucket + ':' + group.length,
         lat: lat,
         lng: lng,
         icon: L.divIcon({
-          className: 'pin-cluster',
+          className: 'pin-cluster' + (clusterDone ? ' is-done' : ''),
           html: '<span>' + group.length + '</span>',
           iconSize: [36, 36],
           iconAnchor: [18, 18]
@@ -1891,13 +1894,25 @@ function dotSpec(feature, lat, lng, key) {
     lat: lat,
     lng: lng,
     icon: L.divIcon({
-      className: 'pin-dot',
+      className: 'pin-dot' + markerClass(feature),
       html: '<span></span>',
       iconSize: [16, 16],
       iconAnchor: [8, 8]
     }),
     onClick: function () { openFeature(feature); }
   };
+}
+
+function syncMarkerState(marker, className) {
+  var node = marker && marker.getElement ? marker.getElement() : marker;
+  if (!node) return;
+  var names = String(className || '').split(/\s+/);
+  var done = names.indexOf('is-done') >= 0;
+  ['is-done', 'is-planned', 'is-trek'].forEach(function (name) {
+    node.classList.toggle(name, names.indexOf(name) >= 0);
+  });
+  node.classList.remove('pin-leave');
+  if (marker && marker.setZIndexOffset) marker.setZIndexOffset(done ? 800 : 0);
 }
 
 function updateMapMarkers() {
@@ -1915,8 +1930,7 @@ function updateMapMarkers() {
     var existing = liveMarkers[spec.key];
     if (existing) {
       existing.setLatLng([spec.lat, spec.lng]);
-      var node = existing.getElement();
-      if (node) node.classList.remove('pin-leave');
+      syncMarkerState(existing, spec.icon && spec.icon.options && spec.icon.options.className);
       return;
     }
     addDivMarker(spec.lat, spec.lng, spec.icon, spec.onClick, spec.key, animate);
