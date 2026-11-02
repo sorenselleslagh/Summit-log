@@ -309,14 +309,20 @@ html.map-expanded #map-scaler {
 }
 
 /* map-cover is applied after the card has grown, so the grow itself is a transform. */
+html.map-cover,
+html.map-cover body {
+  background: #d5e0d0;
+}
+
 html.map-cover #map-scaler {
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
+  top: var(--vv-top, 0px) !important;
+  left: var(--vv-left, 0px) !important;
+  width: var(--vv-width, 100vw) !important;
+  height: var(--vv-height, 100dvh) !important;
   z-index: 1250;
   border-radius: 0;
+  background: #d5e0d0;
 }
 
 html.map-cover #map-container {
@@ -324,6 +330,7 @@ html.map-cover #map-container {
   height: 100% !important;
   border-color: transparent;
   border-radius: 0;
+  background: #d5e0d0;
 }
 
 html.map-resizing .leaflet-fade-anim .leaflet-tile,
@@ -346,17 +353,21 @@ html.map-cover .map-close {
   align-items: center;
   justify-content: center;
   position: fixed;
-  top: calc(0.55rem + env(safe-area-inset-top, 0px));
-  left: calc(0.55rem + env(safe-area-inset-left, 0px));
-  z-index: 1400;
-  width: 44px;
-  height: 44px;
+  top: calc(var(--vv-top, 0px) + max(0.5rem, env(safe-area-inset-top, 0px)));
+  left: calc(var(--vv-left, 0px) + max(0.5rem, env(safe-area-inset-left, 0px)));
+  z-index: 1600;
+  width: 48px;
+  height: 48px;
   padding: 0;
+  border: none;
   border-radius: 999px;
-  font-size: 1.5rem;
-  line-height: 1;
+  background: #fff;
+  color: #1c1915;
+  box-shadow: 0 8px 22px rgba(28, 25, 21, 0.22);
   opacity: 0;
 }
+
+html.map-cover .map-close svg { width: 26px; height: 26px; }
 
 html.map-cover .map-fabs {
   display: flex;
@@ -590,10 +601,10 @@ html.map-settled .map-chrome {
 
 .map-search {
   position: fixed;
-  top: calc(0.7rem + env(safe-area-inset-top, 0px));
-  left: calc(4.2rem + env(safe-area-inset-left, 0px));
-  right: calc(4.6rem + env(safe-area-inset-right, 0px));
-  z-index: 1410;
+  top: calc(var(--vv-top, 0px) + max(0.5rem, env(safe-area-inset-top, 0px)));
+  left: calc(var(--vv-left, 0px) + 4.6rem + env(safe-area-inset-left, 0px));
+  right: calc(0.7rem + env(safe-area-inset-right, 0px));
+  z-index: 1550;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -631,9 +642,47 @@ html.map-settled .map-chrome {
 #map-filter svg,
 .map-fabs svg { width: 18px; height: 18px; }
 
+.map-query-clear {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #1c1915;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.map-suggestions {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border-radius: 16px;
+  background: #fff;
+  color: #1c1915;
+  box-shadow: 0 12px 28px rgba(28, 25, 21, 0.18);
+}
+
+.map-suggestions button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: none;
+  border-radius: 12px;
+  min-height: 44px;
+}
+
 .map-chips {
   position: fixed;
-  top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  top: calc(var(--vv-top, 0px) + 4.4rem + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   z-index: 1405;
@@ -760,8 +809,29 @@ html.map-cover .leaflet-control-zoom a {
   box-shadow: 0 8px 16px rgba(28, 25, 21, 0.25);
 }
 
+.pin-face,
+.pin-dot span,
+.pin-cluster span {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+}
+
+.leaflet-marker-icon.pin-enter .pin-face,
+.leaflet-marker-icon.pin-enter span,
+.leaflet-marker-icon.pin-leave .pin-face,
+.leaflet-marker-icon.pin-leave span {
+  transform: scale(0);
+  opacity: 0;
+}
+
+.leaflet-marker-icon.pin-enter.pin-in .pin-face,
+.leaflet-marker-icon.pin-enter.pin-in span {
+  transform: none;
+  opacity: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .map-search, .map-chip, .map-summary, .map-fabs button, #peak-detail {
+  .map-search, .map-chip, .map-summary, .map-fabs button, #peak-detail,
+  .pin-face, .pin-dot span, .pin-cluster span {
     transition: none !important;
   }
 }
@@ -775,6 +845,12 @@ html.map-cover .leaflet-control-zoom a {
   .leaflet-control-zoom {
     transition: opacity 180ms linear !important;
     animation: none !important;
+  }
+
+  html.map-settled .map-close,
+  html.map-settled .map-fabs,
+  html.map-settled .leaflet-control-zoom {
+    opacity: 1 !important;
   }
 }
 
@@ -848,6 +924,27 @@ p { margin: 0.25rem 0; }
 .objective-suggestions li:last-child button { border-bottom: none; }
 .objective-suggestions button[aria-selected="true"],
 .objective-suggestions button:hover { background: var(--card-hover); }
+
+.map-suggestions.objective-suggestions {
+  margin: 0;
+  border: none;
+  background: #fff;
+  color: #1c1915;
+}
+
+.map-suggestions.objective-suggestions button {
+  background: transparent;
+  color: #1c1915;
+  border-bottom-color: #efeae3;
+}
+
+.map-suggestions.objective-suggestions button[aria-selected="true"],
+.map-suggestions.objective-suggestions button:hover { background: #f4f0ea; }
+
+.map-suggestions .badge {
+  background: #e7efe4;
+  color: #1f6b45;
+}
 .suggestion-top {
   display: flex;
   justify-content: space-between;
