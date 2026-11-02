@@ -32,7 +32,8 @@ html.show-login #login-screen { display: flex !important; }
 html.boot-app,
 html.boot-app body {
   height: 100%;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: hidden;
 }
 
 html.boot-app #app {
@@ -48,12 +49,18 @@ html.boot-app #app {
   background: var(--bg);
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.55;
   font-size: 16px;
+  width: 100%;
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
@@ -115,7 +122,9 @@ nav button:hover {
 main {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-x: hidden;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -133,6 +142,8 @@ main {
   border: 1px solid var(--border);
   transition: background 0.15s;
   overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .card:hover { background: var(--card-hover); }
@@ -318,7 +329,7 @@ html.map-cover #map-scaler {
   position: fixed !important;
   top: var(--vv-top, 0px) !important;
   left: var(--vv-left, 0px) !important;
-  width: var(--vv-width, 100vw) !important;
+  width: var(--vv-width, 100%) !important;
   height: var(--vv-height, 100dvh) !important;
   z-index: 1250;
   border-radius: 0;
@@ -449,11 +460,12 @@ html.map-cover .map-status {
   display: block;
   position: fixed;
   top: calc(0.7rem + env(safe-area-inset-top, 0px));
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  width: max-content;
+  max-width: min(70%, calc(100% - 1.5rem));
+  margin-inline: auto;
   z-index: 1400;
-  max-width: 70%;
-  margin: 0;
   padding: 0.45rem 0.7rem;
   border-radius: 999px;
   background: rgba(11, 17, 32, 0.94);
@@ -709,10 +721,12 @@ html.map-settled .map-chrome {
   top: calc(var(--vv-top, 0px) + 4.4rem + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
+  max-width: 100%;
   z-index: 1405;
   display: flex;
   gap: 0.45rem;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding: 0.15rem 0.8rem 0.4rem;
   scrollbar-width: none;
 }
@@ -739,11 +753,13 @@ html.map-settled .map-chrome {
 
 .map-summary {
   position: fixed;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 1.6rem);
+  margin-inline: auto;
   z-index: 1350;
-  margin: 0;
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
   background: rgba(28, 25, 21, 0.88);
@@ -751,6 +767,8 @@ html.map-settled .map-chrome {
   font-size: 0.82rem;
   font-weight: 600;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   box-shadow: 0 8px 20px rgba(28, 25, 21, 0.2);
 }
 
@@ -920,6 +938,7 @@ footer {
 h2, h3 { font-weight: 600; letter-spacing: -0.015em; }
 h3 { font-size: 1.05rem; margin-bottom: 0.3rem; }
 
+p, h1, h2, h3, li, a, button { overflow-wrap: anywhere; }
 p { margin: 0.25rem 0; }
 
 .muted { color: var(--muted); }
@@ -1045,8 +1064,8 @@ p { margin: 0.25rem 0; }
   color: #dbeafe;
   font-size: 0.92rem;
 }
-.join-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.join-actions button { flex: 1; min-width: 140px; }
+.join-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; min-width: 0; max-width: 100%; }
+.join-actions button { flex: 1 1 8rem; min-width: 0; }
 .profile-head { display: flex; gap: 0.75rem; align-items: center; margin: 0.2rem 0 0.8rem; }
 .profile-head h2 { margin-bottom: 0.25rem; }
 .shared-log { margin-top: 0.6rem; }
@@ -1062,7 +1081,8 @@ p { margin: 0.25rem 0; }
   border-radius: 999px;
 }
 .segments button {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 44px;
   border: none;
   border-radius: 999px;
@@ -1072,7 +1092,7 @@ p { margin: 0.25rem 0; }
 }
 .segments button.active { background: var(--accent); color: white; }
 .mine-tools { display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 0.75rem; }
-.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 0.4rem; max-width: 100%; min-width: 0; }
 .chip {
   min-height: 44px;
   padding: 0.35rem 0.9rem;
@@ -1130,6 +1150,9 @@ p { margin: 0.25rem 0; }
   height: 22px;
   flex: 0 0 auto;
 }
+
+#app > nav button,
+#app > nav button span { overflow-wrap: normal; }
 
 #app > nav button[data-tab="plan"] {
   font-weight: 750;
@@ -1219,11 +1242,11 @@ p { margin: 0.25rem 0; }
 .rail-scroll {
   display: flex;
   gap: 0.75rem;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   padding: 0 0 0.45rem;
-  margin-right: -1rem;
-  padding-right: 1rem;
 }
 
 .peak-card {
@@ -1317,7 +1340,8 @@ p { margin: 0.25rem 0; }
 #add-form.form-brief #peak-links,
 #add-form.form-brief #notes { display: none !important; }
 
-.plan-record { display: grid; grid-template-columns: 96px 1fr; gap: 0.35rem 0.75rem; align-items: start; }
+.plan-record { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 0.35rem 0.75rem; align-items: start; min-width: 0; max-width: 100%; }
+.plan-record-body { min-width: 0; }
 .plan-thumb { width: 96px; height: 112px; object-fit: cover; border-radius: 12px; grid-row: span 1; }
 .plan-record .log-actions { grid-column: 1 / -1; }
 .plan-status { color: #93c5fd; font-weight: 650; margin: 0.15rem 0; }
@@ -1328,7 +1352,7 @@ p { margin: 0.25rem 0; }
   background: rgba(56, 189, 248, 0.08);
   border-radius: 8px;
 }
-.reference-data a { display: inline-block; margin-top: 0.25rem; }
+.reference-data a { display: inline-block; max-width: 100%; margin-top: 0.25rem; overflow-wrap: anywhere; }
 
 .share-preview {
   margin-top: 0.65rem;
@@ -1359,7 +1383,7 @@ p { margin: 0.25rem 0; }
 #logbook-views button { flex: 1; font-size: 0.82rem; padding: 0.4rem 0.2rem; }
 #logbook-map { height: 320px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
 .calendar-nav { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; margin-bottom: 0.6rem; }
-.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.25rem; text-align: center; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.25rem; text-align: center; min-width: 0; }
 .calendar-dow { color: var(--muted); font-size: 0.75rem; }
 .calendar-day, .calendar-empty { min-height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
 .calendar-day.has { background: var(--accent-soft); color: #93c5fd; font-weight: 700; }
@@ -1963,7 +1987,9 @@ html.explore-map .explore-sheet .sheet-grab::before { background: #d5cfc6; }
   display: flex;
   flex-wrap: nowrap;
   gap: 0.6rem;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding: 0.15rem 0.1rem 0.75rem;
   scrollbar-width: none;
 }
@@ -2082,6 +2108,17 @@ html.explore-map.explore-sheet-off.explore-peak #peak-detail {
 }
 
 html.explore-map.explore-sheet-off.explore-peak #peak-detail .sheet-grab { display: block; }
+
+.tab { min-width: 0; max-width: 100%; }
+
+#map-frame,
+#logbook-map,
+.peak-mini,
+.leaflet-container {
+  max-width: 100%;
+  overflow: clip;
+  contain: paint;
+}
 
 html.explore-map #collections-card,
 html.explore-map #layers-card { display: none; }
