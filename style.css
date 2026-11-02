@@ -872,6 +872,15 @@ p { margin: 0.25rem 0; }
 .plan-thumb { width: 96px; height: 112px; object-fit: cover; border-radius: 12px; grid-row: span 1; }
 .plan-record .log-actions { grid-column: 1 / -1; }
 .plan-status { color: #93c5fd; font-weight: 650; margin: 0.15rem 0; }
+.reference-data {
+  margin: 0.45rem 0;
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border-radius: 8px;
+}
+.reference-data a { display: inline-block; margin-top: 0.25rem; }
+
 .share-preview {
   margin-top: 0.65rem;
   padding: 0.75rem;

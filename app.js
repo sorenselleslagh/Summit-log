@@ -730,6 +730,45 @@ function stagesFromInput() {
   }).filter(function (stage) { return stage.name; });
 }
 
+function renderNameSuggestions() {
+  var input = document.getElementById('name');
+  var list = document.getElementById('name-suggestions');
+  if (!input || !list) return;
+  var query = input.value.trim();
+  if (!collectionData || query.length < 2) {
+    list.replaceChildren();
+    return;
+  }
+  var folded = Partners.fold(query);
+  var matches = collectionData.peaks.filter(function (peak) {
+    return Partners.fold(peak.name).indexOf(folded) >= 0 || Col.normName(peak.name).indexOf(folded) >= 0;
+  }).slice(0, 6);
+  list.replaceChildren.apply(list, matches.map(function (peak) {
+    return el('li', null, el('button', { type: 'button', 'data-peak-id': peak.id },
+      el('span', { class: 'suggestion-name', text: peak.name }),
+      el('span', { class: 'suggestion-meta', text: peak.elevation + ' m · ' + (peak.subrange || '') + ' · ' + Col.countryLabel(peak) })
+    ));
+  }));
+}
+
+document.getElementById('name').addEventListener('input', renderNameSuggestions);
+document.getElementById('name-suggestions').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-peak-id]') : null;
+  if (!button || !collectionData) return;
+  var peak = null;
+  collectionData.peaks.forEach(function (item) {
+    if (item.id === button.getAttribute('data-peak-id')) peak = item;
+  });
+  if (!peak) return;
+  document.getElementById('name').value = peak.name;
+  document.getElementById('item-kind').value = 'peak';
+  document.getElementById('elevation').value = peak.elevation;
+  document.getElementById('lat').value = peak.lat;
+  document.getElementById('lng').value = peak.lng;
+  document.getElementById('name-suggestions').replaceChildren();
+  syncKindFields();
+});
+
 document.getElementById('activity-type-picker').addEventListener('click', function (event) {
   var button = event.target.closest ? event.target.closest('[data-activity-type]') : null;
   if (!button) return;
@@ -2000,6 +2039,45 @@ function peakLine(peak) {
     ' · grade ' + (peak.grade || 'unknown');
 }
 
+function applyKnownRoute(planId, peak) {
+  if (!peak || !peak.normalRoute || !planId) return;
+  var updated = patchItem(planId, {
+    routeName: peak.normalRoute,
+    routeGrade: peak.grade || '',
+    routeSource: peak.sourceUrl || '',
+    stageManual: false
+  });
+  if (!updated) return;
+  selectTab('plan');
+  showPlanDetail(updated.id);
+}
+
+function useRouteButton(peak) {
+  var button = el('button', { class: 'secondary', type: 'button', text: 'Use this route' });
+  button.addEventListener('click', function () {
+    var existing = null;
+    plannedItems().forEach(function (item) {
+      if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
+    });
+    if (!existing) {
+      addCatalogItem({
+        name: peak.name,
+        kind: 'peak',
+        lat: peak.lat,
+        lng: peak.lng,
+        elevation: peak.elevation,
+        note: '',
+        collectionId: collectionData ? collectionData.id : ''
+      });
+      plannedItems().forEach(function (item) {
+        if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
+      });
+    }
+    if (existing) applyKnownRoute(existing.id, peak);
+  });
+  return button;
+}
+
 function showPeakDetail(peak) {
   var box = document.getElementById('peak-detail');
   if (!box) return;
@@ -2023,7 +2101,7 @@ function showPeakDetail(peak) {
       lat: peak.lat,
       lng: peak.lng,
       elevation: peak.elevation,
-      note: peak.normalRoute || '',
+      note: '',
       collectionId: collectionData ? collectionData.id : ''
     });
     selectTab('plan');
@@ -2039,7 +2117,13 @@ function showPeakDetail(peak) {
   var children = [
     el('h3', { text: peak.name }),
     el('p', { text: peakLine(peak) }),
-    el('p', { class: 'muted', text: peak.normalRoute ? 'Normal route: ' + peak.normalRoute : 'Normal route: unknown' }),
+    el('div', { class: 'reference-data' },
+      el('p', { class: 'field-label', text: 'Known route' }),
+      el('p', { text: peak.normalRoute ? peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') : 'No sourced route is stored for this summit.' }),
+      el('p', { class: 'muted', text: 'The grade, when there is one, belongs to that route. Adding the mountain does not add the route.' }),
+      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null,
+      peak.normalRoute ? useRouteButton(peak) : null
+    ),
     el('div', { class: 'log-actions' }, summited, backlogBtn),
     el('h3', { text: 'Build up to this peak' }),
     el('p', { text: plan.note })
@@ -2065,7 +2149,7 @@ function collectionPopup(peak) {
       lat: peak.lat,
       lng: peak.lng,
       elevation: peak.elevation,
-      note: peak.normalRoute || '',
+      note: '',
       collectionId: collectionData ? collectionData.id : ''
     });
   });
@@ -2412,7 +2496,13 @@ function planDetailNode(item) {
     'aria-label': 'Route', value: item.routeName || ''
   });
   route.addEventListener('change', function () {
-    var updated = patchItem(item.id, { routeName: route.value, stageManual: false });
+    var known = peak && peak.normalRoute && Col.normName(peak.normalRoute) === Col.normName(route.value);
+    var updated = patchItem(item.id, {
+      routeName: route.value,
+      stageManual: false,
+      routeGrade: known ? (peak.grade || '') : '',
+      routeSource: known ? (peak.sourceUrl || '') : ''
+    });
     if (updated) showPlanDetail(updated.id);
   });
   var timeframe = el('input', {
@@ -2482,14 +2572,30 @@ function planDetailNode(item) {
   });
   var research = [el('h3', { text: 'Research' })];
   if (peak) {
-    research.push(el('p', { text: (peak.grade ? 'Grade ' + peak.grade + '. ' : '') + (peak.normalRoute || 'Normal route not recorded.') }));
-    if (peak.sourceUrl) {
-      research.push(el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }));
-    }
-  } else if (item.grade) {
-    research.push(el('p', { text: 'Grade ' + item.grade }));
-  } else {
-    research.push(el('p', { class: 'muted', text: 'Add a note for the route, the grade, or where you read about it.' }));
+    research.push(el('p', { class: 'reference-data', text: 'Reference: ' + peak.elevation + ' m · ' + peak.subrange + ' · ' + Col.countryLabel(peak) + '. Choosing the mountain does not choose a route.' }));
+  }
+  if (item.routeName) {
+    research.push(el('p', { text: 'Your route: ' + item.routeName }));
+  }
+  if (item.routeGrade || item.routeSource) {
+    var sourceBits = el('p', { class: 'reference-data' },
+      el('span', { text: 'Grade ' + (item.routeGrade || 'not recorded') + ' belongs to the route you selected.' }),
+      item.routeSource ? el('a', { href: item.routeSource, target: '_blank', rel: 'noopener noreferrer', text: ' Source' }) : null
+    );
+    research.push(sourceBits);
+  }
+  if (peak && peak.normalRoute) {
+    var useRoute = el('button', { class: 'secondary', type: 'button', text: 'Use this route' });
+    useRoute.addEventListener('click', function () { applyKnownRoute(item.id, peak); });
+    research.push(el('div', { class: 'reference-data' },
+      el('p', { class: 'field-label', text: 'Known route' }),
+      el('p', { text: peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') }),
+      el('p', { class: 'muted', text: 'This is the sourced normal route. It is not applied until you use it.' }),
+      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null,
+      useRoute
+    ));
+  } else if (!item.routeName) {
+    research.push(el('p', { class: 'muted', text: 'Route TBD. You can type one, or pick a known route when this mountain has one.' }));
   }
   var partners = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
   partners.addEventListener('click', function () {
@@ -2503,7 +2609,7 @@ function planDetailNode(item) {
     back,
     el('h2', { text: item.name }),
     el('p', { class: 'plan-status', text: planStatusLine(item) }),
-    el('p', { class: 'entry-meta', text: [kindLabel(item.kind), item.elevation ? item.elevation + ' m' : '', seasonLabel(item.season)].filter(Boolean).join(' · ') }),
+    el('p', { class: 'entry-meta', text: [activityLabel(item), item.elevation ? item.elevation + ' m' : '', seasonLabel(item.season)].filter(Boolean).join(' · ') }),
     el('label', { class: 'field-label', for: 'plan-stage', text: 'Stage' }),
     stage,
     el('label', { class: 'field-label', for: 'plan-route', text: 'Route' }),
@@ -2698,7 +2804,7 @@ function peakCard(peak) {
     lat: peak.lat,
     lng: peak.lng,
     elevation: peak.elevation,
-    note: peak.normalRoute || '',
+    note: '',
     collectionId: collectionData ? collectionData.id : ''
   };
   var card = el('article', { class: 'peak-card' },
@@ -2857,7 +2963,7 @@ function placeFromObjective(objective) {
       lat: peak.lat,
       lng: peak.lng,
       elevation: peak.elevation,
-      note: peak.normalRoute || '',
+      note: '',
       collectionId: collectionData.id
     };
   }
