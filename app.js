@@ -6,6 +6,9 @@ var Col = window.SummitCollections;
 var Partners = window.SummitPartners;
 var Photos = window.SummitPhotos;
 
+var FEATURES = { exploreSheet: false };
+if (!FEATURES.exploreSheet) document.documentElement.classList.add('explore-sheet-off');
+
 var items = [];
 var mineSegment = 'planned';
 var mineKinds = {};
@@ -246,7 +249,12 @@ function selectTab(name) {
   if (name === 'logbook') showLogbookHome();
 }
 
+function exploreSheetOn() {
+  return FEATURES.exploreSheet === true;
+}
+
 function enterExploreMap() {
+  document.documentElement.classList.toggle('explore-sheet-off', !exploreSheetOn());
   document.documentElement.classList.add('explore-map');
   initMap();
   setMapGestures(true);
@@ -2727,7 +2735,8 @@ function bindSheetDismiss() {
   box.dataset.dismissBound = '1';
   var swipe = null;
   box.addEventListener('pointerdown', function (event) {
-    if (!document.documentElement.classList.contains('map-show-peak')) return;
+    var root = document.documentElement;
+    if (!root.classList.contains('map-show-peak') && !root.classList.contains('explore-peak')) return;
     if (event.target.closest && event.target.closest('.sheet-close, a, input, textarea, select, button:not(.sheet-grab)')) return;
     var onGrab = event.target.closest && event.target.closest('.sheet-grab');
     if (!onGrab && box.scrollTop > 0) return;
@@ -3743,6 +3752,16 @@ function snapHeights() {
 function applySheetSnap(animate) {
   var sheet = document.getElementById('explore-sheet');
   if (!sheet) return;
+  if (!exploreSheetOn()) {
+    if (sheetMode !== 'peak') {
+      document.documentElement.style.setProperty('--sheet-h', '0px');
+      return;
+    }
+    requestAnimationFrame(function () {
+      document.documentElement.style.setProperty('--sheet-h', sheet.offsetHeight + 'px');
+    });
+    return;
+  }
   var limits = snapHeights();
   var height = limits[sheetSnap] || limits.peek;
   var motion = animate && !prefersReducedMotion();
@@ -3761,6 +3780,7 @@ function fitFeatures(features) {
 }
 
 function selectBrowseCollection(id) {
+  if (!exploreSheetOn()) return;
   if (id === 'near-you' && !userLocation) {
     requestNear();
     return;
@@ -3873,7 +3893,7 @@ function renderCollectionPeaks(collection) {
 function renderExploreSheet() {
   var head = document.getElementById('explore-sheet-head');
   var body = document.getElementById('explore-sheet-body');
-  if (!head || !body) return;
+  if (!head || !body || !exploreSheetOn()) return;
   if (sheetMode === 'peak') return;
   var active = activeCollectionRecord();
   if (active) {
@@ -3913,6 +3933,7 @@ function bindExploreSheet() {
     return event.target === grab || (head && head.contains(event.target)) || event.target === sheet;
   }
   function start(event) {
+    if (!exploreSheetOn()) return;
     if (!document.documentElement.classList.contains('explore-map') || !canDrag(event)) return;
     drag = {
       id: event.pointerId,

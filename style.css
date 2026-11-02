@@ -2030,6 +2030,43 @@ html.explore-map.explore-peak #peak-detail { display: block; padding-bottom: 0.8
 
 html.explore-map.explore-peak #peak-detail .sheet-grab { display: none; }
 
+/* Collections sheet stays in the page, switched off until FEATURES.exploreSheet is on. */
+html.explore-sheet-off { --sheet-h: 0px; }
+
+html.explore-map.explore-sheet-off:not(.explore-peak) .explore-sheet {
+  display: none;
+  height: 0;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+html.explore-map.explore-sheet-off #explore-grab,
+html.explore-map.explore-sheet-off #explore-sheet-head,
+html.explore-map.explore-sheet-off #explore-sheet-body {
+  display: none;
+}
+
+html.explore-map.explore-sheet-off.explore-peak .explore-sheet {
+  display: flex;
+  height: auto;
+  max-height: none;
+  pointer-events: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+html.explore-map.explore-sheet-off.explore-peak #peak-detail {
+  pointer-events: auto;
+  flex: 0 1 auto;
+  max-height: min(68dvh, 620px);
+  border-radius: 22px;
+  background: #f7f4ef;
+  box-shadow: 0 14px 40px rgba(28, 25, 21, 0.22);
+}
+
+html.explore-map.explore-sheet-off.explore-peak #peak-detail .sheet-grab { display: block; }
+
 html.explore-map #collections-card,
 html.explore-map #layers-card { display: none; }
 
