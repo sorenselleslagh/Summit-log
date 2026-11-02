@@ -1140,7 +1140,10 @@ function clearMotion(container) {
 function settleTiles() {
   var root = document.documentElement;
   root.classList.add('map-resizing');
-  if (map) map.invalidateSize({ animate: false, pan: false });
+  if (map) {
+    map.invalidateSize({ animate: false, pan: false });
+    if (map._keptCenter) map.setView(map._keptCenter, map._keptZoom, { animate: false });
+  }
   requestAnimationFrame(function () {
     requestAnimationFrame(function () { root.classList.remove('map-resizing'); });
   });
@@ -1238,6 +1241,10 @@ function expandMap() {
   var first = container.getBoundingClientRect();
   var root = document.documentElement;
   mapExpanded = true;
+  if (map) {
+    map._keptCenter = map.getCenter();
+    map._keptZoom = map.getZoom();
+  }
   root.classList.add('map-expanded');
   pushMapHistory();
   if (prefersReducedMotion()) {
@@ -1272,7 +1279,7 @@ function collapseMap(fromPop) {
   var root = document.documentElement;
   var covered = root.classList.contains('map-cover');
   mapExpanded = false;
-  root.classList.remove('map-settled', 'map-show-layers', 'map-show-collections', 'map-show-peak');
+  root.classList.remove('map-settled', 'map-show-layers', 'map-show-collections', 'map-show-peak', 'map-sheet-tall');
   setMapGestures(false);
   popMapHistory(fromPop);
   if (!container) return;
@@ -1369,13 +1376,11 @@ function initMap() {
         keyboard: false
       }).setView([46.5, 8.5], 6);
       L.control.zoom({ position: 'topright' }).addTo(map);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap',
-        errorTileUrl: 'icons/tile-offline.svg'
-      }).addTo(map);
+      mutedTiles().addTo(map);
       map.on('locationerror', function () {
         showMapStatus('Location is unavailable on this device.');
       });
+      map.on('zoomend moveend', function () { updateMapMarkers(); });
       syncAreas();
     }
     updateMapMarkers();
@@ -1383,6 +1388,15 @@ function initMap() {
   } catch (err) {
     showMapFallback();
   }
+}
+
+function mutedTiles() {
+  return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap, &copy; OpenTopoMap (CC-BY-SA)',
+    subdomains: 'abc',
+    maxZoom: 17,
+    errorTileUrl: 'icons/tile-offline.svg'
+  });
 }
 
 function addCircle(item, color, popup) {
@@ -1398,25 +1412,182 @@ function addCircle(item, color, popup) {
   markers.push(marker);
 }
 
+var mapFilter = 'all';
+var mapQuery = '';
+
+function featureMatchesQuery(name) {
+  if (!mapQuery) return true;
+  var folded = Partners.fold(mapQuery);
+  return Partners.fold(name).indexOf(folded) >= 0 || Col.normName(name).indexOf(folded) >= 0;
+}
+
+function mapFeatures() {
+  var list = [];
+  var showPeaks = mapFilter === 'all' || mapFilter === '4000' || mapFilter === 'planned' || mapFilter === 'done';
+  var showTreks = mapFilter === 'all' || mapFilter === 'treks';
+  if (showPeaks && collectionData) {
+    collectionData.peaks.forEach(function (peak) {
+      if (!featureMatchesQuery(peak.name)) return;
+      var planned = alreadyPlanned(peak.name);
+      var done = Col.isSummited(peak, doneItems());
+      if (mapFilter === 'planned' && !planned) return;
+      if (mapFilter === 'done' && !done) return;
+      list.push({ type: 'peak', name: peak.name, lat: peak.lat, lng: peak.lng, peak: peak, planned: planned, done: done });
+    });
+  }
+  if (showPeaks && mapFilter !== '4000') {
+    plannedItems().concat(doneItems()).forEach(function (item) {
+      if (!Lgc.hasCoords(item) || collectionPeakByName(item)) return;
+      if (!featureMatchesQuery(item.name)) return;
+      var planned = item.status === 'planned';
+      if (mapFilter === 'planned' && !planned) return;
+      if (mapFilter === 'done' && planned) return;
+      list.push({ type: 'item', name: item.name, lat: item.lat, lng: item.lng, item: item, planned: planned, done: !planned });
+    });
+  }
+  if (showTreks) {
+    Lgc.FAMOUS.forEach(function (place) {
+      if (place.kind !== 'hike' || !featureMatchesQuery(place.name)) return;
+      list.push({ type: 'trek', name: place.name, lat: place.lat, lng: place.lng, place: place });
+    });
+  }
+  if (showPeaks && document.getElementById('osm-layer') && document.getElementById('osm-layer').checked) {
+    osmMarkers.forEach(function (place) {
+      if (!featureMatchesQuery(place.name)) return;
+      list.push({ type: 'osm', name: place.name, lat: place.lat, lng: place.lng, place: place });
+    });
+  }
+  return list.filter(function (feature) { return Number.isFinite(feature.lat) && Number.isFinite(feature.lng); });
+}
+
+function featuresInView(features) {
+  if (!map) return features;
+  var bounds = map.getBounds();
+  return features.filter(function (feature) {
+    return bounds.contains([feature.lat, feature.lng]);
+  });
+}
+
+function safePhotoUrl(url) {
+  return typeof url === 'string' && /^https:\/\/(thumb|upload)\.wikimedia\.org\//.test(url) ? url : '';
+}
+
+function markerClass(feature) {
+  if (feature.type === 'trek') return ' is-trek';
+  if (feature.done) return ' is-done';
+  if (feature.planned) return ' is-planned';
+  return '';
+}
+
+function photoFace(feature) {
+  var photo = feature.peak ? photoRecord(feature.peak) : (feature.type === 'trek' ? peakPhotos['place:' + feature.name] : null);
+  var src = safePhotoUrl(photo && photo.thumb);
+  if (!src) return '<span class="pin-face"></span>';
+  return '<span class="pin-face" style="background-image:url(\'' + src.replace(/'/g, '') + '\')"></span>';
+}
+
+function openFeature(feature) {
+  if (feature.type === 'peak') showPeakDetail(feature.peak);
+  else if (feature.type === 'trek') showTrailSheet(feature.place);
+  else if (feature.item) showMemoryOrPlan(feature.item);
+  else if (feature.place) showTrailSheet(feature.place);
+}
+
+function showMemoryOrPlan(item) {
+  if (item.status === 'planned') {
+    selectTab('plan');
+    showPlanDetail(item.id);
+    return;
+  }
+  selectTab('logbook');
+  showMemory(item.id);
+}
+
+function addDivMarker(lat, lng, icon, onClick) {
+  var marker = L.marker([lat, lng], { icon: icon, keyboard: false });
+  marker.on('click', function (event) {
+    if (event.originalEvent) L.DomEvent.stopPropagation(event.originalEvent);
+    onClick();
+  });
+  marker.addTo(map);
+  markers.push(marker);
+}
+
+function updateMapSummary(count, noun) {
+  var summary = document.getElementById('map-summary');
+  if (!summary) return;
+  var label = count === 1 ? noun.replace(/s$/, '') : noun;
+  summary.textContent = count + ' ' + label + ' in view';
+}
+
 function updateMapMarkers() {
   if (!map) return;
   markers.forEach(function (marker) { map.removeLayer(marker); });
   markers = [];
-  doneItems().forEach(function (item) {
-    if (!collectionPeakByName(item)) addCircle(item, '#3b82f6');
+  var features = mapFeatures();
+  var visible = featuresInView(features);
+  var peakCount = visible.filter(function (feature) { return feature.type !== 'trek'; }).length;
+  var trailCount = visible.filter(function (feature) { return feature.type === 'trek'; }).length;
+  if (mapFilter === 'treks') updateMapSummary(trailCount, 'trails');
+  else updateMapSummary(peakCount, 'peaks');
+  var zoom = map.getZoom();
+  if (zoom <= 6) {
+    drawClusters(visible.length ? visible : features, zoom);
+    return;
+  }
+  visible.forEach(function (feature) {
+    if (zoom < 8 || feature.type === 'osm') {
+      addDivMarker(feature.lat, feature.lng, L.divIcon({
+        className: 'pin-dot',
+        html: '<span></span>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      }), function () { openFeature(feature); });
+      return;
+    }
+    addDivMarker(feature.lat, feature.lng, L.divIcon({
+      className: 'photo-pin' + markerClass(feature),
+      html: photoFace(feature),
+      iconSize: [44, 44],
+      iconAnchor: [22, 22]
+    }), function () { openFeature(feature); });
   });
-  plannedItems().forEach(function (item) {
-    if (!collectionPeakByName(item)) addCircle(item, '#f59e0b');
+}
+
+function drawClusters(features, zoom) {
+  var cell = zoom <= 5 ? 1.4 : 0.7;
+  var groups = {};
+  features.forEach(function (feature) {
+    var key = Math.floor(feature.lat / cell) + ':' + Math.floor(feature.lng / cell);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(feature);
   });
-  if (collectionData) {
-    collectionData.peaks.forEach(function (peak) {
-      addCircle(peak, Col.isSummited(peak, doneItems()) ? '#22c55e' : '#64748b', collectionPopup(peak));
+  Object.keys(groups).forEach(function (key) {
+    var group = groups[key];
+    var lat = 0;
+    var lng = 0;
+    group.forEach(function (feature) { lat += feature.lat; lng += feature.lng; });
+    lat /= group.length;
+    lng /= group.length;
+    if (group.length === 1) {
+      addDivMarker(lat, lng, L.divIcon({
+        className: 'pin-dot',
+        html: '<span></span>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      }), function () { openFeature(group[0]); });
+      return;
+    }
+    addDivMarker(lat, lng, L.divIcon({
+      className: 'pin-cluster',
+      html: '<span>' + group.length + '</span>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18]
+    }), function () {
+      var bounds = L.latLngBounds(group.map(function (feature) { return [feature.lat, feature.lng]; }));
+      map.fitBounds(bounds.pad(0.4), { maxZoom: zoom + 3 });
     });
-  }
-  if (document.getElementById('osm-layer') && document.getElementById('osm-layer').checked) {
-    Lgc.FAMOUS.forEach(function (place) { addCircle(place, '#a78bfa', placePopup(place)); });
-    osmMarkers.forEach(function (place) { addCircle(place, '#a78bfa', placePopup(place)); });
-  }
+  });
 }
 
 function loadPeaksInView() {
@@ -1921,7 +2092,7 @@ document.getElementById('load-peaks-btn').addEventListener('click', loadPeaksInV
 
 document.getElementById('map-container').addEventListener('click', function (event) {
   if (mapExpanded) return;
-  if (event.target.closest && event.target.closest('.leaflet-control, .map-expand, .map-close, .map-fabs')) return;
+  if (event.target.closest && event.target.closest('.leaflet-control, .map-expand, .map-close, .map-fabs, .map-chrome, .photo-pin, .pin-dot, .pin-cluster')) return;
   expandMap();
 });
 document.getElementById('map-expand').addEventListener('click', function (event) {
@@ -2081,6 +2252,7 @@ function useRouteButton(peak) {
 function showPeakDetail(peak) {
   var box = document.getElementById('peak-detail');
   if (!box) return;
+  document.documentElement.classList.remove('map-sheet-tall');
   var level = Col.estimateLevel(doneItems(), collectionData.peaks, Store.getLevel());
   var plan = Col.suggestBuildUp(peak, collectionData.peaks, level);
   var summited = el('button', { class: 'primary', type: 'button', text: Col.isSummited(peak, doneItems()) ? 'Summited' : 'Mark summited' });
@@ -2089,7 +2261,7 @@ function showPeakDetail(peak) {
     else markSummited(peak);
     showPeakDetail(peak);
   });
-  var backlogBtn = el('button', { class: 'secondary', type: 'button', text: alreadyPlanned(peak.name) ? 'In your plan' : 'Add to plan' });
+  var backlogBtn = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(peak.name) ? 'In your plan' : 'Add to plan' });
   backlogBtn.addEventListener('click', function () {
     if (alreadyPlanned(peak.name)) {
       openPlanByName(peak.name);
@@ -2114,9 +2286,43 @@ function showPeakDetail(peak) {
       el('p', { class: 'entry-meta', text: peakLine(step) })
     );
   });
+  var progress = collectionData ? Col.progress(collectionData.peaks, doneItems()) : null;
+  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Expand or collapse details' });
+  grab.addEventListener('click', function () {
+    document.documentElement.classList.toggle('map-sheet-tall');
+  });
+  var partnersBtn = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
+  partnersBtn.addEventListener('click', function () {
+    var existing = null;
+    plannedItems().forEach(function (item) {
+      if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
+    });
+    if (!existing) {
+      addCatalogItem({
+        name: peak.name, kind: 'peak', lat: peak.lat, lng: peak.lng,
+        elevation: peak.elevation, note: '', collectionId: collectionData ? collectionData.id : ''
+      });
+      plannedItems().forEach(function (item) {
+        if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
+      });
+    }
+    if (existing) startPartnerFrom(existing.id);
+  });
   var children = [
-    el('h3', { text: peak.name }),
-    el('p', { text: peakLine(peak) }),
+    grab,
+    summitHero(peak),
+    el('h3', { class: 'summit-name', text: peak.name }),
+    el('p', { class: 'sheet-meta' },
+      el('span', { text: peak.elevation + ' m' }),
+      el('span', { text: peak.subrange || 'Alps' }),
+      el('span', { text: Col.countryLabel(peak) })
+    ),
+    el('p', null,
+      el('span', { text: peak.normalRoute ? 'Normal route ' + peak.normalRoute : 'No sourced normal route' }),
+      peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
+    ),
+    progress ? el('p', { class: 'muted', text: progress.done + ' of ' + progress.total + ' Alpine 4000ers' }) : null,
+    el('div', { class: 'log-actions' }, backlogBtn, partnersBtn),
     el('div', { class: 'reference-data' },
       el('p', { class: 'field-label', text: 'Known route' }),
       el('p', { text: peak.normalRoute ? peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') : 'No sourced route is stored for this summit.' }),
@@ -2136,6 +2342,72 @@ function showPeakDetail(peak) {
   if (map) {
     map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10));
   }
+}
+
+function summitHero(peak) {
+  var photo = photoRecord(peak);
+  var frame = el('div', { class: 'summit-hero' });
+  var src = safePhotoUrl(photo && photo.thumb);
+  if (!src) {
+    frame.appendChild(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
+    return frame;
+  }
+  var img = el('img', { alt: '', src: src });
+  img.addEventListener('error', function () {
+    img.replaceWith(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
+  });
+  frame.appendChild(img);
+  if (photo.page) {
+    frame.appendChild(el('a', {
+      class: 'photo-credit',
+      href: photo.page,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      title: photo.credit || photo.license || 'Photo',
+      text: photo.license || 'Photo'
+    }));
+  }
+  return frame;
+}
+
+function showTrailSheet(place) {
+  var box = document.getElementById('peak-detail');
+  if (!box || !place) return;
+  document.documentElement.classList.remove('map-sheet-tall');
+  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Expand or collapse details' });
+  grab.addEventListener('click', function () {
+    document.documentElement.classList.toggle('map-sheet-tall');
+  });
+  var add = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(place.name) ? 'In your plan' : 'Add to plan' });
+  add.addEventListener('click', function () {
+    if (alreadyPlanned(place.name)) openPlanByName(place.name);
+    else addCatalogItem(place);
+  });
+  var photo = peakPhotos['place:' + place.name];
+  var hero = el('div', { class: 'summit-hero' });
+  var src = safePhotoUrl(photo && photo.thumb);
+  if (src) {
+    var img = el('img', { alt: '', src: src });
+    img.addEventListener('error', function () {
+      img.replaceWith(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
+    });
+    hero.appendChild(img);
+    if (photo.page) hero.appendChild(el('a', { class: 'photo-credit', href: photo.page, target: '_blank', rel: 'noopener noreferrer', text: photo.license || 'Photo' }));
+  } else {
+    hero.appendChild(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
+  }
+  box.replaceChildren(el('div', null,
+    grab,
+    hero,
+    el('h3', { class: 'summit-name', text: place.name }),
+    el('p', { class: 'sheet-meta' },
+      el('span', { text: place.area || 'Trail' }),
+      el('span', { text: place.note || 'Stages vary' })
+    ),
+    el('div', { class: 'log-actions' }, add)
+  ));
+  box.classList.remove('hidden');
+  if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
 }
 
 function collectionPopup(peak) {
@@ -2991,6 +3263,33 @@ document.getElementById('explore-suggestions').addEventListener('click', functio
   if (!button) return;
   addExploreObjective(button.getAttribute('data-explore'));
 });
+document.getElementById('map-chips').addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-map-filter]') : null;
+  if (!button) return;
+  mapFilter = button.getAttribute('data-map-filter');
+  document.querySelectorAll('#map-chips .map-chip').forEach(function (chip) {
+    var on = chip === button;
+    chip.classList.toggle('active', on);
+    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  updateMapMarkers();
+});
+document.getElementById('map-query').addEventListener('input', function () {
+  mapQuery = document.getElementById('map-query').value.trim();
+  updateMapMarkers();
+});
+document.getElementById('map-filter').addEventListener('click', function () {
+  var chips = document.getElementById('map-chips');
+  if (chips) chips.scrollIntoView({ block: 'nearest', inline: 'start' });
+});
+document.getElementById('map-search-form').addEventListener('submit', function (event) {
+  event.preventDefault();
+  var hit = mapFeatures()[0];
+  if (!hit || !map) return;
+  map.setView([hit.lat, hit.lng], Math.max(map.getZoom(), 10));
+  openFeature(hit);
+});
+
 document.getElementById('open-map').addEventListener('click', function () {
   if (document.getElementById('explore').classList.contains('hidden')) selectTab('explore');
   requestAnimationFrame(function () { expandMap(); });
@@ -3032,9 +3331,7 @@ function renderLogbookMap(done) {
   }
   if (!logbookMap) {
     logbookMap = L.map(box, { zoomControl: false }).setView([46.5, 8.5], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(logbookMap);
+    mutedTiles().addTo(logbookMap);
   }
   logbookMarkers.forEach(function (marker) { logbookMap.removeLayer(marker); });
   logbookMarkers = [];
