@@ -204,28 +204,16 @@
       </section>
 
       <section id="partners" class="tab hidden">
-        <div id="messages-panel" class="card messages-panel">
-          <h2>Messages</h2>
-          <p class="muted" id="messages-status">Messages are not connected yet. Plans and queues stay on this device. Partner chat will appear here once an account server is added.</p>
-          <p id="migration-banner" class="migration-note hidden" role="status"></p>
-          <div id="messages-requests"></div>
-          <h3>Direct</h3>
-          <div id="messages-direct"></div>
-          <h3>Teams</h3>
-          <div id="messages-teams">
-            <p class="muted">Team chats come next. A team will share one plan, with the same messages and safety tools as a direct chat.</p>
+        <div id="partner-find" class="partner-find">
+          <h2>Find partners</h2>
+          <label class="field-label" for="objective-query">What's your objective?</label>
+          <div class="objective-search">
+            <input type="search" id="objective-query" placeholder="Peak, route, or trek" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="objective-suggestions" aria-label="What's your objective?">
+            <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
           </div>
         </div>
-        <div id="chat-screen" class="chat-screen hidden"></div>
-        <div id="shared-plan-view" class="hidden"></div>
         <div id="partner-flow">
           <div id="partner-home">
-            <h2>Find partners</h2>
-            <label class="field-label" for="objective-query">What's your objective?</label>
-            <div class="objective-search">
-              <input type="search" id="objective-query" placeholder="Peak, route, or trek" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="objective-suggestions" aria-label="What's your objective?">
-              <ul id="objective-suggestions" class="objective-suggestions" role="listbox"></ul>
-            </div>
             <p class="muted partners-intro">Peaks from the Alpine 4000ers, your planned and done items, and famous treks. A Demo badge is a sample person, not a real user. Nothing here is a ranking.</p>
             <button class="secondary hidden" id="partner-home-back" type="button">Back to plan</button>
           </div>
@@ -242,6 +230,20 @@
             <div id="partner-profile-body"></div>
           </div>
         </div>
+        <div id="messages-panel" class="card messages-panel">
+          <h2>Messages</h2>
+          <p class="muted" id="messages-status">Messages are not connected yet. Plans and queues stay on this device. Partner chat will appear here once an account server is added.</p>
+          <p id="migration-banner" class="migration-note hidden" role="status"></p>
+          <div id="messages-requests"></div>
+          <h3>Direct</h3>
+          <div id="messages-direct"></div>
+          <h3>Teams</h3>
+          <div id="messages-teams">
+            <p class="muted">Team chats come next. A team will share one plan, with the same messages and safety tools as a direct chat.</p>
+          </div>
+        </div>
+        <div id="chat-screen" class="chat-screen hidden"></div>
+        <div id="shared-plan-view" class="hidden"></div>
       </section>
 
       <!-- Explore is the map. The tab bar stays; the header steps aside. -->

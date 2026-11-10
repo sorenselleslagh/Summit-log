@@ -2107,6 +2107,8 @@ function showPartnerSearch() {
   partnerReturn = 'search';
   showPartnerFlow();
   document.getElementById('partner-home').classList.remove('hidden');
+  var find = document.getElementById('partner-find');
+  if (find) find.classList.remove('hidden');
   document.getElementById('objective-page').classList.add('hidden');
   document.getElementById('partner-profile').classList.add('hidden');
   var panel = document.getElementById('messages-panel');
@@ -4707,6 +4709,63 @@ document.getElementById('logbook-views').addEventListener('click', function (eve
   var button = event.target.closest ? event.target.closest('[data-view]') : null;
   if (!button) return;
   setLogbookView(button.getAttribute('data-view'));
+});
+
+function placeChatAboveKeyboard() {
+  var screen = document.getElementById('chat-screen');
+  if (!screen || screen.classList.contains('hidden') || !window.visualViewport) return;
+  var active = document.activeElement;
+  var inComposer = active && active.closest && active.closest('.composer');
+  if (!inComposer) {
+    screen.style.height = '';
+    return;
+  }
+  var header = document.querySelector('#app > header');
+  var nav = document.querySelector('#app > nav');
+  var available = window.visualViewport.height - (header ? header.offsetHeight : 0) - (nav ? nav.offsetHeight : 0) - 8;
+  screen.style.height = Math.max(220, Math.round(available)) + 'px';
+}
+
+function focusFieldIntoView(target) {
+  if (!target || !target.matches || !target.matches('input, textarea, select')) return;
+  if (target.closest && target.closest('#map-chrome, .map-search, #map-search-form')) return;
+  if (target.closest && target.closest('.composer')) {
+    placeChatAboveKeyboard();
+    return;
+  }
+  window.setTimeout(function () {
+    if (!target.isConnected) return;
+    target.scrollIntoView({
+      block: 'center',
+      inline: 'nearest',
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth'
+    });
+  }, 280);
+}
+
+document.addEventListener('focusin', function (event) {
+  focusFieldIntoView(event.target);
+});
+document.addEventListener('focusout', function (event) {
+  var target = event.target;
+  if (!target || !target.closest || !target.closest('.composer')) return;
+  window.setTimeout(function () {
+    var active = document.activeElement;
+    if (!active || !active.closest || !active.closest('.composer')) placeChatAboveKeyboard();
+  }, 60);
+});
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', function () {
+    var active = document.activeElement;
+    if (active && active.closest && active.closest('.composer')) placeChatAboveKeyboard();
+    else focusFieldIntoView(active);
+  });
+}
+window.addEventListener('resize', function () {
+  var active = document.activeElement;
+  if (!active) return;
+  if (active.closest && active.closest('.composer')) placeChatAboveKeyboard();
+  else focusFieldIntoView(active);
 });
 
 // ---- Init ----
