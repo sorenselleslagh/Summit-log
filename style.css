@@ -659,12 +659,33 @@ html.map-settled .map-chrome {
   display: block;
 }
 
-.map-search {
+.map-top {
   position: fixed;
   top: calc(var(--vv-top, 0px) + max(0.5rem, env(safe-area-inset-top, 0px)));
-  left: calc(var(--vv-left, 0px) + 4.6rem + env(safe-area-inset-left, 0px));
-  right: calc(0.7rem + env(safe-area-inset-right, 0px));
+  left: calc(var(--vv-left, 0px) + max(0.7rem, env(safe-area-inset-left, 0px)));
+  right: calc(var(--vv-right, 0px) + max(0.7rem, env(safe-area-inset-right, 0px)));
   z-index: 1550;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 100%;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.map-top > * { pointer-events: auto; }
+
+.map-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 0 0 auto;
+}
+
+.map-search {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -691,9 +712,18 @@ html.map-settled .map-chrome {
   font-size: 16px;
   font-weight: 500;
   line-height: 48px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
   outline: none;
   -webkit-appearance: none;
   appearance: none;
+}
+
+.map-search input::placeholder {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .map-search input::-webkit-search-decoration,
@@ -705,25 +735,11 @@ html.map-settled .map-chrome {
   display: none;
 }
 
-#map-filter {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  background: #1f6b45;
-  color: white;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#map-filter,
 .map-query-clear {
   flex: 0 0 auto;
   align-self: center;
 }
 
-#map-filter svg,
 .map-fabs svg { width: 18px; height: 18px; }
 
 .map-query-clear {
@@ -1981,12 +1997,11 @@ html.explore-map #map-container {
 
 html.explore-map .map-chrome { display: block; }
 
-html.explore-map .map-search {
+html.explore-map .map-top {
   position: absolute;
   top: max(0.5rem, env(safe-area-inset-top, 0px));
   left: max(0.7rem, env(safe-area-inset-left, 0px));
   right: max(0.7rem, env(safe-area-inset-right, 0px));
-  z-index: 1550;
 }
 
 html.explore-map .map-chips {
@@ -2445,7 +2460,8 @@ html.explore-map.map-show-layers #layers-card {
   min-width: 36px;
   color: #1c1915;
   border-color: transparent;
-  background: transparent;
+  background: rgba(255, 252, 248, 0.96);
+  box-shadow: 0 8px 18px rgba(28, 25, 21, 0.16);
 }
 .chat-toasts {
   position: fixed;

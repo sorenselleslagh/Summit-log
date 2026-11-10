@@ -318,19 +318,20 @@
             <div id="map-container"></div>
           </div>
           <div class="map-chrome" id="map-chrome">
-            <form class="map-search" id="map-search-form" role="search">
-              <input type="search" id="map-query" placeholder="Search peaks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks">
-              <button class="map-query-clear hidden" id="map-query-clear" type="button" aria-label="Clear search">×</button>
-              <button type="button" id="map-filter" aria-label="Map filters">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              </button>
-              <button type="button" id="map-chat" class="chat-launch map-chat" aria-label="Messages">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 19 17H9l-4 3v-3H5a1.5 1.5 0 0 1-1.5-1.5V8A1.5 1.5 0 0 1 5 6.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-                <span id="map-chat-unread" class="nav-badge hidden"></span>
-              </button>
-              <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
-              <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
-            </form>
+            <div class="map-top">
+              <form class="map-search" id="map-search-form" role="search">
+                <input type="search" id="map-query" placeholder="Search peaks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks">
+                <button class="map-query-clear hidden" id="map-query-clear" type="button" aria-label="Clear search">×</button>
+                <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
+              </form>
+              <div class="map-tools">
+                <button type="button" id="map-chat" class="chat-launch map-chat" aria-label="Messages">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 19 17H9l-4 3v-3H5a1.5 1.5 0 0 1-1.5-1.5V8A1.5 1.5 0 0 1 5 6.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                  <span id="map-chat-unread" class="nav-badge hidden"></span>
+                </button>
+                <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
+              </div>
+            </div>
             <div class="map-chips" id="map-chips" role="group" aria-label="Map filters">
               <button type="button" class="map-chip active" data-map-filter="all" aria-pressed="true">All</button>
               <button type="button" class="map-chip" data-map-filter="4000" aria-pressed="false">4000ers</button>
