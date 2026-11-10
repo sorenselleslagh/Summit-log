@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v30'"));
+assert.ok(sw.includes("VERSION = 'v31'"));
 assert.ok(html.includes('class="map-top"'));
 assert.ok(!html.includes('id="map-filter"'));
 assert.ok(!app.includes("getElementById('map-filter')"));
