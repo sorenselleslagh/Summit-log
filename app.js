@@ -4787,10 +4787,6 @@ document.getElementById('map-suggestions').addEventListener('click', function (e
   if (!button) return;
   chooseMapSuggestion(button.getAttribute('data-map-objective'));
 });
-document.getElementById('map-filter').addEventListener('click', function () {
-  var chips = document.getElementById('map-chips');
-  if (chips) chips.scrollIntoView({ block: 'nearest', inline: 'start' });
-});
 document.getElementById('map-search-form').addEventListener('submit', function (event) {
   event.preventDefault();
   var hit = mapFeatures()[0];
