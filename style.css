@@ -974,7 +974,28 @@ p { margin: 0.25rem 0; }
 .entry-notes { margin-top: 0.4rem; white-space: pre-wrap; }
 .map-caption { font-size: 0.9rem; margin-bottom: 1rem; }
 .suggestion-intro { font-size: 0.9rem; margin-bottom: 0.75rem; }
-.partners-intro { margin: 0.75rem 0 0; }
+.partners-intro { margin: 0.35rem 0 0.85rem; }
+.partner-find {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--bg);
+  padding: 0.15rem 0 0.7rem;
+  box-shadow: 0 10px 0 var(--bg);
+}
+.partner-find h2 { font-size: 1.2rem; margin: 0 0 0.35rem; }
+.partner-find .field-label { margin-bottom: 0.25rem; }
+#partner-find .objective-suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 50;
+  margin: 0;
+  max-height: min(46vh, 18rem);
+  overflow: auto;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
 .objective-search { position: relative; }
 .objective-suggestions {
   list-style: none;

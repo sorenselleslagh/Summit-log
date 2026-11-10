@@ -396,8 +396,10 @@
     var panel = byId('messages-panel');
     var screen = byId('chat-screen');
     var shared = byId('shared-plan-view');
-    if (flow) flow.classList.add('hidden');
-    if (panel) panel.classList.add('hidden');
+  if (flow) flow.classList.add('hidden');
+  if (panel) panel.classList.add('hidden');
+  var find = byId('partner-find');
+  if (find) find.classList.add('hidden');
     if (shared) shared.classList.add('hidden');
     if (screen) screen.classList.remove('hidden');
   }
@@ -827,6 +829,8 @@
     if (shared) shared.classList.add('hidden');
     if (flow) flow.classList.remove('hidden');
     if (panel) panel.classList.remove('hidden');
+  var find = byId('partner-find');
+  if (find) find.classList.remove('hidden');
     var home = byId('partner-home');
     var page = byId('objective-page');
     var profile = byId('partner-profile');
