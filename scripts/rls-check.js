@@ -48,6 +48,8 @@ function setup() {
   psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110180000_accounts_and_chat.sql'));
   psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110181000_harden_function_search_path.sql'));
   psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110190000_profile_credentials.sql'));
+  psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110190500_credential_types_rls.sql'));
+  psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110200000_message_push.sql'));
   psql([
     "create or replace function rls_try(uid uuid, stmt text) returns text language plpgsql as $$",
     "begin",
@@ -278,6 +280,41 @@ try {
 var after = scalar("select status from public.profile_credentials where id = '" + credId + "'");
 if (after === 'verified') console.log('PASS app_metadata admin can verify');
 else { failed += 1; console.log('FAIL app_metadata admin can verify status ' + after); }
+
+expectEq('credential types are protected by row security',
+  "select relrowsecurity::text from pg_class where oid = 'public.credential_types'::regclass",
+  'true');
+count('authenticated can read the credential catalogue', A,
+  'select count(*) from public.credential_types',
+  '10');
+check('authenticated cannot edit the credential catalogue', A,
+  "insert into public.credential_types (code, label, detail, group_name) values ('nope', 'Nope', 'Nope', 'Nope')",
+  'denied');
+
+psql([
+  'create schema if not exists vault;',
+  'create table if not exists vault.decrypted_secrets (name text primary key, decrypted_secret text);',
+  "insert into vault.decrypted_secrets (name, decrypted_secret) values",
+  "  ('summitlog_push_function_url', 'http://127.0.0.1:9/send-push'),",
+  "  ('summitlog_push_webhook_secret', 'local-test-secret'),",
+  "  ('summitlog_vapid_public', 'pub'),",
+  "  ('summitlog_vapid_private', 'priv'),",
+  "  ('summitlog_vapid_subject', 'mailto:test@example.com')",
+  'on conflict (name) do update set decrypted_secret = excluded.decrypted_secret;'
+].join('\n'));
+expectEq('database owner can read push secrets from the private function',
+  "select private.push_runtime_secrets() ->> 'summitlog_vapid_subject'",
+  'mailto:test@example.com');
+check('authenticated cannot read push secrets', A,
+  'select private.push_runtime_secrets()',
+  'denied');
+try {
+  psql("insert into public.messages (conversation_id, sender_id, kind, body, client_id) values ('" + convId + "', '" + A + "', 'text', 'Still here after push setup', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd')");
+  console.log('PASS a message still saves when push secrets exist and pg_net is absent');
+} catch (err) {
+  failed += 1;
+  console.log('FAIL a message still saves when push secrets exist and pg_net is absent -> ' + (err.stderr || err.message));
+}
 
 if (failed) {
   console.log(failed + ' RLS check(s) failed');
