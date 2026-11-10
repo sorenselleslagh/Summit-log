@@ -48,9 +48,11 @@ function setupDatabase() {
     "create table if not exists auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}'::jsonb);",
     "create or replace function auth.uid() returns uuid language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claim.sub', true), ''), nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub')::uuid $$;"
   ].join('\n'));
-  execFileSync('sudo', ['-u', 'postgres', 'psql', '-d', DB, '-v', 'ON_ERROR_STOP=1', '-f',
-    require('path').join(__dirname, '..', 'supabase/migrations/20261110180000_accounts_and_chat.sql')
-  ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  ['20261110180000_accounts_and_chat.sql', '20261110181000_harden_function_search_path.sql'].forEach(function (file) {
+    execFileSync('sudo', ['-u', 'postgres', 'psql', '-d', DB, '-v', 'ON_ERROR_STOP=1', '-f',
+      require('path').join(__dirname, '..', 'supabase/migrations', file)
+    ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  });
   psqlAdmin(DB, "grant usage on schema public to anon, authenticator;");
   psqlAdmin(DB, "insert into auth.users (id, email, raw_user_meta_data) values ('" + A + "', 'alex@example.com', '{\"display_name\":\"Alex M.\"}'), ('" + B + "', 'blair@example.com', '{\"display_name\":\"Blair T.\"}');");
   psqlAdmin(DB, "update profiles set display_name = 'Alex M.', region_label = 'Chamonix' where id = '" + A + "';");

@@ -7,7 +7,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
   'use strict';
 
-  var SDK = 'https://esm.sh/@supabase/supabase-js@2.49.4';
+  // 2.119 keeps sb_publishable keys in the apikey header. 2.49 sent every key as a Bearer JWT.
+  var SDK = 'https://esm.sh/@supabase/supabase-js@2.119.0';
   var client = null;
   var sessionUser = null;
   var bootPromise = null;
@@ -155,11 +156,15 @@
   }
 
   function redirectTo() {
-    if (!root.location) return '';
+    // Magic links must return to this app. On GitHub Pages that is
+    // https://sorenselleslagh.github.io/Summit-log/ and it has to be on the
+    // Supabase redirect allow-list. A local server uses its own origin.
+    if (!root.location || !root.location.origin) return 'https://sorenselleslagh.github.io/Summit-log/';
     var url = new URL(root.location.href);
     url.hash = '';
     url.search = '';
     if (/\/index\.html$/i.test(url.pathname)) url.pathname = url.pathname.replace(/index\.html$/i, '');
+    if (url.pathname.length > 1 && url.pathname.charAt(url.pathname.length - 1) !== '/') url.pathname += '/';
     return url.origin + url.pathname;
   }
 

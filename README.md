@@ -89,7 +89,7 @@ On a peak, **Build up to this peak** suggests a few lower summits in the same ar
 
 ## Accounts and messages
 
-Without `config.js` filled in, SummitLog does not call a server. Plans, the log, and queue places stay on this device, and the Partners tab says messages are not connected yet.
+`config.js` holds the project URL and the publishable client key for `https://vjruyrawruirwrwqfeyy.supabase.co`. If those values are removed, SummitLog does not call a server: plans, the log, and queue places stay on this device, and the Partners tab says messages are not connected yet.
 
 When a Supabase project is connected, sign-in is an email link (Google and Apple can be switched on later in the project). The first sign-in copies this device's log onto the account without changing ids. Doing it again does not duplicate those records. Private preparation notes stay in an owner-only table. A chat opens only after the other person accepts a partner request. Team chats are reserved in the database (`conversations.type = 'team'`) and are not built in the app yet.
 
@@ -106,9 +106,8 @@ Web push is off. Turning it on later needs all of the following, and still must 
 1. Go to [supabase.com](https://supabase.com) and create a project on the free tier. Choose a region in the EU (for example Frankfurt).
 2. In Authentication → Providers, leave Email enabled. Under Authentication → URL configuration, set the site URL and add this redirect URL: `https://sorenselleslagh.github.io/Summit-log/`
 3. Optional: enable Google and Apple under Authentication → Providers when you have their client ids. The app already has buttons for them.
-4. In the SQL editor, run `supabase/migrations/20261110180000_accounts_and_chat.sql`.
-5. In Project Settings → API, copy the project URL and the `anon` `public` key. Those are the only two values the app needs. Do not copy the `service_role` key into the app, a screenshot, or `config.js`.
-6. Put them in `config.js` as `supabaseUrl` and `supabaseAnonKey`.
+4. In the SQL editor, run `supabase/migrations/20261110180000_accounts_and_chat.sql`, then `supabase/migrations/20261110181000_harden_function_search_path.sql`.
+5. `config.js` already has this project's URL and publishable key. Do not put the `service_role` key in that file.
 
 ## Roadmap
 
