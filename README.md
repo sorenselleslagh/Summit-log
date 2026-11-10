@@ -106,7 +106,7 @@ Web push is off. Turning it on later needs all of the following, and still must 
 1. Go to [supabase.com](https://supabase.com) and create a project on the free tier. Choose a region in the EU (for example Frankfurt).
 2. In Authentication → Providers, leave Email enabled. Under Authentication → URL configuration, set the site URL and add this redirect URL: `https://sorenselleslagh.github.io/Summit-log/`
 3. Optional: enable Google and Apple under Authentication → Providers when you have their client ids. The app already has buttons for them.
-4. In the SQL editor, run `supabase/migrations/20261110180000_accounts_and_chat.sql`, then `supabase/migrations/20261110181000_harden_function_search_path.sql`.
+4. In the SQL editor, run `supabase/migrations/20261110180000_accounts_and_chat.sql`, then `supabase/migrations/20261110181000_harden_function_search_path.sql`, then `supabase/migrations/20261110190000_profile_credentials.sql`.
 5. `config.js` already has this project's URL and publishable key. Do not put the `service_role` key in that file.
 
 ## Roadmap

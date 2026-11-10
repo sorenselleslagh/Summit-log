@@ -36,10 +36,18 @@ function setup() {
     "grant authenticated to postgres;",
     "create schema if not exists auth;",
     "create table if not exists auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}'::jsonb);",
-    "create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;"
+    "create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;",
+    "create schema if not exists storage;",
+    "create table if not exists storage.buckets (id text primary key, name text, public boolean default false);",
+    "create table if not exists storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text, owner uuid);",
+    "create or replace function storage.foldername(name text) returns text[] language sql immutable as $$ select string_to_array(name, '/') $$;",
+    "alter table storage.objects enable row level security;",
+    "grant usage on schema storage to anon, authenticated;",
+    "grant select, insert, update, delete on storage.objects to anon, authenticated;"
   ].join('\n'));
   psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110180000_accounts_and_chat.sql'));
   psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110181000_harden_function_search_path.sql'));
+  psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110190000_profile_credentials.sql'));
   psql([
     "create or replace function rls_try(uid uuid, stmt text) returns text language plpgsql as $$",
     "begin",
@@ -215,6 +223,61 @@ check('blocked user cannot send another message', B,
 count('blocked user still cannot read the other private notes', B,
   "select count(*) from public.account_records",
   '0');
+
+check('member cannot self-verify a credential', A,
+  "insert into public.profile_credentials (profile_id, code, status) values ('" + A + "', 'ifmga', 'verified')",
+  'denied');
+check('member can self-declare a credential', A,
+  "insert into public.profile_credentials (profile_id, code, status) values ('" + A + "', 'kvb1', 'self_declared')",
+  'ok');
+check('member can offer a certificate as pending', A,
+  "insert into public.profile_credentials (profile_id, code, status) values ('" + A + "', 'wfr', 'pending')",
+  'ok');
+var credId = scalar("select id from public.profile_credentials where profile_id = '" + A + "' and code = 'wfr'");
+check('member cannot update their chip to verified', A,
+  "update public.profile_credentials set status = 'verified' where id = '" + credId + "'",
+  'denied');
+check('member stores a proof path', A,
+  "insert into public.credential_proofs (credential_id, owner_id, path) values ('" + credId + "', '" + A + "', '" + A + "/wfr')",
+  'ok');
+count('other user cannot read proof paths', B,
+  "select count(*) from public.credential_proofs",
+  '0');
+psql("insert into storage.objects (bucket_id, name, owner) values ('credential-proofs', '" + A + "/wfr.jpg', '" + A + "')");
+count('other user cannot select the proof file', B,
+  "select count(*) from storage.objects where bucket_id = 'credential-proofs'",
+  '0');
+count('owner can select their proof file', A,
+  "select count(*) from storage.objects where bucket_id = 'credential-proofs'",
+  '1');
+expectEq('anon cannot execute review_credential',
+  "select has_function_privilege('anon', 'public.review_credential(uuid, text)', 'execute')", 'f');
+try {
+  psql([
+    "select set_config('request.jwt.claim.sub', '" + C + "', false);",
+    "select set_config('request.jwt.claims', '{\"sub\":\"" + C + "\",\"user_metadata\":{\"role\":\"admin\"}}', false);",
+    "set role authenticated;",
+    "select public.review_credential('" + credId + "'::uuid, 'verified');"
+  ].join('\n'));
+  failed += 1;
+  console.log('FAIL user_metadata admin cannot verify');
+} catch (err) {
+  console.log('PASS user_metadata admin cannot verify');
+}
+try {
+  psql([
+    "select set_config('request.jwt.claim.sub', '" + C + "', false);",
+    "select set_config('request.jwt.claims', '{\"sub\":\"" + C + "\",\"app_metadata\":{\"role\":\"admin\"}}', false);",
+    "set role authenticated;",
+    "select public.review_credential('" + credId + "'::uuid, 'verified');"
+  ].join('\n'));
+} catch (err) {
+  failed += 1;
+  console.log('FAIL app_metadata admin can verify -> ' + (err.stderr || err.message));
+}
+var after = scalar("select status from public.profile_credentials where id = '" + credId + "'");
+if (after === 'verified') console.log('PASS app_metadata admin can verify');
+else { failed += 1; console.log('FAIL app_metadata admin can verify status ' + after); }
 
 if (failed) {
   console.log(failed + ' RLS check(s) failed');

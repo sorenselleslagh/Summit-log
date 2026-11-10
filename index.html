@@ -254,6 +254,7 @@
               <button type="button" id="map-filter" aria-label="Map filters">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
               </button>
+              <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
               <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
             </form>
             <div class="map-chips" id="map-chips" role="group" aria-label="Map filters">
@@ -343,6 +344,8 @@
 
       <!-- PROFILE -->
       <section id="profile" class="tab hidden">
+        <div id="profile-screen"></div>
+        <div id="profile-settings">
         <div class="card" id="account-card">
           <h2>Account</h2>
           <p class="muted" id="account-status">Accounts are not connected on this copy yet. Your log stays on this device, and nothing here is sent to a server.</p>
@@ -393,6 +396,7 @@
           <h2>About</h2>
           <p class="muted">Your climbs, your log, your partners.</p>
           <button class="secondary" id="replay-intro" type="button">View intro</button>
+        </div>
         </div>
       </section>
 
@@ -451,6 +455,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="account.js"></script>
   <script src="chat.js"></script>
+  <script src="profile.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

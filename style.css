@@ -2316,3 +2316,121 @@ html.explore-map.map-show-layers #layers-card {
 .safety-row { margin-top: 0.7rem; }
 #shared-plan-view { min-width: 0; max-width: 100%; }
 #account-auth input { margin-bottom: 0.75rem; }
+
+.map-avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+}
+.profile-head-card { display: flex; flex-direction: column; gap: 0.45rem; align-items: flex-start; }
+.profile-name {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 2rem;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+.profile-photo, .profile-initials {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #1f6b45;
+  color: #f8fafc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+.profile-home { color: var(--muted); }
+.chip-row, .stat-row, .gallery-row, .profile-actions, .section-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.section-head { justify-content: space-between; align-items: center; }
+.cred-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+}
+.cred-chip svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.cred-chip.is-verified {
+  background: #1f6b45;
+  border-color: #1f6b45;
+  color: #f8fafc;
+}
+.cred-chip.is-pending { border-style: dashed; }
+.cred-chip.is-fact { color: var(--muted); }
+.stat-row { margin: 0.2rem 0 0.8rem; }
+.stat-tile {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.75rem 0.4rem;
+  text-align: center;
+}
+.stat-tile strong {
+  display: block;
+  font-family: Fraunces, Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 560;
+}
+.stat-tile span { color: var(--muted); font-size: 0.78rem; }
+.gallery-row { overflow-x: auto; flex-wrap: nowrap; overscroll-behavior-x: contain; }
+.gallery-shot {
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.activity-card {
+  min-height: 148px;
+  margin: 0 0 0.75rem;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #1f6b45 center/cover no-repeat;
+  color: #f8fafc;
+}
+.activity-copy { padding: 0.9rem 1rem 0.85rem; }
+.activity-card h3 {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.activity-date, .activity-metrics { color: rgba(248, 250, 252, 0.86); font-size: 0.86rem; }
+.activity-metrics { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.35rem; }
+.activity-metrics span { display: inline-flex; align-items: center; gap: 0.25rem; }
+.activity-metrics svg { width: 16px; height: 16px; }
+.fav-pin, .lock-mark {
+  margin-top: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(248, 250, 252, 0.45);
+  background: transparent;
+  color: inherit;
+  padding: 0.2rem 0.6rem;
+}
+.lock-mark { display: inline-block; font-size: 0.75rem; }
+.preview-banner, .sign-in-prompt p { margin-bottom: 0.6rem; }
+.cred-edit { margin: 0.35rem 0 0.7rem; }
+.profile-section-title { margin: 0.4rem 0 0.6rem; }
+#profile-screen, #profile-settings { min-width: 0; max-width: 100%; }
+#profile-settings { margin-top: 0.4rem; }

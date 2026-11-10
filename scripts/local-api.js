@@ -48,7 +48,7 @@ function setupDatabase() {
     "create table if not exists auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}'::jsonb);",
     "create or replace function auth.uid() returns uuid language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claim.sub', true), ''), nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub')::uuid $$;"
   ].join('\n'));
-  ['20261110180000_accounts_and_chat.sql', '20261110181000_harden_function_search_path.sql'].forEach(function (file) {
+  ['20261110180000_accounts_and_chat.sql', '20261110181000_harden_function_search_path.sql', '20261110190000_profile_credentials.sql'].forEach(function (file) {
     execFileSync('sudo', ['-u', 'postgres', 'psql', '-d', DB, '-v', 'ON_ERROR_STOP=1', '-f',
       require('path').join(__dirname, '..', 'supabase/migrations', file)
     ], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
