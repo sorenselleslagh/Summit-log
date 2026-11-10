@@ -71,15 +71,21 @@
       <h1>SummitLog</h1>
       <p class="muted">Sign in to your mountain log</p>
 
-      <button class="social-btn google" id="google-login" type="button">
+      <button class="social-btn google hidden" id="google-login" type="button">
         <span>Continue with Google</span>
       </button>
-      <button class="social-btn github" id="github-login" type="button">
-        <span>Continue with GitHub</span>
+      <button class="social-btn apple hidden" id="apple-login" type="button">
+        <span>Continue with Apple</span>
       </button>
+      <p id="auth-or" class="muted small hidden">or use email</p>
 
       <div id="account-auth" class="hidden">
-        <input type="email" id="magic-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email">
+        <label class="field-label" for="magic-first">First name</label>
+        <input type="text" id="magic-first" placeholder="First name" autocomplete="given-name" maxlength="40" aria-label="First name" required>
+        <label class="field-label" for="magic-last">Last name</label>
+        <input type="text" id="magic-last" placeholder="Last name" autocomplete="family-name" maxlength="40" aria-label="Last name" required>
+        <label class="field-label" for="magic-email">Email</label>
+        <input type="email" id="magic-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email" required>
         <button class="primary btn-block" id="magic-send" type="button">Email me a sign-in link</button>
         <p id="magic-status" class="muted small" role="status"></p>
       </div>
@@ -90,7 +96,20 @@
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" aria-label="Password">
       <button class="primary btn-block" id="login-btn" type="button">Sign in</button>
       <button class="secondary btn-block btn-follow" id="login-back" type="button">Back</button>
-      <p class="muted small login-note">Demo mode. Social login coming soon. Data stays on this device.</p>
+      <p class="muted small login-note">Demo mode. Data stays on this device.</p>
+    </div>
+  </div>
+
+  <div id="name-screen" class="login-container hidden">
+    <div class="login-card">
+      <h1>Complete your profile</h1>
+      <p class="muted">First and last name are required. Your profile shows the name, then your email.</p>
+      <label class="field-label" for="name-first">First name</label>
+      <input type="text" id="name-first" placeholder="First name" autocomplete="given-name" maxlength="40" aria-label="First name" required>
+      <label class="field-label" for="name-last">Last name</label>
+      <input type="text" id="name-last" placeholder="Last name" autocomplete="family-name" maxlength="40" aria-label="Last name" required>
+      <button class="primary btn-block" id="name-save" type="button">Continue</button>
+      <p id="name-status" class="muted small" role="status"></p>
     </div>
   </div>
 
