@@ -9,6 +9,8 @@
   --border: #2d3a4f;
   --danger: #ef4444;
   --radius: 12px;
+  --detail-pad-x: 1.25rem;
+  --detail-pad-y: 1.125rem;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -587,7 +589,28 @@ html.map-expanded.map-show-peak #peak-detail {
   position: relative;
 }
 
-.summit-hero { position: relative; margin-bottom: 0.7rem; }
+.summit-hero { position: relative; margin: 0; }
+
+.detail-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--detail-pad-y);
+  padding: var(--detail-pad-y) var(--detail-pad-x) calc(var(--detail-pad-y) + 0.35rem);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.detail-copy > * { margin: 0; }
+
+.detail-copy .summit-name {
+  font-family: Fraunces, Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 560;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.peak-page .detail-copy .summit-name { font-size: 2.35rem; }
 
 .summit-hero-fallback {
   background: #e7e1d8 url("illustrations/peak-card.svg") center/cover no-repeat;
@@ -1776,22 +1799,35 @@ p { margin: 0.25rem 0; }
   overflow: auto;
   background: var(--bg);
   color: var(--text);
-  padding: calc(0.8rem + env(safe-area-inset-top, 0px)) 1rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
+  padding: 0 0 calc(var(--detail-pad-y) + env(safe-area-inset-bottom, 0px));
 }
 
-.peak-page-inner { max-width: 720px; margin: 0 auto; }
-.peak-page .summit-name { font-size: 2.1rem; line-height: 1.05; margin: 0.6rem 0 0.35rem; }
+.peak-page-inner { position: relative; max-width: 720px; margin: 0 auto; min-width: 0; }
+.peak-page .summit-hero { border-radius: 0; }
+.peak-page .detail-back {
+  position: absolute;
+  z-index: 2;
+  top: calc(0.7rem + env(safe-area-inset-top, 0px));
+  left: 0.75rem;
+}
 .peak-mini { height: 180px; margin: 0.8rem 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
 
 button.sheet-title {
   display: block;
   width: 100%;
+  margin: 0;
   padding: 0;
   border: none;
   background: none;
   color: inherit;
+  font-family: Fraunces, Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 560;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
   text-align: left;
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .sheet-open { cursor: pointer; }
@@ -2090,21 +2126,43 @@ html.explore-map.explore-sheet-off #explore-sheet-body {
 
 html.explore-map.explore-sheet-off.explore-peak .explore-sheet {
   display: flex;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.75rem;
   height: auto;
-  max-height: none;
+  max-height: calc(100% - 7.5rem);
   pointer-events: none;
   background: transparent;
   box-shadow: none;
-  overflow: visible;
+  overflow: hidden;
 }
 
 html.explore-map.explore-sheet-off.explore-peak #peak-detail {
   pointer-events: auto;
   flex: 0 1 auto;
-  max-height: min(68dvh, 620px);
+  width: 100%;
+  min-width: 0;
+  max-height: calc(100dvh - 12.5rem - env(safe-area-inset-bottom, 0px));
+  overflow: auto;
   border-radius: 22px;
   background: #f7f4ef;
   box-shadow: 0 14px 40px rgba(28, 25, 21, 0.22);
+  padding: 0;
+}
+
+html.explore-map.explore-sheet-off.explore-peak #peak-detail .summit-hero {
+  margin: 0;
+  border-radius: 22px 22px 0 0;
+  overflow: hidden;
+}
+
+html.explore-map.explore-sheet-off.explore-peak #peak-detail > .sheet-grab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  margin: 0;
 }
 
 html.explore-map.explore-sheet-off.explore-peak #peak-detail .sheet-grab { display: block; }
