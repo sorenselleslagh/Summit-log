@@ -253,6 +253,16 @@ document.getElementById('login-password').addEventListener('keydown', function (
 document.getElementById('profile-btn').addEventListener('click', function () {
   selectTab('profile');
 });
+function openChatFromBar() {
+  if (window.SummitChat) SummitChat.openInbox();
+}
+var chatOpen = document.getElementById('chat-open');
+if (chatOpen) chatOpen.addEventListener('click', openChatFromBar);
+var mapChat = document.getElementById('map-chat');
+if (mapChat) mapChat.addEventListener('click', function (event) {
+  event.preventDefault();
+  openChatFromBar();
+});
 var mapProfile = document.getElementById('map-profile');
 if (mapProfile) mapProfile.addEventListener('click', function () { selectTab('profile'); });
 
@@ -3526,8 +3536,13 @@ function planPartnersNode(item, findButton) {
   var nodes = [el('h3', { text: 'Partners' })];
   if (!shared) {
     nodes.push(el('p', { class: 'muted', text: 'This plan is not in the community queue. Private notes stay on this device.' }));
-    nodes.push(findButton);
-    return el('div', { class: 'plan-partners' }, nodes);
+  nodes.push(findButton);
+  var message = el('button', { class: 'secondary', type: 'button', text: 'Message' });
+  message.addEventListener('click', function () {
+    if (window.SummitChat) SummitChat.messageAbout(item.name);
+  });
+  nodes.push(message);
+  return el('div', { class: 'plan-partners' }, nodes);
   }
   nodes.push(el('p', { class: 'muted', text: 'Same queue as the Partners tab. Sample people wear a Demo badge. Private notes are not included.' }));
   var people = queuePeopleFor(objective);
@@ -3562,6 +3577,11 @@ function planPartnersNode(item, findButton) {
     renderObjective();
   });
   nodes.push(join);
+  var messageShared = el('button', { class: 'secondary', type: 'button', text: 'Message' });
+  messageShared.addEventListener('click', function () {
+    if (window.SummitChat) SummitChat.messageAbout(item.name);
+  });
+  nodes.push(messageShared);
   return el('div', { class: 'plan-partners' }, nodes);
 }
 
@@ -4707,6 +4727,15 @@ if (window.SummitChat) {
         if (item && Partners.fold(item.name) === Partners.fold(name || '')) found = item;
       });
       return found;
+    },
+    signIn: function () { showLogin(); },
+    openRequest: function (name) {
+      var item = null;
+      items.forEach(function (entry) {
+        if (entry && entry.status === 'planned' && Partners.fold(entry.name) === Partners.fold(name || '')) item = entry;
+      });
+      if (item) startPartnerFrom(item.id);
+      else selectTab('partners');
     }
   });
 }
@@ -4723,6 +4752,27 @@ if (window.SummitProfile) {
     openLogbook: function () { selectTab('logbook'); },
     openMemory: function (id) { selectTab('logbook'); showMemory(id); },
     signIn: function () { showLogin(); }
+  });
+}
+
+document.getElementById('push-enable') && document.getElementById('push-enable').addEventListener('click', function () {
+  if (window.SummitChat && SummitChat.enablePush) SummitChat.enablePush();
+  else showLogin();
+});
+
+var params = new URLSearchParams(window.location.search);
+var openChat = params.get('chat');
+if (openChat && window.SummitChat) {
+  window.addEventListener('load', function () {
+    setTimeout(function () { SummitChat.openConversation(openChat); }, 600);
+  });
+}
+if (navigator.serviceWorker) {
+  navigator.serviceWorker.addEventListener('message', function (event) {
+    var data = event.data || {};
+    if (data.type === 'open-chat' && data.conversationId && window.SummitChat) {
+      SummitChat.openConversation(data.conversationId);
+    }
   });
 }
 

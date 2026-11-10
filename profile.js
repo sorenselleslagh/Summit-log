@@ -615,6 +615,14 @@
     var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
     back.addEventListener('click', function () { screenMode = 'own'; other = null; paint(); });
     var request = el('button', { class: 'primary', type: 'button', text: 'Request to climb together' });
+    var message = el('button', { class: 'secondary', type: 'button', text: 'Message' });
+    message.addEventListener('click', function () {
+      if (!root.SummitChat || !person.id) { hooks.signIn(); return; }
+      root.SummitChat.openWithUser(person.id).then(function (opened) {
+        if (opened) return;
+        request.click();
+      });
+    });
     request.addEventListener('click', function () {
       if (!signedIn()) { hooks.signIn(); return; }
       var plan = person.planRows && person.planRows[0];
@@ -647,7 +655,7 @@
         person.privateProfile ? el('p', { class: 'lock-mark', text: 'Private profile' }) : null,
         !person.privateProfile && person.bio ? el('p', { text: person.bio }) : null,
         !person.privateProfile && person.homeBase ? el('p', { class: 'profile-home', text: person.homeBase }) : null,
-        request
+        el('div', { class: 'profile-actions' }, request, message)
       ),
       el('section', { class: 'card' },
         el('h3', { text: 'Credentials' }),

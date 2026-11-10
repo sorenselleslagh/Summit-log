@@ -13,10 +13,15 @@
   var active = null;
   var started = false;
   var pollTimer = null;
+  var primed = false;
+  var threadState = {};
+  var pushOffered = false;
   var hooks = {
     onUnread: function () {},
     getPlanByName: function () { return null; },
-    selectPartners: function () {}
+    selectPartners: function () {},
+    signIn: function () {},
+    openRequest: function () {}
   };
 
   function account() { return root.SummitAccount || null; }
@@ -93,15 +98,17 @@
   }
 
   function setBadge(count) {
-    var badge = byId('nav-unread');
-    if (!badge) return;
-    if (!count) {
-      badge.textContent = '';
-      badge.classList.add('hidden');
-    } else {
-      badge.textContent = count > 9 ? '9+' : String(count);
-      badge.classList.remove('hidden');
-    }
+    ['nav-unread', 'chat-unread', 'map-chat-unread'].forEach(function (id) {
+      var badge = byId(id);
+      if (!badge) return;
+      if (!count) {
+        badge.textContent = '';
+        badge.classList.add('hidden');
+      } else {
+        badge.textContent = count > 9 ? '9+' : String(count);
+        badge.classList.remove('hidden');
+      }
+    });
     try { hooks.onUnread(count); } catch (err) { /* badge is enough */ }
   }
 
@@ -188,7 +195,7 @@
     var name = person.objectiveName || (objective && objective.name) || '';
     var existing = requestState(person.userId, name);
     if (existing && existing.status === 'accepted' && existing.conversation_id) {
-      var open = el('button', { class: 'secondary', type: 'button', text: 'Open chat' });
+      var open = el('button', { class: 'secondary', type: 'button', 'data-message': person.userId, text: 'Message' });
       open.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -199,7 +206,7 @@
     if (existing && existing.status === 'pending') {
       return el('div', { class: 'partner-actions' }, el('p', { class: 'muted small', text: 'Request sent. A chat opens if they accept.' }));
     }
-    var button = el('button', { class: 'secondary', type: 'button', 'data-ask': person.userId, text: 'Ask to partner' });
+    var button = el('button', { class: 'secondary', type: 'button', 'data-ask': person.userId, text: 'Message' });
     button.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -296,10 +303,12 @@
                 muted: !!muted,
                 unread: unread,
                 preview: latest ? latest.body : 'No messages yet',
+                senderId: latest ? latest.sender_id : '',
                 updatedAt: latest ? latest.created_at : conversation.updated_at
               };
             });
             threads.sort(function (a, b) { return Date.parse(b.updatedAt || 0) - Date.parse(a.updatedAt || 0); });
+            noticeThreads(threads);
             return threads;
           });
       });
@@ -616,6 +625,7 @@
         message.created_at = result.data[0].created_at;
         message.failed = false;
         paintChat();
+        offerPush();
       }
     }, function () {
       message.failed = true;
@@ -852,12 +862,183 @@
     }).catch(function () {});
   }
 
+  function noticeThreads(next) {
+    if (!primed) {
+      primed = true;
+      next.forEach(function (thread) {
+        threadState[thread.id] = { unread: thread.unread, preview: thread.preview };
+      });
+      return;
+    }
+    next.forEach(function (thread) {
+      var prev = threadState[thread.id];
+      if (prev && thread.unread > prev.unread && thread.senderId && thread.senderId !== uid()) {
+        if (!(active && active.id === thread.id)) {
+          showToast({
+            conversationId: thread.id,
+            preview: thread.preview,
+            senderId: thread.senderId,
+            title: thread.objective || 'New message'
+          });
+        }
+      }
+      threadState[thread.id] = { unread: thread.unread, preview: thread.preview };
+    });
+  }
+
+  function showToast(message) {
+    var host = byId('chat-toasts');
+    if (!host || !message || !message.conversationId) return;
+    var existing = host.querySelector('[data-toast="' + message.conversationId + '"]');
+    var title = message.title || 'New message';
+    var preview = String(message.preview || '').slice(0, 140);
+    if (existing) {
+      var line = existing.querySelector('p');
+      if (line) line.textContent = title + ': ' + preview;
+      restartToast(existing);
+      return;
+    }
+    while (host.children.length >= 3) host.removeChild(host.firstChild);
+    var toast = el('button', { type: 'button', class: 'chat-toast', 'data-toast': message.conversationId },
+      el('p', { text: title + ': ' + preview })
+    );
+    var startY = 0;
+    toast.addEventListener('click', function () {
+      toast.remove();
+      openConversation(message.conversationId);
+    });
+    toast.addEventListener('touchstart', function (event) {
+      startY = event.changedTouches && event.changedTouches[0] ? event.changedTouches[0].clientY : 0;
+    }, { passive: true });
+    toast.addEventListener('touchend', function (event) {
+      var y = event.changedTouches && event.changedTouches[0] ? event.changedTouches[0].clientY : startY;
+      if (startY - y > 24) toast.remove();
+    });
+    host.appendChild(toast);
+    restartToast(toast);
+    if (message.senderId && ready()) {
+      db().from('profiles').select('display_name').eq('id', message.senderId).maybeSingle().then(function (result) {
+        var name = result.data && result.data.display_name;
+        var line = toast.querySelector('p');
+        if (name && line && toast.isConnected) line.textContent = name + ': ' + preview;
+      }).catch(function () {});
+    }
+  }
+
+  function restartToast(toast) {
+    if (toast._timer) window.clearTimeout(toast._timer);
+    toast._timer = window.setTimeout(function () { if (toast.isConnected) toast.remove(); }, 4000);
+  }
+
+  function offerPush() {
+    if (pushOffered || !ready()) return;
+    var api = account();
+    if (!api.pushEnabled || !api.pushEnabled()) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'default') return;
+    pushOffered = true;
+    var host = byId('chat-toasts');
+    if (!host) return;
+    var card = el('div', { class: 'chat-toast push-offer' },
+      el('p', { text: 'Get a notification when someone replies.' }),
+      el('p', { class: 'muted small', text: 'On iPhone, this works after you add SummitLog to the Home Screen (iOS 16.4 or newer).' })
+    );
+    var enable = el('button', { class: 'primary', type: 'button', text: 'Turn on' });
+    var later = el('button', { class: 'secondary', type: 'button', text: 'Not now' });
+    enable.addEventListener('click', function () { enablePush(); card.remove(); });
+    later.addEventListener('click', function () { card.remove(); });
+    card.appendChild(el('div', { class: 'partner-actions' }, enable, later));
+    host.appendChild(card);
+  }
+
+  function enablePush() {
+    var api = account();
+    if (!api || !api.pushEnabled || !api.pushEnabled() || !ready()) return Promise.resolve({ ok: false });
+    if (!root.Notification || !navigator.serviceWorker) return Promise.resolve({ ok: false, reason: 'unsupported' });
+    var cfg = root.SUMMIT_CONFIG || {};
+    return Notification.requestPermission().then(function (permission) {
+      if (permission !== 'granted') return { ok: false };
+      return navigator.serviceWorker.ready.then(function (reg) {
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(cfg.vapidPublicKey || '')
+        });
+      }).then(function (sub) {
+        var json = sub.toJSON();
+        return db().from('push_subscriptions').upsert({
+          user_id: uid(),
+          endpoint: sub.endpoint,
+          p256dh: json.keys.p256dh,
+          auth_secret: json.keys.auth
+        }, { onConflict: 'user_id,endpoint' }).then(function (result) {
+          return { ok: !result.error };
+        });
+      });
+    }).catch(function () { return { ok: false }; });
+  }
+
+  function urlBase64ToUint8Array(value) {
+    var padding = '='.repeat((4 - value.length % 4) % 4);
+    var base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = window.atob(base64);
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  function openInbox() {
+    if (!ready()) {
+      if (hooks.signIn) hooks.signIn();
+      return;
+    }
+    active = null;
+    if (typeof root.selectTab === 'function') root.selectTab('partners');
+  }
+
+  function messageAbout(name) {
+    if (!ready()) {
+      if (hooks.signIn) hooks.signIn();
+      return;
+    }
+    var key = root.SummitPartners ? root.SummitPartners.fold(name) : String(name || '').toLowerCase();
+    var found = null;
+    threads.forEach(function (thread) {
+      if (root.SummitPartners.fold(thread.objective) === key) found = thread;
+    });
+    if (found) {
+      if (typeof root.selectTab === 'function') root.selectTab('partners');
+      openConversation(found.id);
+      return;
+    }
+    if (hooks.openRequest) hooks.openRequest(name);
+  }
+
+  function openWithUser(userId) {
+    if (!ready()) {
+      if (hooks.signIn) hooks.signIn();
+      return Promise.resolve(false);
+    }
+    return db().from('conversation_members').select('conversation_id, user_id').in('user_id', [uid(), userId]).then(function (result) {
+      var mine = {};
+      var theirs = {};
+      (result.data || []).forEach(function (row) {
+        if (row.user_id === uid()) mine[row.conversation_id] = true;
+        if (row.user_id === userId) theirs[row.conversation_id] = true;
+      });
+      var found = null;
+      Object.keys(mine).forEach(function (id) { if (theirs[id]) found = id; });
+      if (!found) return false;
+      if (typeof root.selectTab === 'function') root.selectTab('partners');
+      openConversation(found);
+      return true;
+    }).catch(function () { return false; });
+  }
+
   function subscribe() {
     var api = db();
     if (!api || !api.channel || api._summitChannel) return;
     try {
       api._summitChannel = api.channel('summit-inbox')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, function () { refresh(); })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function () { refresh(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'partner_requests' }, function () { refresh(); })
         .subscribe();
     } catch (err) {
@@ -893,6 +1074,10 @@
     prefetchQueue: prefetchQueue,
     actionsForPerson: actionsForPerson,
     openConversation: openConversation,
+    openInbox: openInbox,
+    messageAbout: messageAbout,
+    openWithUser: openWithUser,
+    enablePush: enablePush,
     localStamp: localStamp
   };
 });
