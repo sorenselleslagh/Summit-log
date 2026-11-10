@@ -2703,10 +2703,7 @@ function showPeakDetail(peak) {
   });
   var sheetTitle = el('button', { class: 'summit-name sheet-title', type: 'button', text: peak.name });
   sheetTitle.addEventListener('click', function () { openPeakPage(peak, 'map'); });
-  var children = [
-    grab,
-    sheetCloseButton(),
-    hero,
+  var copy = [
     sheetTitle,
     el('p', { class: 'sheet-meta' },
       el('span', { text: peak.elevation + ' m' }),
@@ -2726,12 +2723,17 @@ function showPeakDetail(peak) {
       peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: peak.normalRoute ? 'Route source' : 'Source' }) : null,
       peak.normalRoute ? useRouteButton(peak) : null
     ),
-    el('div', { class: 'log-actions' }, summited, backlogBtn),
+    el('div', { class: 'log-actions' }, summited),
     el('h3', { text: 'Build up to this peak' }),
     el('p', { text: plan.note })
   ];
-  if (!plan.steps.length) children.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
-  box.replaceChildren.apply(box, children.concat(steps));
+  if (!plan.steps.length) copy.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
+  box.replaceChildren(
+    grab,
+    sheetCloseButton(),
+    hero,
+    el.apply(null, ['div', { class: 'detail-copy' }].concat(copy).concat([steps]))
+  );
   box.classList.remove('hidden');
   if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
   else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
@@ -2865,17 +2867,19 @@ function showTrailSheet(place) {
   } else {
     hero.appendChild(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
   }
-  box.replaceChildren(el('div', null,
+  box.replaceChildren(
     grab,
     sheetCloseButton(),
     hero,
-    el('h3', { class: 'summit-name', text: place.name }),
-    el('p', { class: 'sheet-meta' },
-      el('span', { text: place.area || 'Trail' }),
-      el('span', { text: place.note || 'Stages vary' })
-    ),
-    el('div', { class: 'log-actions' }, add)
-  ));
+    el('div', { class: 'detail-copy' },
+      el('h3', { class: 'summit-name', text: place.name }),
+      el('p', { class: 'sheet-meta' },
+        el('span', { text: place.area || 'Trail' }),
+        el('span', { text: place.note || 'Stages vary' })
+      ),
+      el('div', { class: 'log-actions' }, add)
+    )
+  );
   box.classList.remove('hidden');
   if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
   else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
@@ -4184,7 +4188,7 @@ function renderPeakPage(peak) {
   var logged = Col.isSummited(peak, doneItems());
   var level = Col.estimateLevel(doneItems(), collectionData.peaks, Store.getLevel());
   var build = Col.suggestBuildUp(peak, collectionData.peaks, level);
-  var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+  var back = el('button', { class: 'secondary detail-back', type: 'button', text: 'Back' });
   back.addEventListener('click', closePeakPage);
   var add = el('button', {
     class: 'primary',
@@ -4207,28 +4211,30 @@ function renderPeakPage(peak) {
   page.replaceChildren(el('div', { class: 'peak-page-inner' },
     back,
     summitHero(peak),
-    el('h2', { class: 'summit-name', text: peak.name }),
-    el('p', { class: 'sheet-meta' },
-      el('span', { text: peak.elevation + ' m' }),
-      el('span', { text: peak.subrange || 'Alps' }),
-      el('span', { text: Col.countryLabel(peak) })
-    ),
-    el('p', { text: peakStatusLine(peak) }),
-    logged && !planned ? el('p', { class: 'muted', text: 'You have logged this peak. You can plan it again.' }) : null,
-    el('div', { class: 'reference-data' },
-      el('p', { class: 'field-label', text: 'Known route' }),
-      el('p', null,
-        el('span', { text: peak.normalRoute || 'No sourced normal route' }),
-        peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
+    el('div', { class: 'detail-copy' },
+      el('h2', { class: 'summit-name', text: peak.name }),
+      el('p', { class: 'sheet-meta' },
+        el('span', { text: peak.elevation + ' m' }),
+        el('span', { text: peak.subrange || 'Alps' }),
+        el('span', { text: Col.countryLabel(peak) })
       ),
-      el('p', { class: 'muted', text: 'The grade belongs to this route, not to the mountain by itself.' }),
-      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null
-    ),
-    el('div', { id: 'peak-mini', class: 'peak-mini' }),
-    el('h3', { text: 'Build up to this peak' }),
-    el('p', { text: build.note }),
-    steps,
-    el('div', { class: 'log-actions' }, add)
+      el('p', { text: peakStatusLine(peak) }),
+      logged && !planned ? el('p', { class: 'muted', text: 'You have logged this peak. You can plan it again.' }) : null,
+      el('div', { class: 'reference-data' },
+        el('p', { class: 'field-label', text: 'Known route' }),
+        el('p', null,
+          el('span', { text: peak.normalRoute || 'No sourced normal route' }),
+          peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
+        ),
+        el('p', { class: 'muted', text: 'The grade belongs to this route, not to the mountain by itself.' }),
+        peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: 'Route source' }) : null
+      ),
+      el('div', { id: 'peak-mini', class: 'peak-mini' }),
+      el('h3', { text: 'Build up to this peak' }),
+      el('p', { text: build.note }),
+      steps,
+      el('div', { class: 'log-actions' }, add)
+    )
   ));
   page.classList.remove('hidden');
   page.scrollTop = 0;
@@ -4240,7 +4246,7 @@ function renderTrekPage(place) {
   if (!page) return;
   peakPagePeak = null;
   var planned = alreadyPlanned(place.name);
-  var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+  var back = el('button', { class: 'secondary detail-back', type: 'button', text: 'Back' });
   back.addEventListener('click', closePeakPage);
   var add = el('button', { class: 'primary', type: 'button', text: planned ? 'In your plan' : 'Add to plan' });
   add.addEventListener('click', function () {
@@ -4264,12 +4270,14 @@ function renderTrekPage(place) {
   page.replaceChildren(el('div', { class: 'peak-page-inner' },
     back,
     hero,
-    el('h2', { class: 'summit-name', text: place.name }),
-    el('p', { class: 'sheet-meta' },
-      el('span', { text: place.area || 'Trail' }),
-      el('span', { text: place.note || '' })
-    ),
-    el('div', { class: 'log-actions' }, add)
+    el('div', { class: 'detail-copy' },
+      el('h2', { class: 'summit-name', text: place.name }),
+      el('p', { class: 'sheet-meta' },
+        el('span', { text: place.area || 'Trail' }),
+        el('span', { text: place.note || '' })
+      ),
+      el('div', { class: 'log-actions' }, add)
+    )
   ));
   page.classList.remove('hidden');
   page.scrollTop = 0;
