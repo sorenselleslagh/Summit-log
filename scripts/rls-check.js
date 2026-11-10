@@ -32,12 +32,14 @@ function setup() {
   execFileSync('sudo', ['-u', 'postgres', 'psql', '-d', 'postgres', '-c', 'create database ' + DB], { encoding: 'utf8' });
   psql([
     "do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;",
+    "do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;",
     "grant authenticated to postgres;",
     "create schema if not exists auth;",
     "create table if not exists auth.users (id uuid primary key, email text, raw_user_meta_data jsonb default '{}'::jsonb);",
     "create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;"
   ].join('\n'));
   psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110180000_accounts_and_chat.sql'));
+  psqlFile(path.join(__dirname, '..', 'supabase/migrations/20261110181000_harden_function_search_path.sql'));
   psql([
     "create or replace function rls_try(uid uuid, stmt text) returns text language plpgsql as $$",
     "begin",
@@ -77,7 +79,53 @@ function count(name, uid, stmt, expected) {
   console.log((ok ? 'PASS ' : 'FAIL ') + name + (ok ? '' : ' -> ' + JSON.stringify(lines)));
 }
 
+function scalar(sql) {
+  var lines = psql(sql).split('\n').map(function (line) { return line.trim(); }).filter(Boolean);
+  return lines[lines.length - 1] || '';
+}
+
+function expectEq(name, sql, expected) {
+  var got = scalar(sql);
+  var ok = got === expected;
+  if (!ok) failed += 1;
+  console.log((ok ? 'PASS ' : 'FAIL ') + name + (ok ? '' : ' -> ' + got));
+}
+
 setup();
+
+expectEq('unaccent lives in extensions',
+  "select n.nspname from pg_extension e join pg_namespace n on n.oid = e.extnamespace where e.extname = 'unaccent'",
+  'extensions');
+[
+  'public.objective_key(text)',
+  'public.set_plan_name_key()',
+  'public.protect_message_edit()',
+  'public.protect_member_row()',
+  'public.touch_conversation()',
+  'public.handle_new_user()',
+  'public.accept_partner_request(uuid)',
+  'public.decline_partner_request(uuid)',
+  'private.is_conversation_member(uuid, boolean)',
+  'private.users_are_blocked(uuid, uuid)'
+].forEach(function (fn) {
+  expectEq('empty search_path on ' + fn,
+    "select proconfig from pg_proc where oid = '" + fn + "'::regprocedure",
+    '{"search_path=\\"\\""}');
+});
+expectEq('anon cannot execute handle_new_user',
+  "select has_function_privilege('anon', 'public.handle_new_user()', 'execute')", 'f');
+expectEq('authenticated cannot execute handle_new_user',
+  "select has_function_privilege('authenticated', 'public.handle_new_user()', 'execute')", 'f');
+expectEq('authenticated cannot execute touch_conversation',
+  "select has_function_privilege('authenticated', 'public.touch_conversation()', 'execute')", 'f');
+expectEq('anon cannot execute accept_partner_request',
+  "select has_function_privilege('anon', 'public.accept_partner_request(uuid)', 'execute')", 'f');
+expectEq('authenticated can execute accept_partner_request',
+  "select has_function_privilege('authenticated', 'public.accept_partner_request(uuid)', 'execute')", 't');
+expectEq('anon cannot execute decline_partner_request',
+  "select has_function_privilege('anon', 'public.decline_partner_request(uuid)', 'execute')", 'f');
+expectEq('authenticated can execute decline_partner_request',
+  "select has_function_privilege('authenticated', 'public.decline_partner_request(uuid)', 'execute')", 't');
 
 var key = psql("select public.objective_key('Dôme du Goûter');").trim();
 if (key !== 'dome du gouter') {
@@ -129,6 +177,9 @@ check('message before a conversation exists is rejected', B,
   'denied');
 check('recipient cannot mark accepted by a plain update', A,
   "update public.partner_requests set status = 'accepted' where id = '" + requestId + "'",
+  'denied');
+check('sender cannot accept a request that is not addressed to them', B,
+  "select public.accept_partner_request('" + requestId + "'::uuid)",
   'denied');
 
 var conv = psql("select rls_try('" + A + "'::uuid, $sql$select public.accept_partner_request('" + requestId + "'::uuid)$sql$)").trim();

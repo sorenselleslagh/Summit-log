@@ -6,8 +6,10 @@
   'use strict';
 
   var file = {
-    supabaseUrl: '',
-    supabaseAnonKey: '',
+    supabaseUrl: 'https://vjruyrawruirwrwqfeyy.supabase.co',
+    // Publishable client key. It is safe in the browser. Never put a
+    // service_role key here.
+    supabaseAnonKey: 'sb_publishable_VwoY6M9dizu9sinDwHRkNA_Ar6S5OJ2',
     // Web push stays off until a server holds VAPID keys and can send
     // notifications. Turning this on in the client only is not enough.
     pushEnabled: false
