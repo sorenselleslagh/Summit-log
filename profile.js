@@ -156,10 +156,12 @@
   }
 
   function paintAvatarButtons(name) {
-    var text = initials(name);
+    var userId = signedIn() ? account().user().id : '';
     ['profile-btn', 'map-profile'].forEach(function (id) {
       var node = document.getElementById(id);
-      if (node && !node.querySelector('img')) node.textContent = text;
+      if (!node) return;
+      if (root.SummitChat && SummitChat.paintAvatar) SummitChat.paintAvatar(node, userId, name);
+      else if (!node.querySelector('img')) node.textContent = initials(name);
     });
   }
 
@@ -552,6 +554,7 @@
       editing = false;
       pendingPhotoBlob = null;
       proofFiles = {};
+      if (signedIn() && root.SummitChat && SummitChat.forgetAvatar) SummitChat.forgetAvatar(account().user().id);
       paint();
       paintAvatarButtons(name || 'You');
     }).catch(function () {

@@ -16,6 +16,8 @@
   var primed = false;
   var threadState = {};
   var pushOffered = false;
+  var avatarCache = {};
+  var nameCache = {};
   var hooks = {
     onUnread: function () {},
     getPlanByName: function () { return null; },
@@ -90,6 +92,139 @@
     if (!parts.length) return '?';
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  function publicAvatarUrl(userId) {
+    var client = db();
+    if (!client || !client.storage || !userId) return '';
+    var got = client.storage.from('avatars').getPublicUrl(userId + '/avatar.jpg');
+    return (got && got.data && got.data.publicUrl) || '';
+  }
+
+  function nameFor(userId) {
+    if (userId && userId === uid()) {
+      var me = account() && account().user && account().user();
+      return (me && me.displayName) || nameCache[userId] || 'You';
+    }
+    return (userId && nameCache[userId]) || '';
+  }
+
+  function rememberProfiles(ids) {
+    var list = [];
+    (ids || []).forEach(function (id) {
+      if (id && nameCache[id] == null && list.indexOf(id) < 0) list.push(id);
+    });
+    if (!list.length || !ready()) return Promise.resolve();
+    return Promise.all([
+      db().from('profiles').select('id, display_name').in('id', list),
+      db().from('profile_details').select('profile_id, avatar_path').in('profile_id', list)
+    ]).then(function (parts) {
+      var paths = {};
+      ((parts[1] && parts[1].data) || []).forEach(function (row) {
+        paths[row.profile_id] = row.avatar_path || '';
+      });
+      ((parts[0] && parts[0].data) || []).forEach(function (row) {
+        nameCache[row.id] = row.display_name || '';
+      });
+      list.forEach(function (id) {
+        if (nameCache[id] == null) nameCache[id] = '';
+        if (avatarCache[id] == null) avatarCache[id] = paths[id] ? publicAvatarUrl(id) : '';
+      });
+    }).catch(function () {
+      list.forEach(function (id) {
+        if (nameCache[id] == null) nameCache[id] = '';
+        if (avatarCache[id] == null) avatarCache[id] = '';
+      });
+    });
+  }
+
+  function showInitials(slot, name) {
+    slot.replaceChildren(document.createTextNode(initials(name || '?')));
+  }
+
+  function photoInto(slot, url, userId, name) {
+    var img = document.createElement('img');
+    img.alt = '';
+    img.width = 32;
+    img.height = 32;
+    img.loading = 'lazy';
+    img.addEventListener('error', function () {
+      if (userId) avatarCache[userId] = '';
+      if (userId && userId === uid()) localPhoto(slot, name);
+      else showInitials(slot, name);
+    });
+    img.src = url;
+    slot.replaceChildren(img);
+  }
+
+  function localPhoto(slot, name) {
+    var photos = root.SummitPhotos;
+    if (!photos || !photos.getAvatar) {
+      showInitials(slot, name);
+      return;
+    }
+    photos.getAvatar().then(function (row) {
+      if (!slot.isConnected) return;
+      if (!row || !row.blob) {
+        showInitials(slot, name);
+        return;
+      }
+      var img = document.createElement('img');
+      img.alt = '';
+      img.width = 32;
+      img.height = 32;
+      img.src = URL.createObjectURL(row.blob);
+      slot.replaceChildren(img);
+    }).catch(function () { showInitials(slot, name); });
+  }
+
+  function messageAvatar(userId, name) {
+    var slot = el('span', { class: 'msg-avatar', 'aria-hidden': 'true' });
+    var label = name || nameFor(userId);
+    var url = userId ? avatarCache[userId] : '';
+    if (url) photoInto(slot, url, userId, label);
+    else if (userId && userId === uid()) localPhoto(slot, label);
+    else showInitials(slot, label);
+    return slot;
+  }
+
+  function paintAvatar(node, userId, name) {
+    if (!node) return;
+    var label = name || nameFor(userId) || 'You';
+    function letters() {
+      node.replaceChildren(document.createTextNode(initials(label)));
+    }
+    if (userId && avatarCache[userId] == null) {
+      letters();
+      rememberProfiles([userId]).then(function () { paintAvatar(node, userId, name); });
+      return;
+    }
+    var url = userId ? avatarCache[userId] : '';
+    if (!url) {
+      if (userId && userId === uid()) {
+        var photos = root.SummitPhotos;
+        if (photos && photos.getAvatar) {
+          photos.getAvatar().then(function (row) {
+            if (!node.isConnected) return;
+            if (!row || !row.blob) { letters(); return; }
+            var img = document.createElement('img');
+            img.className = 'avatar-photo';
+            img.alt = '';
+            img.src = URL.createObjectURL(row.blob);
+            node.replaceChildren(img);
+          }).catch(letters);
+          return;
+        }
+      }
+      letters();
+      return;
+    }
+    var img = document.createElement('img');
+    img.className = 'avatar-photo';
+    img.alt = '';
+    img.addEventListener('error', function () { letters(); });
+    img.src = url;
+    node.replaceChildren(img);
   }
 
   function setStatus(text) {
@@ -308,8 +443,22 @@
               };
             });
             threads.sort(function (a, b) { return Date.parse(b.updatedAt || 0) - Date.parse(a.updatedAt || 0); });
-            noticeThreads(threads);
-            return threads;
+            return db().from('conversation_members').select('conversation_id, user_id').in('conversation_id', ids).then(function (people) {
+              var other = {};
+              (people.data || []).forEach(function (row) {
+                if (row.user_id !== uid()) other[row.conversation_id] = row.user_id;
+              });
+              var idsToName = [];
+              threads.forEach(function (thread) {
+                thread.personId = other[thread.id] || thread.senderId || '';
+                if (thread.personId) idsToName.push(thread.personId);
+                if (thread.senderId) idsToName.push(thread.senderId);
+              });
+              return rememberProfiles(idsToName).then(function () {
+                noticeThreads(threads);
+                return threads;
+              });
+            });
           });
       });
   }
@@ -364,13 +513,17 @@
   }
 
   function threadButton(thread) {
-    var button = el('button', { class: 'thread', type: 'button', 'data-thread': thread.id },
+    var copy = el('span', { class: 'thread-copy' },
       el('span', { class: 'thread-top' },
         el('span', { class: 'thread-title', text: thread.objective || 'Conversation' }),
         thread.unread ? el('span', { class: 'unread-dot', text: String(thread.unread) }) : null
       ),
       el('span', { class: 'muted small', text: [thread.route, thread.dates, thread.stage].filter(Boolean).join(' · ') }),
       el('span', { class: 'thread-preview', text: thread.preview })
+    );
+    var button = el('button', { class: 'thread', type: 'button', 'data-thread': thread.id },
+      messageAvatar(thread.personId || thread.senderId, nameFor(thread.personId || thread.senderId)),
+      copy
     );
     button.addEventListener('click', function () { openConversation(thread.id); });
     return button;
@@ -429,16 +582,19 @@
         else otherId = member.user_id;
       });
       var blockedIds = (parts[3].data || []).map(function (row) { return row.blocked_id; });
-      active = {
-        id: id,
-        conversation: conversation,
-        otherId: otherId,
-        messages: parts[2].data || [],
-        blocked: blockedIds.indexOf(otherId) >= 0,
-        muted: !!(mine && mine.muted_until && Date.parse(mine.muted_until) > Date.now())
-      };
-      paintChat();
-      markRead();
+      var ids = members.map(function (member) { return member.user_id; });
+      return rememberProfiles(ids).then(function () {
+        active = {
+          id: id,
+          conversation: conversation,
+          otherId: otherId,
+          messages: parts[2].data || [],
+          blocked: blockedIds.indexOf(otherId) >= 0,
+          muted: !!(mine && mine.muted_until && Date.parse(mine.muted_until) > Date.now())
+        };
+        paintChat();
+        markRead();
+      });
     }).catch(function () {
       if (screen) screen.replaceChildren(el('p', { class: 'muted', text: 'This conversation could not be opened. Your log is still on this device.' }));
     });
@@ -452,6 +608,7 @@
     var screen = byId('chat-screen');
     if (!screen || !active || !active.conversation) return;
     var conversation = active.conversation;
+    var otherName = nameFor(active.otherId);
     var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
     back.addEventListener('click', closeChat);
     var plan = el('button', { class: 'secondary', type: 'button', text: 'Shared plan' });
@@ -509,8 +666,13 @@
     screen.replaceChildren(
       el('div', { class: 'chat-head' },
         back,
-        el('h2', { text: conversation.objective_name || 'Conversation' }),
-        el('p', { class: 'chat-objective', text: headerLine(conversation) || 'Objective' }),
+        el('div', { class: 'chat-head-row' },
+          messageAvatar(active.otherId, otherName),
+          el('div', { class: 'chat-head-copy' },
+            el('h2', { text: conversation.objective_name || 'Conversation' }),
+            el('p', { class: 'chat-objective', text: headerLine(conversation) || 'Objective' })
+          )
+        ),
         plan
       ),
       log,
@@ -526,24 +688,28 @@
   function messageNode(message) {
     var mine = message.sender_id === uid();
     var failed = message.failed ? el('span', { class: 'bubble-failed', text: 'Not sent yet. It will retry.' }) : null;
-    if (message.kind === 'date_proposal') {
-      return dateCard(message, mine);
-    }
-    if (message.kind === 'gear_checklist') {
+    var body;
+    if (message.kind === 'date_proposal') body = dateCard(message, mine);
+    else if (message.kind === 'gear_checklist') {
       var items = (message.payload && message.payload.items) || [];
       var list = el('ul', { class: 'gear-list' });
       if (!items.length) list.appendChild(el('li', { text: 'No preparation steps on this plan yet.' }));
       items.forEach(function (item) { list.appendChild(el('li', { text: item })); });
-      return el('article', { class: 'gear-card' },
+      body = el('article', { class: 'gear-card' },
         el('p', { class: 'field-label', text: 'Gear checklist' }),
         list,
         el('time', { text: localStamp(message.created_at) })
       );
+    } else {
+      body = el('article', { class: mine ? 'bubble mine' : 'bubble theirs' },
+        el('p', { text: message.body || '' }),
+        el('time', { text: localStamp(message.created_at) }),
+        failed
+      );
     }
-    return el('article', { class: mine ? 'bubble mine' : 'bubble theirs' },
-      el('p', { text: message.body || '' }),
-      el('time', { text: localStamp(message.created_at) }),
-      failed
+    return el('div', { class: 'bubble-row ' + (mine ? 'mine' : 'theirs') },
+      messageAvatar(message.sender_id, nameFor(message.sender_id)),
+      body
     );
   }
 
@@ -904,6 +1070,7 @@
     }
     while (host.children.length >= 3) host.removeChild(host.firstChild);
     var toast = el('button', { type: 'button', class: 'chat-toast', 'data-toast': message.conversationId },
+      messageAvatar(message.senderId, title),
       el('p', { text: title + ': ' + preview })
     );
     var startY = 0;
@@ -921,10 +1088,13 @@
     host.appendChild(toast);
     restartToast(toast);
     if (message.senderId && ready()) {
-      db().from('profiles').select('display_name').eq('id', message.senderId).maybeSingle().then(function (result) {
-        var name = result.data && result.data.display_name;
+      rememberProfiles([message.senderId]).then(function () {
+        if (!toast.isConnected) return;
+        var name = nameFor(message.senderId) || title;
         var line = toast.querySelector('p');
-        if (name && line && toast.isConnected) line.textContent = name + ': ' + preview;
+        if (line) line.textContent = name + ': ' + preview;
+        var slot = toast.querySelector('.msg-avatar');
+        if (slot && avatarCache[message.senderId]) slot.replaceWith(messageAvatar(message.senderId, name));
       }).catch(function () {});
     }
   }
@@ -1061,6 +1231,7 @@
       }, 8000);
     }
     subscribe();
+    rememberProfiles([uid()]);
     flushOutbox().then(refresh);
   }
 
@@ -1082,6 +1253,12 @@
     messageAbout: messageAbout,
     openWithUser: openWithUser,
     enablePush: enablePush,
+    paintAvatar: paintAvatar,
+    forgetAvatar: function (userId) {
+      if (!userId) return;
+      delete nameCache[userId];
+      delete avatarCache[userId];
+    },
     localStamp: localStamp
   };
 });

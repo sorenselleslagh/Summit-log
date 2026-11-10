@@ -88,14 +88,23 @@ function saveItems() { items = Store.saveItems(items); }
 function doneItems() { return items.filter(function (item) { return item.status !== 'planned'; }); }
 function plannedItems() { return items.filter(function (item) { return item.status === 'planned'; }); }
 
+var accountButtonBound = false;
+
 function refreshAccountButton() {
   var button = document.getElementById('logout-btn');
   var avatar = document.getElementById('profile-btn');
-  var label = document.getElementById('user-display');
-  if (label) label.textContent = currentUser || '';
-  if (avatar) avatar.textContent = currentUser ? yourInitials() : 'You';
   var mapAvatar = document.getElementById('map-profile');
-  if (mapAvatar) mapAvatar.textContent = avatar ? avatar.textContent : 'You';
+  var label = document.getElementById('user-display');
+  var accountUser = window.SummitAccount && SummitAccount.user ? SummitAccount.user() : null;
+  var name = currentUser || (accountUser && accountUser.displayName) || '';
+  if (label) label.textContent = name;
+  function paint(node) {
+    if (!node) return;
+    if (window.SummitChat && SummitChat.paintAvatar) SummitChat.paintAvatar(node, accountUser ? accountUser.id : '', name || 'You');
+    else node.textContent = name ? yourInitials() : 'You';
+  }
+  paint(avatar);
+  paint(mapAvatar);
   if (!button) return;
   if (window.SummitAccount && SummitAccount.configured()) {
     button.textContent = SummitAccount.user() ? 'Log out' : 'Sign in';
@@ -181,6 +190,10 @@ function showApp() {
   loadPeakPhotos();
   fillLevelForm();
   if (window.SummitAccount) {
+    if (!accountButtonBound && SummitAccount.onChange) {
+      accountButtonBound = true;
+      SummitAccount.onChange(refreshAccountButton);
+    }
     SummitAccount.boot(accountSnapshot).then(function () {
       refreshAccountButton();
       if (window.SummitChat) SummitChat.start();
