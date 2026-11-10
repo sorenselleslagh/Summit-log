@@ -193,7 +193,12 @@
     if (next) {
       name = (next.user_metadata && next.user_metadata.display_name) || next.email || '';
     }
-    sessionUser = next ? { id: next.id, email: next.email || '', displayName: clean(name, 80) } : null;
+    sessionUser = next ? {
+      id: next.id,
+      email: next.email || '',
+      displayName: clean(name, 80),
+      admin: !!(next.app_metadata && next.app_metadata.role === 'admin')
+    } : null;
     emit();
     return sessionUser;
   }

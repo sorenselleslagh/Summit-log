@@ -59,5 +59,28 @@
     });
   }
 
-  return { list: list, add: add };
+  function getAvatar() {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var request = db.transaction(STORE, 'readonly').objectStore(STORE).get('profile-avatar');
+        request.onsuccess = function () { resolve(request.result || null); };
+        request.onerror = function () { reject(request.error); };
+      });
+    }).catch(function () { return null; });
+  }
+
+  function setAvatar(blob) {
+    if (!blob) return Promise.resolve(null);
+    var record = { id: 'profile-avatar', itemId: 'profile-avatar', createdAt: new Date().toISOString(), blob: blob };
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(record);
+        tx.oncomplete = function () { resolve(record); };
+        tx.onerror = function () { reject(tx.error); };
+      });
+    });
+  }
+
+  return { list: list, add: add, getAvatar: getAvatar, setAvatar: setAvatar };
 });

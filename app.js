@@ -94,6 +94,8 @@ function refreshAccountButton() {
   var label = document.getElementById('user-display');
   if (label) label.textContent = currentUser || '';
   if (avatar) avatar.textContent = currentUser ? yourInitials() : 'You';
+  var mapAvatar = document.getElementById('map-profile');
+  if (mapAvatar) mapAvatar.textContent = avatar ? avatar.textContent : 'You';
   if (!button) return;
   if (window.SummitAccount && SummitAccount.configured()) {
     button.textContent = SummitAccount.user() ? 'Log out' : 'Sign in';
@@ -251,6 +253,8 @@ document.getElementById('login-password').addEventListener('keydown', function (
 document.getElementById('profile-btn').addEventListener('click', function () {
   selectTab('profile');
 });
+var mapProfile = document.getElementById('map-profile');
+if (mapProfile) mapProfile.addEventListener('click', function () { selectTab('profile'); });
 
 document.getElementById('connections').addEventListener('click', function (event) {
   var button = event.target.closest ? event.target.closest('button[data-connect]') : null;
@@ -306,6 +310,7 @@ function selectTab(name) {
   if (name === 'plan') showPlanHome();
   if (name === 'logbook') showLogbookHome();
   if (name === 'partners') showPartnerSearch();
+  if (name === 'profile' && window.SummitProfile) SummitProfile.openOwn();
 }
 
 function exploreSheetOn() {
@@ -2387,6 +2392,14 @@ function showPerson(person) {
     el('h3', { text: person.demo ? 'Logs they chose to share' : 'Logs you chose to share' }),
     el('div', { class: 'shared-logs' }, logsBox),
     window.SummitChat && SummitChat.actionsForPerson ? SummitChat.actionsForPerson(person) : null,
+    person.account && window.SummitProfile ? (function () {
+      var view = el('button', { class: 'secondary', type: 'button', text: 'View profile' });
+      view.addEventListener('click', function () {
+        selectTab('profile');
+        SummitProfile.openOther(person);
+      });
+      return view;
+    })() : null,
     person.demo || person.account ? null : accountHint()
   ]);
   var mainEl = document.querySelector('#app main');
@@ -4695,6 +4708,21 @@ if (window.SummitChat) {
       });
       return found;
     }
+  });
+}
+
+if (window.SummitProfile) {
+  SummitProfile.bind({
+    getItems: function () { return items; },
+    peaks: function () { return collectionData && collectionData.peaks ? collectionData.peaks : []; },
+    photoFor: function (item) {
+      var peak = collectionPeakByName(item);
+      return peak ? photoRecord(peak) : null;
+    },
+    openStats: function () { selectTab('logbook'); setLogbookView('stats'); },
+    openLogbook: function () { selectTab('logbook'); },
+    openMemory: function (id) { selectTab('logbook'); showMemory(id); },
+    signIn: function () { showLogin(); }
   });
 }
 

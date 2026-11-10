@@ -26,6 +26,9 @@
   var INTRO_KEY = 'summitlog_intro_seen';
   var LEVEL_KEY = 'summitlog_level';
   var OUTBOX_KEY = 'summitlog_outbox';
+  var PROFILE_KEY = 'summitlog_profile';
+  var CREDENTIAL_KEY = 'summitlog_credentials';
+  var FAVOURITE_KEY = 'summitlog_favourites';
 
   function createRepository(options) {
     var storage = options.storage;
@@ -289,6 +292,70 @@
       }
     }
 
+    function loadProfile() {
+      try {
+        var raw = storage.getItem(PROFILE_KEY);
+        if (!raw) return { bio: '', homeBase: '', isPrivate: false };
+        var data = JSON.parse(raw);
+        if (!data || typeof data !== 'object') return { bio: '', homeBase: '', isPrivate: false };
+        return {
+          bio: String(data.bio || '').slice(0, 280),
+          homeBase: String(data.homeBase || '').slice(0, 80),
+          isPrivate: data.isPrivate === true
+        };
+      } catch (err) {
+        return { bio: '', homeBase: '', isPrivate: false };
+      }
+    }
+
+    function saveProfile(profile) {
+      var next = {
+        bio: String(profile && profile.bio || '').slice(0, 280),
+        homeBase: String(profile && profile.homeBase || '').slice(0, 80),
+        isPrivate: !!(profile && profile.isPrivate)
+      };
+      write(PROFILE_KEY, next);
+      return next;
+    }
+
+    function loadCredentials() {
+      var read = readArray(CREDENTIAL_KEY);
+      if (read.state !== 'ok') return [];
+      return read.items.filter(function (row) {
+        return row && row.code && (row.status === 'self_declared' || row.status === 'pending' || row.status === 'rejected');
+      });
+    }
+
+    function saveCredentials(items) {
+      var cleaned = (Array.isArray(items) ? items : []).filter(function (row) {
+        return row && row.code && row.status !== 'verified';
+      }).map(function (row) {
+        return {
+          code: String(row.code).slice(0, 40),
+          status: row.status === 'pending' || row.status === 'rejected' ? row.status : 'self_declared',
+          declaredAt: row.declaredAt || ''
+        };
+      });
+      write(CREDENTIAL_KEY, cleaned);
+      return cleaned;
+    }
+
+    function loadFavourites() {
+      var read = readArray(FAVOURITE_KEY);
+      if (read.state !== 'ok') return [];
+      return read.items.filter(function (id) { return typeof id === 'string' && id; });
+    }
+
+    function saveFavourites(ids) {
+      var cleaned = [];
+      (Array.isArray(ids) ? ids : []).forEach(function (id) {
+        var text = String(id || '');
+        if (text && cleaned.indexOf(text) < 0) cleaned.push(text);
+      });
+      write(FAVOURITE_KEY, cleaned.slice(0, 200));
+      return cleaned.slice(0, 200);
+    }
+
     function loadOutbox() {
       var read = readArray(OUTBOX_KEY);
       if (read.state !== 'ok') return [];
@@ -335,7 +402,13 @@
       isIntroDismissed: isIntroDismissed,
       dismissIntro: dismissIntro,
       loadOutbox: loadOutbox,
-      saveOutbox: saveOutbox
+      saveOutbox: saveOutbox,
+      loadProfile: loadProfile,
+      saveProfile: saveProfile,
+      loadCredentials: loadCredentials,
+      saveCredentials: saveCredentials,
+      loadFavourites: loadFavourites,
+      saveFavourites: saveFavourites
     };
   }
 
