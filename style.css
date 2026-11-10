@@ -1214,6 +1214,7 @@ p { margin: 0.25rem 0; }
   height: 40px;
   min-width: 40px;
   padding: 0;
+  overflow: hidden;
   border-radius: 999px;
   border: none;
   background: var(--accent);
@@ -2241,9 +2242,9 @@ html.explore-map.map-show-layers #layers-card {
 .thread {
   width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.15rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
   text-align: left;
   background: transparent;
   color: inherit;
@@ -2319,6 +2320,48 @@ html.explore-map.map-show-layers #layers-card {
   overflow-wrap: anywhere;
 }
 .bubble.mine { align-self: flex-end; background: var(--accent); color: white; }
+.bubble-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  max-width: 100%;
+  min-width: 0;
+}
+.bubble-row.mine { align-self: flex-end; flex-direction: row-reverse; }
+.bubble-row.theirs { align-self: flex-start; }
+.bubble-row .bubble,
+.bubble-row .date-card,
+.bubble-row .gear-card { max-width: calc(100% - 40px); align-self: auto; }
+.msg-avatar {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1f6b45;
+  color: #f8fafc;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.msg-avatar img { width: 32px; height: 32px; object-fit: cover; display: block; }
+.thread { flex-direction: row; align-items: center; gap: 0.65rem; }
+.thread-copy { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; text-align: left; }
+.chat-head-row { display: flex; align-items: center; gap: 0.7rem; min-width: 0; margin-top: 0.55rem; }
+.chat-head-copy { min-width: 0; }
+.chat-head-row h2 { margin: 0 0 0.15rem; font-size: 1.45rem; }
+.chat-head-row .msg-avatar { width: 40px; height: 40px; flex-basis: 40px; }
+.chat-head-row .msg-avatar img { width: 40px; height: 40px; }
+.avatar-btn .avatar-photo, .map-avatar .avatar-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
 .bubble.theirs, .date-card, .gear-card {
   align-self: flex-start;
   background: var(--card);
@@ -2393,6 +2436,12 @@ html.explore-map .chat-toasts {
   from { transform: translateY(-12px); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
+button.chat-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.push-offer { display: flex; flex-direction: column; align-items: stretch; gap: 0.35rem; }
 @media (prefers-reduced-motion: reduce) {
   .chat-toast { animation: none; }
 }
