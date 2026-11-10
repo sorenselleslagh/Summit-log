@@ -78,6 +78,12 @@
         <span>Continue with GitHub</span>
       </button>
 
+      <div id="account-auth" class="hidden">
+        <input type="email" id="magic-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email">
+        <button class="primary btn-block" id="magic-send" type="button">Email me a sign-in link</button>
+        <p id="magic-status" class="muted small" role="status"></p>
+      </div>
+
       <div class="divider"><span>or</span></div>
 
       <input type="text" id="login-username" placeholder="Username" autocomplete="username" maxlength="80" aria-label="Username">
@@ -194,6 +200,20 @@
       </section>
 
       <section id="partners" class="tab hidden">
+        <div id="messages-panel" class="card messages-panel">
+          <h2>Messages</h2>
+          <p class="muted" id="messages-status">Messages are not connected yet. Plans and queues stay on this device. Partner chat will appear here once an account server is added.</p>
+          <p id="migration-banner" class="migration-note hidden" role="status"></p>
+          <div id="messages-requests"></div>
+          <h3>Direct</h3>
+          <div id="messages-direct"></div>
+          <h3>Teams</h3>
+          <div id="messages-teams">
+            <p class="muted">Team chats come next. A team will share one plan, with the same messages and safety tools as a direct chat.</p>
+          </div>
+        </div>
+        <div id="chat-screen" class="chat-screen hidden"></div>
+        <div id="shared-plan-view" class="hidden"></div>
         <div id="partner-flow">
           <div id="partner-home">
             <h2>Find partners</h2>
@@ -323,6 +343,15 @@
 
       <!-- PROFILE -->
       <section id="profile" class="tab hidden">
+        <div class="card" id="account-card">
+          <h2>Account</h2>
+          <p class="muted" id="account-status">Accounts are not connected on this copy yet. Your log stays on this device, and nothing here is sent to a server.</p>
+          <div id="account-migration" class="migration-note hidden" role="status"></div>
+          <label class="field-label" for="account-area">Area, approximate</label>
+          <input type="text" id="account-area" maxlength="80" placeholder="A place name, such as Chamonix" aria-label="Approximate area">
+          <p class="muted small">A place name only. Exact location is never stored or shared.</p>
+          <button class="secondary" id="account-area-save" type="button">Save area</button>
+        </div>
         <div class="card">
           <h2>Your mountain résumé</h2>
           <p>Private by default. A partner queue shares only the logs you tick.</p>
@@ -407,10 +436,12 @@
       <button type="button" data-tab="partners">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="9" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 18.5c.6-2.4 2.4-3.5 4.5-3.5s3.9 1.1 4.5 3.5M11.5 18.5c.5-2 2-3.2 4.5-3.2 2.4 0 3.9 1.2 4.5 3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span>Partners</span>
+        <span id="nav-unread" class="nav-badge hidden"></span>
       </button>
     </nav>
   </div>
 
+  <script src="config.js"></script>
   <script src="logic.js"></script>
   <script src="partners.js"></script>
   <script src="storage.js"></script>
@@ -418,6 +449,8 @@
   <script src="collections.js"></script>
   <script src="photos.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="account.js"></script>
+  <script src="chat.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

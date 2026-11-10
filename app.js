@@ -95,6 +95,10 @@ function refreshAccountButton() {
   if (label) label.textContent = currentUser || '';
   if (avatar) avatar.textContent = currentUser ? yourInitials() : 'You';
   if (!button) return;
+  if (window.SummitAccount && SummitAccount.configured()) {
+    button.textContent = SummitAccount.user() ? 'Log out' : 'Sign in';
+    return;
+  }
   button.textContent = currentUser ? 'Log out' : 'Sign in';
 }
 
@@ -133,6 +137,34 @@ function setScreen(mode) {
   document.getElementById('app').classList.toggle('hidden', mode !== 'app');
 }
 
+function accountSnapshot() {
+  return {
+    items: items,
+    memberships: memberships,
+    level: Store.getLevel(),
+    displayName: Store.getDisplayName() || currentUser,
+    onApply: function (next) {
+      items = Store.saveItems(next);
+      renderMine();
+    },
+    listPhotos: function () {
+      if (!Photos || !Photos.list) return Promise.resolve([]);
+      var done = items.filter(function (item) { return item.status !== 'planned'; }).slice(0, 20);
+      return Promise.all(done.map(function (item) {
+        return Photos.list(item.id).then(function (rows) {
+          return (rows || []).slice(0, 2).map(function (row) {
+            return { itemId: item.id, id: row.id, blob: row.blob };
+          });
+        }, function () { return []; });
+      })).then(function (groups) {
+        var flat = [];
+        groups.forEach(function (group) { group.forEach(function (row) { if (row && row.blob) flat.push(row); }); });
+        return flat.slice(0, 20);
+      });
+    }
+  };
+}
+
 function showApp() {
   setScreen('app');
   watchChrome();
@@ -146,6 +178,12 @@ function showApp() {
   loadCollections();
   loadPeakPhotos();
   fillLevelForm();
+  if (window.SummitAccount) {
+    SummitAccount.boot(accountSnapshot).then(function () {
+      refreshAccountButton();
+      if (window.SummitChat) SummitChat.start();
+    });
+  }
 }
 
 function showLogin() {
@@ -170,10 +208,24 @@ document.getElementById('intro-back').addEventListener('click', function () {
 });
 
 document.getElementById('google-login').addEventListener('click', function () {
+  if (window.SummitAccount && SummitAccount.configured()) {
+    var status = document.getElementById('magic-status');
+    SummitAccount.signInWithProvider('google').then(function (result) {
+      if (status && result && !result.ok) status.textContent = 'Google sign-in is not switched on for this project yet.';
+    });
+    return;
+  }
   alert('Google login coming soon.\n\nFor now, use any username and password below.');
 });
 
 document.getElementById('github-login').addEventListener('click', function () {
+  if (window.SummitAccount && SummitAccount.configured()) {
+    var status = document.getElementById('magic-status');
+    SummitAccount.signInWithProvider('apple').then(function (result) {
+      if (status && result && !result.ok) status.textContent = 'Apple sign-in is not switched on for this project yet.';
+    });
+    return;
+  }
   alert('GitHub login coming soon.\n\nFor now, use any username and password below.');
 });
 
@@ -207,6 +259,11 @@ document.getElementById('connections').addEventListener('click', function (event
 });
 
 document.getElementById('logout-btn').addEventListener('click', function () {
+  if (window.SummitAccount && SummitAccount.configured()) {
+    if (SummitAccount.user()) SummitAccount.signOut().then(refreshAccountButton);
+    else showLogin();
+    return;
+  }
   if (!currentUser) {
     showLogin();
     return;
@@ -2037,6 +2094,16 @@ function showPartnerSearch() {
   document.getElementById('partner-home').classList.remove('hidden');
   document.getElementById('objective-page').classList.add('hidden');
   document.getElementById('partner-profile').classList.add('hidden');
+  var panel = document.getElementById('messages-panel');
+  var chat = document.getElementById('chat-screen');
+  var shared = document.getElementById('shared-plan-view');
+  if (panel) panel.classList.remove('hidden');
+  if (chat) chat.classList.add('hidden');
+  if (shared) shared.classList.add('hidden');
+  if (window.SummitChat) {
+    if (window.SummitAccount && SummitAccount.user()) SummitChat.refresh();
+    else SummitChat.renderInbox();
+  }
   renderSuggestions();
 }
 
@@ -2049,6 +2116,8 @@ function showObjective(objective) {
   document.getElementById('partner-home').classList.add('hidden');
   document.getElementById('objective-page').classList.remove('hidden');
   document.getElementById('partner-profile').classList.add('hidden');
+  var panel = document.getElementById('messages-panel');
+  if (panel) panel.classList.add('hidden');
   renderObjective();
   var mainEl = document.querySelector('#app main');
   if (mainEl) mainEl.scrollTop = 0;
@@ -2134,7 +2203,10 @@ function personCard(person) {
     el('span', { class: 'queue-copy' },
       el('span', { class: 'suggestion-top' },
         el('span', { class: 'suggestion-name', text: person.name }),
-        el('span', { class: person.demo ? 'badge demo-badge' : 'badge device-badge', text: person.demo ? 'Demo' : 'Only on this device' })
+        el('span', {
+          class: person.demo ? 'badge demo-badge' : (person.account ? 'badge account-badge' : 'badge device-badge'),
+          text: person.demo ? 'Demo' : (person.account ? 'Signed in' : 'Only on this device')
+        })
       ),
       person.level ? el('span', { class: 'queue-level', text: person.level }) : null,
       person.dates ? el('span', { class: 'queue-dates', text: person.dates }) : null,
@@ -2143,6 +2215,17 @@ function personCard(person) {
     )
   );
   return button;
+}
+
+function personRow(person, onCard) {
+  var card = personCard(person);
+  if (onCard) card.addEventListener('click', function (event) {
+    if (event.target && event.target.closest && event.target.closest('.partner-actions')) return;
+    onCard();
+  });
+  var extra = window.SummitChat && SummitChat.actionsForPerson ? SummitChat.actionsForPerson(person) : null;
+  if (!extra) return card;
+  return el('div', { class: 'queue-row' }, card, extra);
 }
 
 function accountHint() {
@@ -2229,6 +2312,9 @@ function queuePeopleFor(objective) {
     });
   }
   Partners.demoQueue(objective).forEach(function (person) { people.push(person); });
+  if (window.SummitChat && SummitChat.peopleFor) {
+    SummitChat.peopleFor(objective).forEach(function (person) { people.push(person); });
+  }
   return people;
 }
 
@@ -2249,9 +2335,16 @@ function renderObjective() {
   if (!people.length) {
     list.replaceChildren(el('p', { class: 'muted', text: 'No one is in this queue yet.' }));
   } else {
-    list.replaceChildren.apply(list, people.map(personCard));
+    list.replaceChildren.apply(list, people.map(function (person) { return personRow(person); }));
   }
   renderJoinPanel(membership);
+  if (window.SummitChat && SummitChat.prefetchQueue) {
+    SummitChat.prefetchQueue(activeObjective, function () {
+      if (joinFormOpen) return;
+      if (document.getElementById('objective-page').classList.contains('hidden')) return;
+      renderObjective();
+    });
+  }
 }
 
 function showPerson(person) {
@@ -2259,6 +2352,8 @@ function showPerson(person) {
   activePerson = person;
   document.getElementById('objective-page').classList.add('hidden');
   document.getElementById('partner-profile').classList.remove('hidden');
+  var panel = document.getElementById('messages-panel');
+  if (panel) panel.classList.add('hidden');
   var logsBox = person.logs && person.logs.length
     ? person.logs.map(function (log) {
       return el('div', { class: 'card shared-log' },
@@ -2272,27 +2367,37 @@ function showPerson(person) {
       avatarNode(person.initials, person.id),
       el('div', null,
         el('h2', { text: person.name }),
-        el('span', { class: person.demo ? 'badge demo-badge' : 'badge device-badge', text: person.demo ? 'Demo' : 'Only on this device' })
+        el('span', {
+          class: person.demo ? 'badge demo-badge' : (person.account ? 'badge account-badge' : 'badge device-badge'),
+          text: person.demo ? 'Demo' : (person.account ? 'Signed in' : 'Only on this device')
+        })
       )
     ),
     el('p', {
       class: 'muted',
-      text: person.demo
-        ? 'Sample profile. Not a real person. Only the logs chosen for this objective are shown.'
-        : 'This place is on your device. Other people cannot see it until you have an account.'
+      text: person.account
+        ? 'Signed-in climber. A chat opens only after they accept a partner request. Private notes are not shown.'
+        : (person.demo
+          ? 'Sample profile. Not a real person. Only the logs chosen for this objective are shown.'
+          : 'This place is on your device. Other people cannot see it until you have an account.')
     }),
     person.level ? el('p', { text: person.level }) : null,
     person.dates ? el('p', { class: 'queue-dates', text: person.dates }) : null,
     person.note ? el('p', { class: 'queue-note', text: person.note }) : null,
     el('h3', { text: person.demo ? 'Logs they chose to share' : 'Logs you chose to share' }),
     el('div', { class: 'shared-logs' }, logsBox),
-    person.demo ? null : accountHint()
+    window.SummitChat && SummitChat.actionsForPerson ? SummitChat.actionsForPerson(person) : null,
+    person.demo || person.account ? null : accountHint()
   ]);
   var mainEl = document.querySelector('#app main');
   if (mainEl) mainEl.scrollTop = 0;
 }
 
 function personFromQueue(id) {
+  if (window.SummitChat && SummitChat.personById) {
+    var remote = SummitChat.personById(id);
+    if (remote) return remote;
+  }
   if (id === 'you') {
     var membership = Partners.membershipFor(activeObjective, memberships);
     if (!membership) return null;
@@ -2332,6 +2437,17 @@ function saveQueuePlace() {
   }, { now: new Date().toISOString(), mint: Lgc.mintId }));
   joinFormOpen = false;
   renderObjective();
+  if (window.SummitAccount && SummitAccount.configured() && SummitAccount.user() && activeObjective) {
+    var joinedPlan = null;
+    plannedItems().forEach(function (entry) {
+      if (Partners.fold(entry.name) === Partners.fold(activeObjective.name)) joinedPlan = entry;
+    });
+    if (joinedPlan && (joinedPlan.visibility !== 'community' || joinedPlan.lookingForPartner !== true)) {
+      var published = patchItem(joinedPlan.id, { visibility: 'community', lookingForPartner: true });
+      if (published) joinedPlan = published;
+    }
+    SummitAccount.publishMembership(activeObjective, Partners.membershipFor(activeObjective, memberships), joinedPlan);
+  }
   var mainEl = document.querySelector('#app main');
   if (mainEl) mainEl.scrollTop = 0;
 }
@@ -3196,9 +3312,11 @@ function syncPlanQueue(item) {
       note: item.shareNote || (existing && existing.note) || '',
       attachedIds: existing && existing.attachedIds || []
     }, { now: new Date().toISOString(), mint: Lgc.mintId }));
+    if (window.SummitAccount && SummitAccount.user()) SummitAccount.publishItem(item);
     return;
   }
   if (existing) memberships = Store.saveMemberships(Partners.removeMembership(memberships, objective));
+  if (window.SummitAccount && SummitAccount.user()) SummitAccount.publishItem(item);
 }
 
 function sharePreviewNode(item) {
@@ -3404,16 +3522,14 @@ function planPartnersNode(item, findButton) {
   else {
     var list = el('div', { class: 'plan-queue' });
     people.forEach(function (person) {
-      var card = personCard(person);
-      card.addEventListener('click', function () {
+      list.appendChild(personRow(person, function () {
         if (!objective) return;
         activeObjective = objective;
         activePlanId = item.id;
         selectTab('partners');
         partnerReturn = 'plan';
         showPerson(person);
-      });
-      list.appendChild(card);
+      }));
     });
     nodes.push(list);
   }
@@ -4565,7 +4681,32 @@ bindViewport();
 sizeFullMap();
 registerServiceWorker();
 
+if (window.SummitChat) {
+  SummitChat.bind({
+    selectPartners: function () {
+      var section = document.getElementById('partners');
+      if (section && !section.classList.contains('hidden')) return;
+      selectTab('partners');
+    },
+    getPlanByName: function (name) {
+      var found = null;
+      items.forEach(function (item) {
+        if (item && Partners.fold(item.name) === Partners.fold(name || '')) found = item;
+      });
+      return found;
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+  if (window.SummitAccount) SummitAccount.prepareScreen();
   if (Store.isIntroDismissed()) showApp();
-  else showIntro(false);
+  else {
+    showIntro(false);
+    if (window.SummitAccount && SummitAccount.configured()) {
+      SummitAccount.boot(accountSnapshot).then(function (sessionUser) {
+        if (sessionUser) showApp();
+      });
+    }
+  }
 });

@@ -1,0 +1,34 @@
+// Public client config. The anon key is designed to be shipped in the browser.
+// Leave both strings empty until a Supabase project exists: the app then stays
+// local-first and does not call a server.
+// Never put a service_role key in this file. It bypasses row level security.
+(function (root) {
+  'use strict';
+
+  var file = {
+    supabaseUrl: '',
+    supabaseAnonKey: '',
+    // Web push stays off until a server holds VAPID keys and can send
+    // notifications. Turning this on in the client only is not enough.
+    pushEnabled: false
+  };
+
+  // A loopback override lets a local check point at a dev API without
+  // committing keys. Production hosts ignore it.
+  var host = '';
+  try { host = root.location && root.location.hostname; } catch (err) { host = ''; }
+  if (host === '127.0.0.1' || host === 'localhost') {
+    try {
+      var extra = JSON.parse(root.localStorage.getItem('summitlog_config_override') || 'null');
+      if (extra && extra.supabaseUrl && extra.supabaseAnonKey) {
+        file.supabaseUrl = String(extra.supabaseUrl);
+        file.supabaseAnonKey = String(extra.supabaseAnonKey);
+        file.pushEnabled = extra.pushEnabled === true;
+      }
+    } catch (err) {
+      // A bad override must not break the page. The empty file config stands.
+    }
+  }
+
+  root.SUMMIT_CONFIG = file;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
