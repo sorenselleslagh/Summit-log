@@ -23,6 +23,19 @@ html.boot-hold #intro-screen,
 html.boot-hold #login-screen,
 html.boot-hold #name-screen { display: none !important; }
 
+.boot-splash {
+  display: none;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--bg);
+  color: var(--text);
+}
+html.boot-hold .boot-splash { display: flex; }
+.boot-splash .muted { margin: 0; }
+
 html.boot-app #intro-screen,
 html.boot-app #login-screen,
 html.boot-app #name-screen,

@@ -13,6 +13,8 @@
   var sessionUser = null;
   var sessionMeta = null;
   var recoveryPending = false;
+  var signingOut = false;
+  var AUTH_STORAGE_KEY = 'summitlog-auth';
   var bootPromise = null;
   var PENDING_NAME = 'summitlog_pending_name';
   var migratedFor = '';
@@ -290,7 +292,8 @@
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-          storageKey: 'summitlog-auth'
+          storageKey: AUTH_STORAGE_KEY,
+          storage: authStorage()
         }
       });
       return client;
@@ -531,13 +534,55 @@
     return client && client.storage && typeof client.storage.from === 'function';
   }
 
+  function withTimeout(promise, ms) {
+    return new Promise(function (resolve) {
+      var settled = false;
+      var timer = root.setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        resolve(null);
+      }, ms);
+      Promise.resolve(promise).then(function (value) {
+        if (settled) return;
+        settled = true;
+        root.clearTimeout(timer);
+        resolve(value);
+      }, function () {
+        if (settled) return;
+        settled = true;
+        root.clearTimeout(timer);
+        resolve(null);
+      });
+    });
+  }
+
   function online() {
     return typeof root.navigator === 'undefined' || root.navigator.onLine !== false;
   }
 
+  function keepStoredSession(key, explicitSignOut) {
+    return key === AUTH_STORAGE_KEY && !explicitSignOut;
+  }
+
+  function authStorage() {
+    var memory = root.localStorage;
+    return {
+      getItem: function (key) {
+        try { return memory.getItem(key); } catch (err) { return null; }
+      },
+      setItem: function (key, value) {
+        try { memory.setItem(key, value); } catch (err) { /* the tab stays signed in for this visit */ }
+      },
+      removeItem: function (key) {
+        if (keepStoredSession(key, signingOut)) return;
+        try { memory.removeItem(key); } catch (err) { /* ignore */ }
+      }
+    };
+  }
+
   function readCachedSession() {
     try {
-      var raw = root.localStorage.getItem('summitlog-auth');
+      var raw = root.localStorage.getItem(AUTH_STORAGE_KEY);
       if (!raw) return null;
       var parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object') return null;
@@ -715,18 +760,22 @@
   }
 
   function signOut() {
-    var done = client ? client.auth.signOut() : Promise.resolve();
-    return done.then(function () {
-      sessionUser = null;
-      migratedFor = '';
-      emit();
-      prepareScreen();
-      var status = root.document && root.document.getElementById('account-status');
-      if (status) status.textContent = 'Signed out. Your log is still on this device.';
-    }, function () {
-      sessionUser = null;
-      emit();
-    });
+    signingOut = true;
+    var done = client ? client.auth.signOut({ scope: 'local' }) : Promise.resolve();
+    return done.then(finishSignOut, finishSignOut);
+  }
+
+  function finishSignOut() {
+    try { root.localStorage.removeItem(AUTH_STORAGE_KEY); } catch (err) { /* already gone */ }
+    sessionUser = null;
+    sessionMeta = null;
+    migratedFor = '';
+    recoveryPending = false;
+    emit();
+    prepareScreen();
+    var status = root.document && root.document.getElementById('account-status');
+    if (status) status.textContent = 'Signed out. Your log is still on this device.';
+    root.setTimeout(function () { signingOut = false; }, 1500);
   }
 
   function useAccessToken(accessToken, refreshToken) {
@@ -785,30 +834,35 @@
       if (!sessionUser || !online()) return sessionUser;
       return runMigration().then(function () { return sessionUser; });
     });
-    bootPromise = loadSdk().then(function (api) {
-      if (!api) return null;
+    bootPromise = withTimeout(loadSdk(), 8000).then(function (api) {
+      if (!api) {
+        setUserFromSession(readCachedSession());
+        return sessionUser;
+      }
       api.auth.onAuthStateChange(function (event, session) {
         recoveryPending = event === 'PASSWORD_RECOVERY';
-        if (!session && !online()) session = readCachedSession();
+        if (!session && !signingOut) session = readCachedSession();
         setUserFromSession(session);
-        if (recoveryPending || !online()) return;
+        if (recoveryPending || !sessionUser || !online()) return;
         runMigration();
       });
-      return api.auth.getSession().then(function (result) {
+      return withTimeout(api.auth.getSession(), 4000).then(function (result) {
         var session = result.data && result.data.session;
-        if (!session && !online()) session = readCachedSession();
+        if (!session) session = readCachedSession();
         setUserFromSession(session);
         if (!sessionUser || !online()) return sessionUser;
         return runMigration().then(function () { return sessionUser; });
       }, function () {
-        if (!online()) {
-          setUserFromSession(readCachedSession());
-          return sessionUser;
-        }
-        return null;
+        setUserFromSession(readCachedSession());
+        return sessionUser;
       });
     }).catch(function () {
       bootPromise = null;
+      var cached = readCachedSession();
+      if (cached) {
+        setUserFromSession(cached);
+        return sessionUser;
+      }
       var status = root.document && root.document.getElementById('account-status');
       if (status) status.textContent = 'The account service could not be reached. Your log is still on this device.';
       return null;
@@ -856,6 +910,7 @@
     saveNames: saveNames,
     entryChoice: entryChoice,
     hasCachedSession: hasCachedSession,
+    keepStoredSession: keepStoredSession,
     registerWithEmail: registerWithEmail,
     signInWithPassword: signInWithPassword,
     resetPassword: resetPassword,

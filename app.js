@@ -107,10 +107,10 @@ function refreshAccountButton() {
   paint(mapAvatar);
   if (!button) return;
   if (window.SummitAccount && SummitAccount.configured()) {
-    button.textContent = SummitAccount.user() ? 'Log out' : 'Sign in';
+    button.textContent = SummitAccount.user() ? 'Sign out' : 'Sign in';
     return;
   }
-  button.textContent = currentUser ? 'Log out' : 'Sign in';
+  button.textContent = currentUser ? 'Sign out' : 'Sign in';
 }
 
 items = Store.loadItems();

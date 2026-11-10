@@ -30,6 +30,10 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="boot-splash" class="boot-splash" role="status">
+    <p class="intro-brand">SummitLog</p>
+    <p class="muted">Opening your log…</p>
+  </div>
   <!-- INTRO PAGE. Artwork lives in illustrations/mountain.svg. -->
   <div id="intro-screen" class="intro-container">
     <div class="intro-layout">
@@ -424,6 +428,7 @@
           <input type="text" id="account-area" maxlength="80" placeholder="A place name, such as Chamonix" aria-label="Approximate area">
           <p class="muted small">A place name only. Exact location is never stored or shared.</p>
           <button class="secondary" id="account-area-save" type="button">Save area</button>
+          <button class="secondary" id="logout-btn" type="button">Sign in</button>
         </div>
         <div class="card">
           <h2>Your mountain résumé</h2>
@@ -432,7 +437,6 @@
           <div class="profile-actions">
             <button class="secondary" id="export-btn" type="button">Export data</button>
             <button class="secondary hidden" id="install-btn" type="button">Install app</button>
-            <button class="secondary" id="logout-btn" type="button">Sign in</button>
             <button class="secondary" id="push-enable" type="button">Message notifications</button>
           </div>
           <p class="muted small" id="push-note">On iPhone, notifications work after you add SummitLog to the Home Screen (iOS 16.4 or newer).</p>

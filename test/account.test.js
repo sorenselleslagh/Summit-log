@@ -102,6 +102,9 @@ assert.strictEqual(account.entryChoice({ configured: true, online: true, session
 assert.strictEqual(account.entryChoice({ configured: true, online: false, session: false, cached: true }), 'explore');
 assert.strictEqual(account.entryChoice({ configured: true, online: false, session: false, cached: false }), 'offline');
 assert.strictEqual(account.entryChoice({ configured: true, online: true, session: false }), 'register');
+assert.strictEqual(account.keepStoredSession('summitlog-auth', false), true);
+assert.strictEqual(account.keepStoredSession('summitlog-auth', true), false);
+assert.strictEqual(account.keepStoredSession('summitlog-auth-code-verifier', false), false);
 
 var sentence = account.migrationSentence({ pushed: 1, pulled: 0, plans: 1, logs: 2 });
 assert.ok(sentence.includes('Your log is on this account'));
@@ -151,6 +154,8 @@ assert.ok(html.includes('Complete your profile'));
 assert.ok(html.includes('not connected'));
 assert.ok(config.includes('AUTH_PROVIDERS = { google: false }'));
 assert.ok(!config.includes('apple:'));
+assert.ok(accountJs.includes('persistSession: true'));
+assert.ok(accountJs.includes('autoRefreshToken: true'));
 assert.ok(accountJs.includes('signInWithOAuth'));
 assert.ok(accountJs.includes('emailRedirectTo: redirectTo()'));
 assert.ok(accountJs.includes("google: 'openid email profile'"));
