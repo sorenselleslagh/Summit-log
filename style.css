@@ -18,6 +18,11 @@
 html { color-scheme: dark; }
 
 /* Screen switches. boot-app is set before paint for returning visits. */
+html.boot-hold #app,
+html.boot-hold #intro-screen,
+html.boot-hold #login-screen,
+html.boot-hold #name-screen { display: none !important; }
+
 html.boot-app #intro-screen,
 html.boot-app #login-screen,
 html.boot-app #name-screen,
@@ -1599,6 +1604,18 @@ p { margin: 0.25rem 0; }
 
 .login-card .login-note { margin-bottom: 0; }
 .login-card .field-label { text-align: left; margin-top: 0.15rem; }
+.login-card .auth-copy { display: block; margin: 0 0 0.9rem; text-align: left; color: var(--muted); }
+.auth-title { font-family: Fraunces, Georgia, serif; font-size: 1.45rem; font-weight: 560; margin: 0 0 0.45rem; text-align: left; }
+.text-btn {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.15rem;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+}
 .login-card #magic-status,
 .login-card #name-status,
 .login-card #auth-or { margin-bottom: 0.75rem; }

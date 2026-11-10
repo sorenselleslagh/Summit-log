@@ -12,6 +12,7 @@
   var client = null;
   var sessionUser = null;
   var sessionMeta = null;
+  var recoveryPending = false;
   var bootPromise = null;
   var PENDING_NAME = 'summitlog_pending_name';
   var migratedFor = '';
@@ -308,9 +309,13 @@
       firstName: hinted.firstName,
       lastName: hinted.lastName,
       needsName: false,
+      recovery: !!recoveryPending,
       admin: !!(next.app_metadata && next.app_metadata.role === 'admin')
     } : null;
-    if (!next) sessionMeta = null;
+    if (!next) {
+      sessionMeta = null;
+      recoveryPending = false;
+    }
     emit();
     return sessionUser;
   }
@@ -329,7 +334,7 @@
     if (orLine) orLine.classList.toggle('hidden', !anyProvider);
     var authBox = root.document.getElementById('account-auth');
     var note = root.document.querySelector('.login-note');
-    var demoIds = ['login-username', 'login-password', 'login-btn'];
+    var demoIds = ['login-username', 'login-password', 'login-btn', 'login-back'];
     if (!configured()) return;
     demoIds.forEach(function (id) {
       var node = root.document.getElementById(id);
@@ -338,7 +343,7 @@
     var divider = root.document.querySelector('#login-screen .divider');
     if (divider) divider.classList.add('hidden');
     if (authBox) authBox.classList.remove('hidden');
-    if (note) note.textContent = 'First and last name are required. We email you a sign-in link. No password is stored.';
+    if (note) note.classList.add('hidden');
     var status = root.document.getElementById('account-status');
     if (status && !sessionUser) status.textContent = 'Sign in with the email link to keep this log on your account. Until then it stays on this device.';
   }
@@ -526,6 +531,36 @@
     return client && client.storage && typeof client.storage.from === 'function';
   }
 
+  function online() {
+    return typeof root.navigator === 'undefined' || root.navigator.onLine !== false;
+  }
+
+  function readCachedSession() {
+    try {
+      var raw = root.localStorage.getItem('summitlog-auth');
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      if (parsed.user && parsed.access_token) return parsed;
+      if (parsed.currentSession && parsed.currentSession.user) return parsed.currentSession;
+      return null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function hasCachedSession() {
+    return !!readCachedSession();
+  }
+
+  function entryChoice(state) {
+    var options = state || {};
+    if (!options.configured) return 'plan';
+    if (options.session || (options.online === false && options.cached)) return 'explore';
+    if (options.online === false) return 'offline';
+    return 'register';
+  }
+
   function signInWithEmail(email, first, last) {
     var address = clean(email, 200);
     var given = clean(first, 40);
@@ -551,6 +586,108 @@
         return { ok: true };
       });
     }, function () { return { ok: false, reason: 'sdk' }; });
+  }
+
+  function registerWithEmail(email, password, first, last) {
+    var address = clean(email, 200);
+    var given = clean(first, 40);
+    var family = clean(last, 40);
+    var secret = String(password || '');
+    if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+    if (!online()) return Promise.resolve({ ok: false, reason: 'offline' });
+    if (!given || !family) return Promise.resolve({ ok: false, reason: 'name' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return Promise.resolve({ ok: false, reason: 'email' });
+    if (secret.length < 8) return Promise.resolve({ ok: false, reason: 'password' });
+    rememberPending(given, family);
+    return loadSdk().then(function (api) {
+      if (!api) return { ok: false, reason: 'unconfigured' };
+      return api.auth.signUp({
+        email: address,
+        password: secret,
+        options: {
+          emailRedirectTo: redirectTo(),
+          data: {
+            first_name: given,
+            last_name: family,
+            display_name: fullName(given, family)
+          }
+        }
+      }).then(function (result) {
+        if (result.error) {
+          var message = String(result.error.message || '').toLowerCase();
+          if (message.indexOf('already') >= 0 || message.indexOf('registered') >= 0) return { ok: false, reason: 'exists' };
+          return { ok: false, reason: 'send' };
+        }
+        var session = result.data && result.data.session;
+        if (session) setUserFromSession(session);
+        return { ok: true, pending: !session, email: address };
+      });
+    }, function () { return { ok: false, reason: 'sdk' }; });
+  }
+
+  function signInWithPassword(email, password) {
+    var address = clean(email, 200);
+    var secret = String(password || '');
+    if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+    if (!online()) return Promise.resolve({ ok: false, reason: 'offline' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address) || !secret) return Promise.resolve({ ok: false, reason: 'credentials' });
+    return loadSdk().then(function (api) {
+      if (!api) return { ok: false, reason: 'unconfigured' };
+      return api.auth.signInWithPassword({ email: address, password: secret }).then(function (result) {
+        if (result.error) {
+          var message = String(result.error.message || '').toLowerCase();
+          if (message.indexOf('confirm') >= 0) return { ok: false, reason: 'confirm', email: address };
+          return { ok: false, reason: 'credentials' };
+        }
+        setUserFromSession(result.data && result.data.session);
+        return runMigration().then(function () { return { ok: true, user: sessionUser }; });
+      });
+    }, function () { return { ok: false, reason: 'sdk' }; });
+  }
+
+  function resetPassword(email) {
+    var address = clean(email, 200);
+    if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+    if (!online()) return Promise.resolve({ ok: false, reason: 'offline' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return Promise.resolve({ ok: false, reason: 'email' });
+    return loadSdk().then(function (api) {
+      if (!api) return { ok: false, reason: 'unconfigured' };
+      return api.auth.resetPasswordForEmail(address, { redirectTo: redirectTo() }).then(function (result) {
+        if (result.error) return { ok: false, reason: 'send' };
+        return { ok: true, email: address };
+      });
+    }, function () { return { ok: false, reason: 'sdk' }; });
+  }
+
+  function resendConfirmation(email) {
+    var address = clean(email, 200);
+    if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+    if (!online()) return Promise.resolve({ ok: false, reason: 'offline' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return Promise.resolve({ ok: false, reason: 'email' });
+    return loadSdk().then(function (api) {
+      if (!api) return { ok: false, reason: 'unconfigured' };
+      return api.auth.resend({
+        type: 'signup',
+        email: address,
+        options: { emailRedirectTo: redirectTo() }
+      }).then(function (result) {
+        if (result.error) return { ok: false, reason: 'send' };
+        return { ok: true };
+      });
+    }, function () { return { ok: false, reason: 'sdk' }; });
+  }
+
+  function updatePassword(password) {
+    var secret = String(password || '');
+    if (!client || !sessionUser) return Promise.resolve({ ok: false, reason: 'signed-out' });
+    if (secret.length < 8) return Promise.resolve({ ok: false, reason: 'password' });
+    return client.auth.updateUser({ password: secret }).then(function (result) {
+      if (result.error) return { ok: false, reason: 'save' };
+      recoveryPending = false;
+      if (sessionUser) sessionUser.recovery = false;
+      emit();
+      return { ok: true };
+    }, function () { return { ok: false, reason: 'save' }; });
   }
 
   // Scopes for each OAuth provider. A new one also needs a flag in
@@ -644,16 +781,31 @@
     prepareScreen();
     if (typeof snapshotFn === 'function') snapshotProvider = snapshotFn;
     if (!configured()) return Promise.resolve(null);
-    if (bootPromise) return bootPromise.then(function () { return runMigration().then(function () { return sessionUser; }); });
+    if (bootPromise) return bootPromise.then(function () {
+      if (!sessionUser || !online()) return sessionUser;
+      return runMigration().then(function () { return sessionUser; });
+    });
     bootPromise = loadSdk().then(function (api) {
       if (!api) return null;
-      api.auth.onAuthStateChange(function (_event, session) {
+      api.auth.onAuthStateChange(function (event, session) {
+        recoveryPending = event === 'PASSWORD_RECOVERY';
+        if (!session && !online()) session = readCachedSession();
         setUserFromSession(session);
+        if (recoveryPending || !online()) return;
         runMigration();
       });
       return api.auth.getSession().then(function (result) {
-        setUserFromSession(result.data && result.data.session);
+        var session = result.data && result.data.session;
+        if (!session && !online()) session = readCachedSession();
+        setUserFromSession(session);
+        if (!sessionUser || !online()) return sessionUser;
         return runMigration().then(function () { return sessionUser; });
+      }, function () {
+        if (!online()) {
+          setUserFromSession(readCachedSession());
+          return sessionUser;
+        }
+        return null;
       });
     }).catch(function () {
       bootPromise = null;
@@ -667,21 +819,6 @@
   function bindLogin() {
     if (typeof root.document === 'undefined' || root.document.documentElement.dataset.accountBound) return;
     root.document.documentElement.dataset.accountBound = '1';
-    var send = root.document.getElementById('magic-send');
-    if (send) send.addEventListener('click', function () {
-      var input = root.document.getElementById('magic-email');
-      var first = root.document.getElementById('magic-first');
-      var last = root.document.getElementById('magic-last');
-      var status = root.document.getElementById('magic-status');
-      signInWithEmail(input ? input.value : '', first ? first.value : '', last ? last.value : '').then(function (result) {
-        if (!status) return;
-        if (result.ok) status.textContent = 'Check your email for the sign-in link. You can close this and come back from that link.';
-        else if (result.reason === 'name') status.textContent = 'Enter your first name and your last name.';
-        else if (result.reason === 'email') status.textContent = 'Enter the email address you want the link sent to.';
-        else if (result.reason === 'unconfigured') status.textContent = 'Accounts are not connected on this copy yet.';
-        else status.textContent = 'The link could not be sent. Your log is still on this device.';
-      });
-    });
     var area = root.document.getElementById('account-area-save');
     if (area) area.addEventListener('click', function () {
       var input = root.document.getElementById('account-area');
@@ -717,6 +854,13 @@
     chooseDisplayName: chooseDisplayName,
     namesFromMetadata: namesFromMetadata,
     saveNames: saveNames,
+    entryChoice: entryChoice,
+    hasCachedSession: hasCachedSession,
+    registerWithEmail: registerWithEmail,
+    signInWithPassword: signInWithPassword,
+    resetPassword: resetPassword,
+    resendConfirmation: resendConfirmation,
+    updatePassword: updatePassword,
     redirectTo: redirectTo,
     migrationSentence: migrationSentence,
     boot: boot,

@@ -141,7 +141,7 @@ function redrawTiles() {
 // ---- Auth ----
 function setScreen(mode) {
   var root = document.documentElement;
-  root.classList.remove('boot-app', 'show-intro', 'show-login', 'show-name');
+  root.classList.remove('boot-hold', 'boot-app', 'show-intro', 'show-login', 'show-name');
   var screenClass = mode === 'app' ? 'boot-app' : mode === 'login' ? 'show-login' : mode === 'name' ? 'show-name' : 'show-intro';
   root.classList.add(screenClass);
   document.getElementById('intro-screen').classList.toggle('hidden', mode !== 'intro');
@@ -194,25 +194,20 @@ function showApp() {
   updateOfflineBanner();
   initMap();
   renderMine();
-  selectTab('plan');
+  selectTab(window.SummitAccount && SummitAccount.configured() && SummitAccount.user() ? 'explore' : 'plan');
   renderFamous();
   rebuildObjectives();
   loadCollections();
   loadPeakPhotos();
   fillLevelForm();
   if (window.SummitAccount) {
-    if (!accountButtonBound && SummitAccount.onChange) {
-      accountButtonBound = true;
-      SummitAccount.onChange(function (sessionUser) {
-        if (sessionUser && sessionUser.displayName && sessionUser.firstName && sessionUser.lastName) {
-          currentUser = Store.setDisplayName(sessionUser.displayName);
-        }
-        refreshAccountButton();
-        if (sessionUser && sessionUser.needsName) showNameGate(sessionUser);
-      });
-    }
+    bindAccountWatcher();
     SummitAccount.boot(accountSnapshot).then(function (sessionUser) {
       refreshAccountButton();
+      if (sessionUser && sessionUser.recovery) {
+        paintAuthMode('recovery');
+        return;
+      }
       if (sessionUser && sessionUser.needsName) {
         showNameGate(sessionUser);
         return;
@@ -220,6 +215,74 @@ function showApp() {
       if (window.SummitChat) SummitChat.start();
     });
   }
+}
+
+var pendingEmail = '';
+var authChosen = false;
+
+function authStatus(text) {
+  var status = document.getElementById('magic-status');
+  if (status) status.textContent = text || '';
+}
+
+function paintAuthMode(mode) {
+  authChosen = true;
+  var name = mode || 'register';
+  var ids = {
+    register: 'auth-register',
+    signin: 'auth-signin',
+    forgot: 'auth-forgot-panel',
+    pending: 'auth-pending',
+    offline: 'auth-offline',
+    recovery: 'auth-recovery'
+  };
+  Object.keys(ids).forEach(function (key) {
+    var node = document.getElementById(ids[key]);
+    if (node) node.classList.toggle('hidden', key !== name);
+  });
+  var social = name === 'register' || name === 'signin';
+  var flags = window.SUMMIT_CONFIG && SUMMIT_CONFIG.authProviders ? SUMMIT_CONFIG.authProviders : {};
+  var googleOn = social && !!(window.SummitAccount && SummitAccount.configured() && flags.google === true);
+  var google = document.getElementById('google-login');
+  if (google) google.classList.toggle('hidden', !googleOn);
+  var orLine = document.getElementById('auth-or');
+  if (orLine) orLine.classList.toggle('hidden', !googleOn);
+  var lead = document.getElementById('login-lead');
+  var leads = {
+    register: 'Create an account to open your log.',
+    signin: 'Welcome back. Your log is saved on this account.',
+    forgot: 'We email a link so you can choose a new password.',
+    pending: 'Confirm your email to finish creating the account.',
+    offline: 'Connect to create your account.',
+    recovery: 'Choose a new password. Then you land on Explore.'
+  };
+  if (lead) lead.textContent = leads[name] || leads.register;
+  setScreen('login');
+}
+
+function bindAccountWatcher() {
+  if (accountButtonBound || !window.SummitAccount || !SummitAccount.onChange) return;
+  accountButtonBound = true;
+  SummitAccount.onChange(function (sessionUser) {
+    if (sessionUser && sessionUser.displayName && sessionUser.firstName && sessionUser.lastName) {
+      currentUser = Store.setDisplayName(sessionUser.displayName);
+    }
+    refreshAccountButton();
+    if (!sessionUser) return;
+    if (sessionUser.recovery) {
+      paintAuthMode('recovery');
+      return;
+    }
+    if (!document.getElementById('app').classList.contains('hidden')) {
+      if (sessionUser.needsName) showNameGate(sessionUser);
+      return;
+    }
+    if (sessionUser.needsName) {
+      showNameGate(sessionUser);
+      return;
+    }
+    showApp();
+  });
 }
 
 function showLogin() {
@@ -235,8 +298,19 @@ function showIntro(replay) {
 
 document.getElementById('start-logging').addEventListener('click', function () {
   Store.dismissIntro();
+  if (window.SummitAccount && SummitAccount.configured()) {
+    if (!navigator.onLine && !SummitAccount.hasCachedSession()) {
+      paintAuthMode('offline');
+      return;
+    }
+    if (SummitAccount.user() || (!navigator.onLine && SummitAccount.hasCachedSession())) {
+      showApp();
+      return;
+    }
+    paintAuthMode('register');
+    return;
+  }
   showApp();
-  selectTab('plan');
 });
 
 document.getElementById('intro-back').addEventListener('click', function () {
@@ -245,13 +319,130 @@ document.getElementById('intro-back').addEventListener('click', function () {
 
 document.getElementById('google-login').addEventListener('click', function () {
   if (window.SummitAccount && SummitAccount.configured()) {
-    var status = document.getElementById('magic-status');
+    if (!navigator.onLine) {
+      paintAuthMode('offline');
+      return;
+    }
     SummitAccount.signInWithProvider('google').then(function (result) {
-      if (status && result && !result.ok) status.textContent = 'Google sign-in is not switched on for this project yet.';
+      if (result && !result.ok) authStatus('Google sign-in is not switched on for this project yet.');
     });
     return;
   }
   alert('Google login coming soon.\n\nFor now, use any username and password below.');
+});
+
+document.getElementById('auth-to-signin').addEventListener('click', function () {
+  var email = document.getElementById('magic-email');
+  var signin = document.getElementById('signin-email');
+  if (email && signin && email.value) signin.value = email.value;
+  authStatus('');
+  paintAuthMode('signin');
+});
+document.getElementById('auth-to-register').addEventListener('click', function () {
+  var email = document.getElementById('magic-email');
+  var signin = document.getElementById('signin-email');
+  if (email && signin && signin.value) email.value = signin.value;
+  authStatus('');
+  paintAuthMode('register');
+});
+document.getElementById('auth-forgot').addEventListener('click', function () {
+  var signin = document.getElementById('signin-email');
+  var reset = document.getElementById('reset-email');
+  if (signin && reset && signin.value) reset.value = signin.value;
+  authStatus('');
+  paintAuthMode('forgot');
+});
+document.getElementById('auth-forgot-back').addEventListener('click', function () {
+  authStatus('');
+  paintAuthMode('signin');
+});
+document.getElementById('auth-pending-signin').addEventListener('click', function () {
+  var signin = document.getElementById('signin-email');
+  if (signin && pendingEmail) signin.value = pendingEmail;
+  authStatus('');
+  paintAuthMode('signin');
+});
+document.getElementById('auth-pending-register').addEventListener('click', function () {
+  authStatus('');
+  paintAuthMode('register');
+});
+document.getElementById('auth-retry').addEventListener('click', function () {
+  if (!navigator.onLine) {
+    authStatus('Still offline. Connect, then try again.');
+    return;
+  }
+  authStatus('');
+  paintAuthMode('register');
+});
+document.getElementById('register-send').addEventListener('click', function () {
+  if (!window.SummitAccount) return;
+  var email = document.getElementById('magic-email').value;
+  var first = document.getElementById('magic-first').value;
+  var last = document.getElementById('magic-last').value;
+  var password = document.getElementById('register-password').value;
+  SummitAccount.registerWithEmail(email, password, first, last).then(function (result) {
+    if (result && result.ok && result.pending) {
+      pendingEmail = result.email || email;
+      var copy = document.getElementById('auth-pending-copy');
+      if (copy) copy.textContent = 'We sent a confirmation link to ' + pendingEmail + '. Open it on this device, then come back and sign in.';
+      authStatus('');
+      paintAuthMode('pending');
+      return;
+    }
+    if (result && result.ok) return;
+    if (result && result.reason === 'name') authStatus('Enter your first name and your last name.');
+    else if (result && result.reason === 'email') authStatus('Enter the email address for this account.');
+    else if (result && result.reason === 'password') authStatus('Use a password of at least 8 characters.');
+    else if (result && result.reason === 'exists') authStatus('That email already has an account. Sign in instead.');
+    else if (result && result.reason === 'offline') paintAuthMode('offline');
+    else authStatus('The account could not be created. Your log is still on this device.');
+  });
+});
+document.getElementById('password-signin').addEventListener('click', function () {
+  if (!window.SummitAccount) return;
+  var email = document.getElementById('signin-email').value;
+  var password = document.getElementById('signin-password').value;
+  SummitAccount.signInWithPassword(email, password).then(function (result) {
+    if (result && result.ok) return;
+    if (result && result.reason === 'confirm') {
+      pendingEmail = result.email || email;
+      var copy = document.getElementById('auth-pending-copy');
+      if (copy) copy.textContent = 'Confirm ' + pendingEmail + ' before signing in. Open the link in your email, or send a new one.';
+      authStatus('');
+      paintAuthMode('pending');
+      return;
+    }
+    if (result && result.reason === 'offline') paintAuthMode('offline');
+    else authStatus('That email and password did not match. You can reset the password or create an account.');
+  });
+});
+document.getElementById('auth-reset').addEventListener('click', function () {
+  if (!window.SummitAccount) return;
+  var email = document.getElementById('reset-email').value;
+  SummitAccount.resetPassword(email).then(function (result) {
+    if (result && result.ok) authStatus('If an account uses that email, a reset link is on its way. Open it, choose a new password, then sign in.');
+    else if (result && result.reason === 'email') authStatus('Enter the email address on the account.');
+    else if (result && result.reason === 'offline') paintAuthMode('offline');
+    else authStatus('The reset link could not be sent. You can try again, or create an account.');
+  });
+});
+document.getElementById('auth-resend').addEventListener('click', function () {
+  if (!window.SummitAccount) return;
+  var email = pendingEmail || (document.getElementById('magic-email') && document.getElementById('magic-email').value);
+  SummitAccount.resendConfirmation(email).then(function (result) {
+    if (result && result.ok) authStatus('A new confirmation email is on its way. Open the link, then sign in.');
+    else if (result && result.reason === 'offline') paintAuthMode('offline');
+    else authStatus('The email could not be sent. Check the address, or go back and sign in.');
+  });
+});
+document.getElementById('auth-recovery-save').addEventListener('click', function () {
+  if (!window.SummitAccount) return;
+  var password = document.getElementById('recovery-password').value;
+  SummitAccount.updatePassword(password).then(function (result) {
+    if (result && result.ok) return;
+    if (result && result.reason === 'password') authStatus('Use a password of at least 8 characters.');
+    else authStatus('The password could not be saved. Try again.');
+  });
 });
 
 document.getElementById('name-save').addEventListener('click', function () {
@@ -268,8 +459,7 @@ document.getElementById('name-save').addEventListener('click', function () {
     }
     currentUser = Store.setDisplayName(result.displayName);
     refreshAccountButton();
-    setScreen('app');
-    if (window.SummitChat) SummitChat.start();
+    showApp();
   });
 });
 
@@ -316,8 +506,12 @@ document.getElementById('connections').addEventListener('click', function (event
 
 document.getElementById('logout-btn').addEventListener('click', function () {
   if (window.SummitAccount && SummitAccount.configured()) {
-    if (SummitAccount.user()) SummitAccount.signOut().then(refreshAccountButton);
-    else showLogin();
+    if (SummitAccount.user()) {
+      SummitAccount.signOut().then(function () {
+        refreshAccountButton();
+        paintAuthMode('signin');
+      });
+    } else paintAuthMode('register');
     return;
   }
   if (!currentUser) {
@@ -4879,13 +5073,34 @@ if (navigator.serviceWorker) {
 
 document.addEventListener('DOMContentLoaded', function () {
   if (window.SummitAccount) SummitAccount.prepareScreen();
-  if (Store.isIntroDismissed()) showApp();
-  else {
-    showIntro(false);
-    if (window.SummitAccount && SummitAccount.configured()) {
-      SummitAccount.boot(accountSnapshot).then(function (sessionUser) {
-        if (sessionUser) showApp();
-      });
-    }
+  bindAccountWatcher();
+  if (!window.SummitAccount || !SummitAccount.configured()) {
+    if (Store.isIntroDismissed()) showApp();
+    else showIntro(false);
+    return;
   }
+  SummitAccount.boot(accountSnapshot).then(function (sessionUser) {
+    var choice = SummitAccount.entryChoice({
+      configured: true,
+      online: navigator.onLine,
+      session: !!sessionUser,
+      cached: SummitAccount.hasCachedSession()
+    });
+    if (choice === 'offline') {
+      paintAuthMode('offline');
+      return;
+    }
+    if (choice === 'explore') {
+      showApp();
+      if (sessionUser && sessionUser.recovery) paintAuthMode('recovery');
+      else if (sessionUser && sessionUser.needsName) showNameGate(sessionUser);
+      return;
+    }
+    if (!authChosen) paintAuthMode('register');
+  });
+});
+window.addEventListener('online', function () {
+  if (!window.SummitAccount || !SummitAccount.configured()) return;
+  if (!document.getElementById('auth-offline') || document.getElementById('auth-offline').classList.contains('hidden')) return;
+  paintAuthMode('register');
 });

@@ -13,6 +13,7 @@
   <script>
     /* First paint only. storage.js owns writes to this key. */
     try {
+      document.documentElement.classList.add('boot-hold');
       document.documentElement.classList.add(
         localStorage.getItem('summitlog_intro_seen') === '1' ? 'boot-app' : 'show-intro'
       );
@@ -69,7 +70,7 @@
   <div id="login-screen" class="login-container hidden">
     <div class="login-card">
       <h1>SummitLog</h1>
-      <p class="muted">Sign in to your mountain log</p>
+      <p class="auth-copy" id="login-lead">Create an account to open your log.</p>
 
       <button class="social-btn google hidden" id="google-login" type="button">
         <span>Continue with Google</span>
@@ -77,13 +78,56 @@
       <p id="auth-or" class="muted small hidden">or use email</p>
 
       <div id="account-auth" class="hidden">
-        <label class="field-label" for="magic-first">First name</label>
-        <input type="text" id="magic-first" placeholder="First name" autocomplete="given-name" maxlength="40" aria-label="First name" required>
-        <label class="field-label" for="magic-last">Last name</label>
-        <input type="text" id="magic-last" placeholder="Last name" autocomplete="family-name" maxlength="40" aria-label="Last name" required>
-        <label class="field-label" for="magic-email">Email</label>
-        <input type="email" id="magic-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email" required>
-        <button class="primary btn-block" id="magic-send" type="button">Email me a sign-in link</button>
+        <div id="auth-register">
+          <h2 class="auth-title">Create your account</h2>
+          <label class="field-label" for="magic-first">First name</label>
+          <input type="text" id="magic-first" placeholder="First name" autocomplete="given-name" maxlength="40" aria-label="First name" required>
+          <label class="field-label" for="magic-last">Last name</label>
+          <input type="text" id="magic-last" placeholder="Last name" autocomplete="family-name" maxlength="40" aria-label="Last name" required>
+          <label class="field-label" for="magic-email">Email</label>
+          <input type="email" id="magic-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email" required>
+          <label class="field-label" for="register-password">Password</label>
+          <input type="password" id="register-password" placeholder="Password" autocomplete="new-password" minlength="8" maxlength="72" aria-label="Password" required>
+          <button class="primary btn-block" id="register-send" type="button">Create account</button>
+          <button class="text-btn" id="auth-to-signin" type="button">I already have an account? Sign in</button>
+        </div>
+        <div id="auth-signin" class="hidden">
+          <h2 class="auth-title">Sign in</h2>
+          <label class="field-label" for="signin-email">Email</label>
+          <input type="email" id="signin-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email">
+          <label class="field-label" for="signin-password">Password</label>
+          <input type="password" id="signin-password" placeholder="Password" autocomplete="current-password" maxlength="72" aria-label="Password">
+          <button class="primary btn-block" id="password-signin" type="button">Sign in</button>
+          <button class="text-btn" id="auth-forgot" type="button">Forgot password</button>
+          <button class="text-btn" id="auth-to-register" type="button">New here? Create an account</button>
+        </div>
+        <div id="auth-forgot-panel" class="hidden">
+          <h2 class="auth-title">Reset your password</h2>
+          <p class="auth-copy">We email you a link to choose a new password. Then you can sign in.</p>
+          <label class="field-label" for="reset-email">Email</label>
+          <input type="email" id="reset-email" placeholder="Email" autocomplete="email" maxlength="200" aria-label="Email">
+          <button class="primary btn-block" id="auth-reset" type="button">Email me a reset link</button>
+          <button class="text-btn" id="auth-forgot-back" type="button">Back to sign in</button>
+        </div>
+        <div id="auth-pending" class="hidden">
+          <h2 class="auth-title">Confirm your email</h2>
+          <p class="auth-copy" id="auth-pending-copy">Open the confirmation link we sent. Then come back here and sign in.</p>
+          <button class="primary btn-block" id="auth-resend" type="button">Resend email</button>
+          <button class="text-btn" id="auth-pending-signin" type="button">I already confirmed? Sign in</button>
+          <button class="text-btn" id="auth-pending-register" type="button">Use a different email</button>
+        </div>
+        <div id="auth-offline" class="hidden">
+          <h2 class="auth-title">Connect to create your account</h2>
+          <p class="auth-copy">SummitLog needs a connection the first time. After you have an account, your log works offline.</p>
+          <button class="primary btn-block" id="auth-retry" type="button">Try again</button>
+        </div>
+        <div id="auth-recovery" class="hidden">
+          <h2 class="auth-title">Choose a new password</h2>
+          <p class="auth-copy">This replaces the old password. You will land on Explore afterwards.</p>
+          <label class="field-label" for="recovery-password">New password</label>
+          <input type="password" id="recovery-password" placeholder="New password" autocomplete="new-password" minlength="8" maxlength="72" aria-label="New password">
+          <button class="primary btn-block" id="auth-recovery-save" type="button">Save password</button>
+        </div>
         <p id="magic-status" class="muted small" role="status"></p>
       </div>
 
