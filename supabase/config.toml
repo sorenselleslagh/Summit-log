@@ -1,0 +1,8 @@
+project_id = "vjruyrawruirwrwqfeyy"
+
+# The database calls send-push with x-webhook-secret, not a user JWT.
+# Keep verification off or the gateway rejects the webhook before the function runs.
+# Equivalent deploy flag: supabase functions deploy send-push --no-verify-jwt
+
+[functions.send-push]
+verify_jwt = false
