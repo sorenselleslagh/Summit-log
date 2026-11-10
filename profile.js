@@ -338,7 +338,7 @@
         sign
       ) : null,
       previewing ? el('p', { class: 'preview-banner', text: 'This is what other people can see. Private plans, notes, and certificates stay hidden.' }) : null,
-      el('article', { class: 'card profile-head-card' },
+      el('article', { class: 'card profile-head-card profile-head-center' },
         photoNode(me.name, pendingPhoto),
         el('h2', { class: 'profile-name', text: me.name }),
         !previewing && me.email ? el('p', { class: 'profile-email', text: me.email }) : null,
@@ -685,7 +685,7 @@
     });
     host.replaceChildren(
       back,
-      el('article', { class: 'card profile-head-card' },
+      el('article', { class: 'card profile-head-card profile-head-center' },
         photoNode(person.name, person.avatarUrl || ''),
         el('h2', { class: 'profile-name', text: person.name }),
         person.privateProfile ? el('p', { class: 'lock-mark', text: 'Private profile' }) : null,

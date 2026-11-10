@@ -2512,6 +2512,24 @@ button.chat-toast {
   font-size: 0.68rem;
 }
 .profile-head-card { display: flex; flex-direction: column; gap: 0.45rem; align-items: flex-start; }
+.profile-head-center {
+  align-items: center;
+  text-align: center;
+}
+.profile-head-center .profile-name,
+.profile-head-center .profile-email,
+.profile-head-center .profile-home,
+.profile-head-center .lock-mark,
+.profile-head-center > p {
+  width: 100%;
+  text-align: center;
+}
+.profile-head-center .profile-actions {
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+#profile-screen .chip-row { justify-content: center; }
 .profile-name {
   font-family: Fraunces, Georgia, serif;
   font-size: 2rem;
