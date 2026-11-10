@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "start": "npx serve .",
-    "test": "node test/data.test.js && node test/collections.test.js && node test/partners.test.js && node test/account.test.js && node test/profile.test.js"
+    "test": "node test/data.test.js && node test/collections.test.js && node test/partners.test.js && node test/account.test.js && node test/profile.test.js && node test/push.test.js"
   },
   "private": true
 }

@@ -100,6 +100,10 @@
       <h1>SummitLog</h1>
       <div class="header-tools">
         <span id="user-display" class="visually-hidden"></span>
+        <button type="button" id="chat-open" class="chat-launch" aria-label="Messages">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 19 17H9l-4 3v-3H5a1.5 1.5 0 0 1-1.5-1.5V8A1.5 1.5 0 0 1 5 6.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          <span id="chat-unread" class="nav-badge hidden"></span>
+        </button>
         <button class="avatar-btn" id="profile-btn" type="button" aria-label="Profile">You</button>
       </div>
     </header>
@@ -254,6 +258,10 @@
               <button type="button" id="map-filter" aria-label="Map filters">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
               </button>
+              <button type="button" id="map-chat" class="chat-launch map-chat" aria-label="Messages">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 19 17H9l-4 3v-3H5a1.5 1.5 0 0 1-1.5-1.5V8A1.5 1.5 0 0 1 5 6.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+                <span id="map-chat-unread" class="nav-badge hidden"></span>
+              </button>
               <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
               <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
             </form>
@@ -363,7 +371,9 @@
             <button class="secondary" id="export-btn" type="button">Export data</button>
             <button class="secondary hidden" id="install-btn" type="button">Install app</button>
             <button class="secondary" id="logout-btn" type="button">Sign in</button>
+            <button class="secondary" id="push-enable" type="button">Message notifications</button>
           </div>
+          <p class="muted small" id="push-note">On iPhone, notifications work after you add SummitLog to the Home Screen (iOS 16.4 or newer).</p>
           <p class="muted small install-hint">Install SummitLog from the browser menu so it opens like an app. On iPhone, use Share, then Add to Home Screen. After this page has loaded once, the log keeps working offline.</p>
         </div>
         <div class="card" id="level-card">
@@ -424,6 +434,7 @@
       </div>
     </div>
 
+    <div id="chat-toasts" class="chat-toasts" aria-live="polite"></div>
     <nav aria-label="Sections">
       <button type="button" data-tab="explore">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18l5-7 4 4 3-4 4 7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="16" cy="7" r="1.4" fill="currentColor"/></svg>

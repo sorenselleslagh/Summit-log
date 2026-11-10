@@ -1,6 +1,6 @@
 // App-shell cache plus on-demand map tiles. Paths are relative to this file
 // so the same worker works at / and under /Summit-log/ on GitHub Pages.
-var VERSION = 'v22';
+var VERSION = 'v23';
 var SHELL_CACHE = 'summitlog-shell-' + VERSION;
 var CDN_CACHE = 'summitlog-cdn-' + VERSION;
 var TILE_CACHE = 'summitlog-tiles-' + VERSION;
@@ -192,6 +192,33 @@ async function tileResponse(request) {
   if (cached) return cached;
   return offlineTileResponse();
 }
+
+self.addEventListener('push', function (event) {
+  var data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (err) { data = {}; }
+  var title = data.title || 'SummitLog';
+  var conversationId = data.conversationId || '';
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || 'New message',
+    tag: conversationId || 'summitlog-message',
+    data: { conversationId: conversationId }
+  }));
+});
+
+self.addEventListener('notificationclick', function (event) {
+  event.notification.close();
+  var data = event.notification.data || {};
+  var url = new URL('./', self.location);
+  if (data.conversationId) url.searchParams.set('chat', data.conversationId);
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
+    var client = list[0];
+    if (client) {
+      client.postMessage({ type: 'open-chat', conversationId: data.conversationId || '' });
+      return client.focus();
+    }
+    return self.clients.openWindow(url.href);
+  }));
+});
 
 self.addEventListener('fetch', function (event) {
   var request = event.request;

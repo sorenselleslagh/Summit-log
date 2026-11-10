@@ -10,9 +10,10 @@
     // Publishable client key. It is safe in the browser. Never put a
     // service_role key here.
     supabaseAnonKey: 'sb_publishable_VwoY6M9dizu9sinDwHRkNA_Ar6S5OJ2',
-    // Web push stays off until a server holds VAPID keys and can send
-    // notifications. Turning this on in the client only is not enough.
-    pushEnabled: false
+    // Public half of the push key. Delivery stays off until the send-push
+    // function is deployed with the private key.
+    vapidPublicKey: 'BMpyOYWKiVip5rU3RUdQ8z_EsAooS1S_LaGYEwQaUtPjHMJTBjsfzRIySCYfD1vezqtn-_zROu4XV4xxyYx8B7w',
+    pushEnabled: true
   };
 
   // A loopback override lets a local check point at a dev API without
@@ -25,7 +26,8 @@
       if (extra && extra.supabaseUrl && extra.supabaseAnonKey) {
         file.supabaseUrl = String(extra.supabaseUrl);
         file.supabaseAnonKey = String(extra.supabaseAnonKey);
-        file.pushEnabled = extra.pushEnabled === true;
+        if (extra.vapidPublicKey) file.vapidPublicKey = String(extra.vapidPublicKey);
+        if (typeof extra.pushEnabled === 'boolean') file.pushEnabled = extra.pushEnabled;
       }
     } catch (err) {
       // A bad override must not break the page. The empty file config stands.

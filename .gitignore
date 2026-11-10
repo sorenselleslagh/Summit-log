@@ -5,7 +5,8 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
-*.swp
+vapid-private-key.txt
+*.pem
 *~
 
 # Logs
