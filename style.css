@@ -2199,3 +2199,120 @@ html.explore-map.map-show-layers #layers-card {
 @media (prefers-reduced-motion: reduce) {
   html.explore-map .explore-sheet { transition: none !important; }
 }
+
+.messages-panel h3 { margin: 0.9rem 0 0.35rem; }
+.migration-note {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 8px;
+  background: rgba(31, 107, 69, 0.2);
+  color: #d1fae5;
+}
+.account-badge { background: #1f6b45; color: #f8fafc; }
+.request-card, .thread, .queue-row, .chat-head, .composer, .safety-row {
+  min-width: 0;
+  max-width: 100%;
+}
+.request-card {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.thread {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  text-align: left;
+  background: transparent;
+  color: inherit;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.75rem 0;
+  min-height: 56px;
+}
+.thread-top { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; }
+.thread-title { font-weight: 700; min-width: 0; }
+.thread-preview { color: var(--muted); font-size: 0.88rem; }
+.unread-dot, .nav-badge {
+  flex: 0 0 auto;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.68rem;
+  line-height: 1.15rem;
+  font-weight: 700;
+  text-align: center;
+}
+#app > nav button { position: relative; }
+.nav-badge {
+  position: absolute;
+  top: 0.12rem;
+  right: 0.28rem;
+  pointer-events: none;
+}
+.partner-actions, .safety-row, .composer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.partner-actions { margin: 0.15rem 0 0.7rem; }
+.queue-row .queue-person { margin-bottom: 0.35rem; }
+.chat-screen:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  height: calc(100dvh - 8.75rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: 18rem;
+}
+.chat-head { padding: 0.15rem 0 0.75rem; }
+.chat-head h2 {
+  font-family: Fraunces, Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  margin: 0.7rem 0 0.25rem;
+}
+.chat-objective { color: var(--muted); margin-bottom: 0.55rem; }
+.chat-log {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-bottom: 0.8rem;
+}
+.bubble, .date-card, .gear-card {
+  max-width: min(100%, 28rem);
+  border-radius: 16px;
+  padding: 0.7rem 0.85rem;
+  overflow-wrap: anywhere;
+}
+.bubble.mine { align-self: flex-end; background: var(--accent); color: white; }
+.bubble.theirs, .date-card, .gear-card {
+  align-self: flex-start;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.bubble time, .date-card time, .gear-card time {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+.bubble-failed { display: block; font-size: 0.75rem; }
+.gear-list { margin: 0.35rem 0 0 1.1rem; }
+.composer { margin-top: 0.4rem; padding-top: 0.55rem; border-top: 1px solid var(--border); }
+.composer input, .composer textarea { flex: 1 1 8rem; min-width: 0; }
+.safety-row { margin-top: 0.7rem; }
+#shared-plan-view { min-width: 0; max-width: 100%; }
+#account-auth input { margin-bottom: 0.75rem; }

@@ -87,11 +87,35 @@ Ticking a peak logs it as a Peak (or links the log entry you already have, match
 
 On a peak, **Build up to this peak** suggests a few lower summits in the same area, using only elevation, region, and grade when those fields exist. Your level is the highest elevation and the hardest sourced grade among peaks you have logged. Glacier experience is set only if you say so in Profile, or when a logged peak’s cited route name actually contains the word glacier. You can override the estimate under Profile → Your level. If a grade were missing, the note would say so instead of inventing one.
 
+## Accounts and messages
+
+Without `config.js` filled in, SummitLog does not call a server. Plans, the log, and queue places stay on this device, and the Partners tab says messages are not connected yet.
+
+When a Supabase project is connected, sign-in is an email link (Google and Apple can be switched on later in the project). The first sign-in copies this device's log onto the account without changing ids. Doing it again does not duplicate those records. Private preparation notes stay in an owner-only table. A chat opens only after the other person accepts a partner request. Team chats are reserved in the database (`conversations.type = 'team'`) and are not built in the app yet.
+
+Web push is off. Turning it on later needs all of the following, and still must not put a service role key in the browser:
+
+- A VAPID key pair generated on a server you control.
+- `pushEnabled: true` in `config.js` only after that server exists.
+- The `push_subscriptions` table (already in the migration) to store browser endpoints.
+- A worker that sends pushes with the VAPID private key. The anon key cannot send them.
+- The browser permission prompt, from a tap, after the flag is on.
+
+### Create the Supabase project
+
+1. Go to [supabase.com](https://supabase.com) and create a project on the free tier. Choose a region in the EU (for example Frankfurt).
+2. In Authentication → Providers, leave Email enabled. Under Authentication → URL configuration, set the site URL and add this redirect URL: `https://sorenselleslagh.github.io/Summit-log/`
+3. Optional: enable Google and Apple under Authentication → Providers when you have their client ids. The app already has buttons for them.
+4. In the SQL editor, run `supabase/migrations/20261110180000_accounts_and_chat.sql`.
+5. In Project Settings → API, copy the project URL and the `anon` `public` key. Those are the only two values the app needs. Do not copy the `service_role` key into the app, a screenshot, or `config.js`.
+6. Put them in `config.js` as `supabaseUrl` and `supabaseAnonKey`.
+
 ## Roadmap
 
 Not built yet:
 
-- **Accounts and sync.** Signing up should attach this log, backlog, and queue places to the account without dropping or rewriting ids. A sync layer would replace `storage.js` and use `updatedAt` when two devices both have changes. Joining a partner queue for real needs that account. Until then, sample people stay marked Demo and your own place stays on this device.
+- **Two-device conflict handling.** The first sign-in copies the log and later sign-ins keep the newer `updatedAt`. A full sync layer would still replace `storage.js` when two devices edit the same record while offline.
+- **Team group chats.** The tables accept `type = 'team'` and many members. The Partners tab shows a Teams placeholder until that flow is built.
 - **Connections.** Profile lists Strava, Garmin Connect, and COROS as coming soon. They need an account.
 - **Camptocamp** is the likely source for alpine route detail later. It is not connected. Famous hikes here are a short built-in list; extra peaks come from Overpass when you ask.
 

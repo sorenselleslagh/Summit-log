@@ -25,6 +25,7 @@
   // Also read once in index.html before paint. This module is the only writer.
   var INTRO_KEY = 'summitlog_intro_seen';
   var LEVEL_KEY = 'summitlog_level';
+  var OUTBOX_KEY = 'summitlog_outbox';
 
   function createRepository(options) {
     var storage = options.storage;
@@ -288,6 +289,20 @@
       }
     }
 
+    function loadOutbox() {
+      var read = readArray(OUTBOX_KEY);
+      if (read.state !== 'ok') return [];
+      return read.items.filter(function (row) { return row && row.client_id && row.conversation_id; }).slice(0, 100);
+    }
+
+    function saveOutbox(items) {
+      var cleaned = (Array.isArray(items) ? items : []).filter(function (row) {
+        return row && row.client_id && row.conversation_id && row.body;
+      }).slice(0, 100);
+      write(OUTBOX_KEY, cleaned);
+      return cleaned;
+    }
+
     function dismissIntro() {
       try {
         storage.setItem(INTRO_KEY, '1');
@@ -318,7 +333,9 @@
       getLevel: getLevel,
       setLevel: setLevel,
       isIntroDismissed: isIntroDismissed,
-      dismissIntro: dismissIntro
+      dismissIntro: dismissIntro,
+      loadOutbox: loadOutbox,
+      saveOutbox: saveOutbox
     };
   }
 
