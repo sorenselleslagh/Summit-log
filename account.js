@@ -318,15 +318,15 @@
   function prepareScreen() {
     if (typeof root.document === 'undefined') return;
     var flags = (cfg().authProviders) || {};
-    var googleOn = configured() && flags.google === true;
-    var appleOn = configured() && flags.apple === true;
-    ['google-login', 'apple-login'].forEach(function (id, index) {
-      var node = root.document.getElementById(id);
-      if (!node) return;
-      node.classList.toggle('hidden', index === 0 ? !googleOn : !appleOn);
+    var anyProvider = false;
+    Object.keys(flags).forEach(function (name) {
+      var node = root.document.getElementById(name + '-login');
+      var on = configured() && flags[name] === true;
+      if (on) anyProvider = true;
+      if (node) node.classList.toggle('hidden', !on);
     });
     var orLine = root.document.getElementById('auth-or');
-    if (orLine) orLine.classList.toggle('hidden', !(googleOn || appleOn));
+    if (orLine) orLine.classList.toggle('hidden', !anyProvider);
     var authBox = root.document.getElementById('account-auth');
     var note = root.document.querySelector('.login-note');
     var demoIds = ['login-username', 'login-password', 'login-btn'];
@@ -553,9 +553,13 @@
     }, function () { return { ok: false, reason: 'sdk' }; });
   }
 
+  // Scopes for each OAuth provider. A new one also needs a flag in
+  // AUTH_PROVIDERS and a button id of "<name>-login".
+  var OAUTH_SCOPES = { google: 'openid email profile' };
+
   function signInWithProvider(provider) {
     if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
-    if (provider !== 'google' && provider !== 'apple') return Promise.resolve({ ok: false, reason: 'provider' });
+    if (!OAUTH_SCOPES[provider]) return Promise.resolve({ ok: false, reason: 'provider' });
     var flags = cfg().authProviders || {};
     if (flags[provider] !== true) return Promise.resolve({ ok: false, reason: 'provider-off' });
     return loadSdk().then(function (api) {
@@ -564,7 +568,7 @@
         provider: provider,
         options: {
           redirectTo: redirectTo(),
-          scopes: provider === 'apple' ? 'name email' : 'openid email profile'
+          scopes: OAUTH_SCOPES[provider]
         }
       }).then(function (result) {
         if (result.error) return { ok: false, reason: 'provider-off' };
