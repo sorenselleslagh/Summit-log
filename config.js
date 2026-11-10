@@ -15,9 +15,10 @@
     vapidPublicKey: 'BMpyOYWKiVip5rU3RUdQ8z_EsAooS1S_LaGYEwQaUtPjHMJTBjsfzRIySCYfD1vezqtn-_zROu4XV4xxyYx8B7w',
     pushEnabled: true,
   };
-  // Stay false until Google and Apple are enabled in the Supabase dashboard.
-  // The sign-in buttons stay hidden while a provider is false.
-  var AUTH_PROVIDERS = { google: false, apple: false };
+  // Stay false until Google is enabled in the Supabase dashboard.
+  // A sign-in button stays hidden while its flag is false. Another provider
+  // is a new key here, a matching scope in account.js, and a button.
+  var AUTH_PROVIDERS = { google: false };
   file.authProviders = AUTH_PROVIDERS;
 
   // A loopback override lets a local check point at a dev API without
@@ -33,10 +34,11 @@
         if (extra.vapidPublicKey) file.vapidPublicKey = String(extra.vapidPublicKey);
         if (typeof extra.pushEnabled === 'boolean') file.pushEnabled = extra.pushEnabled;
         if (extra.authProviders && typeof extra.authProviders === 'object') {
-          file.authProviders = {
-            google: extra.authProviders.google === true,
-            apple: extra.authProviders.apple === true
-          };
+          var nextProviders = {};
+          Object.keys(AUTH_PROVIDERS).forEach(function (name) {
+            nextProviders[name] = extra.authProviders[name] === true;
+          });
+          file.authProviders = nextProviders;
         }
       }
     } catch (err) {

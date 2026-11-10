@@ -254,17 +254,6 @@ document.getElementById('google-login').addEventListener('click', function () {
   alert('Google login coming soon.\n\nFor now, use any username and password below.');
 });
 
-document.getElementById('apple-login').addEventListener('click', function () {
-  if (window.SummitAccount && SummitAccount.configured()) {
-    var status = document.getElementById('magic-status');
-    SummitAccount.signInWithProvider('apple').then(function (result) {
-      if (status && result && !result.ok) status.textContent = 'Apple sign-in is not switched on for this project yet.';
-    });
-    return;
-  }
-  alert('Apple login is not switched on yet.\n\nFor now, use any username and password below.');
-});
-
 document.getElementById('name-save').addEventListener('click', function () {
   var first = document.getElementById('name-first');
   var last = document.getElementById('name-last');
