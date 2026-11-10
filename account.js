@@ -11,7 +11,9 @@
   var SDK = 'https://esm.sh/@supabase/supabase-js@2.119.0';
   var client = null;
   var sessionUser = null;
+  var sessionMeta = null;
   var bootPromise = null;
+  var PENDING_NAME = 'summitlog_pending_name';
   var migratedFor = '';
   var snapshotProvider = function () { return {}; };
   var listeners = [];
@@ -155,6 +157,113 @@
     return clean(localName, 80);
   }
 
+  function namesFromMetadata(meta) {
+    var source = meta || {};
+    var first = clean(source.given_name || source.first_name || '', 40);
+    var last = clean(source.family_name || source.last_name || '', 40);
+    var full = clean(source.full_name || source.name || source.display_name || '', 80);
+    var parts = full ? full.split(/\s+/).filter(Boolean) : [];
+    if (!first && parts.length) first = clean(parts[0], 40);
+    if (!last && parts.length > 1) last = clean(parts.slice(1).join(' '), 40);
+    return { firstName: first, lastName: last };
+  }
+
+  function fullName(first, last) {
+    return clean(String(first || '').trim() + ' ' + String(last || '').trim(), 80);
+  }
+
+  function rememberPending(first, last) {
+    try {
+      root.sessionStorage.setItem(PENDING_NAME, JSON.stringify({
+        first: clean(first, 40),
+        last: clean(last, 40)
+      }));
+    } catch (err) { /* the email link can still carry the names */ }
+  }
+
+  function readPending() {
+    try {
+      var parsed = JSON.parse(root.sessionStorage.getItem(PENDING_NAME) || 'null');
+      if (!parsed) return { firstName: '', lastName: '' };
+      return { firstName: clean(parsed.first, 40), lastName: clean(parsed.last, 40) };
+    } catch (err) {
+      return { firstName: '', lastName: '' };
+    }
+  }
+
+  function clearPending() {
+    try { root.sessionStorage.removeItem(PENDING_NAME); } catch (err) { /* ignore */ }
+  }
+
+  function applyNames(first, last) {
+    if (!sessionUser) return '';
+    var display = fullName(first, last);
+    sessionUser.firstName = clean(first, 40);
+    sessionUser.lastName = clean(last, 40);
+    sessionUser.displayName = display;
+    sessionUser.needsName = false;
+    emit();
+    return display;
+  }
+
+  function loadNames() {
+    if (!client || !sessionUser) return Promise.resolve({ complete: true });
+    return client.from('profiles').select('first_name, last_name, display_name').eq('id', sessionUser.id).maybeSingle()
+      .then(function (result) {
+        if (result.error || !sessionUser) {
+          if (sessionUser) sessionUser.needsName = false;
+          return { complete: true };
+        }
+        var row = result.data || {};
+        var first = clean(row.first_name, 40);
+        var last = clean(row.last_name, 40);
+        if (first && last) {
+          var display = applyNames(first, last);
+          clearPending();
+          if (clean(row.display_name, 80) !== display) {
+            return client.from('profiles').update({
+              display_name: display,
+              updated_at: new Date().toISOString()
+            }).eq('id', sessionUser.id).then(function () {
+              return { complete: true };
+            }, function () { return { complete: true }; });
+          }
+          return { complete: true };
+        }
+        var pending = readPending();
+        var hinted = namesFromMetadata(sessionMeta);
+        var guessFirst = first || pending.firstName || hinted.firstName;
+        var guessLast = last || pending.lastName || hinted.lastName;
+        if (guessFirst && guessLast) return saveNames(guessFirst, guessLast);
+        sessionUser.firstName = guessFirst;
+        sessionUser.lastName = guessLast;
+        sessionUser.needsName = true;
+        emit();
+        return { complete: false, firstName: guessFirst, lastName: guessLast };
+      }, function () {
+        if (sessionUser) sessionUser.needsName = false;
+        return { complete: true };
+      });
+  }
+
+  function saveNames(first, last) {
+    var given = clean(first, 40);
+    var family = clean(last, 40);
+    if (!given || !family) return Promise.resolve({ ok: false, reason: 'name' });
+    if (!client || !sessionUser) return Promise.resolve({ ok: false, reason: 'signed-out' });
+    var display = fullName(given, family);
+    return client.from('profiles').update({
+      first_name: given,
+      last_name: family,
+      display_name: display,
+      updated_at: new Date().toISOString()
+    }).eq('id', sessionUser.id).then(function (result) {
+      if (result.error) return { ok: false, reason: 'save' };
+      clearPending();
+      return { ok: true, displayName: applyNames(given, family), firstName: given, lastName: family };
+    }, function () { return { ok: false, reason: 'save' }; });
+  }
+
   function redirectTo() {
     // Magic links must return to this app. On GitHub Pages that is
     // https://sorenselleslagh.github.io/Summit-log/ and it has to be on the
@@ -189,22 +298,35 @@
 
   function setUserFromSession(session) {
     var next = session && session.user ? session.user : null;
-    var name = '';
-    if (next) {
-      name = (next.user_metadata && next.user_metadata.display_name) || next.email || '';
-    }
+    sessionMeta = next && next.user_metadata ? next.user_metadata : null;
+    var hinted = namesFromMetadata(sessionMeta);
+    var name = fullName(hinted.firstName, hinted.lastName) || (next && next.email) || '';
     sessionUser = next ? {
       id: next.id,
       email: next.email || '',
       displayName: clean(name, 80),
+      firstName: hinted.firstName,
+      lastName: hinted.lastName,
+      needsName: false,
       admin: !!(next.app_metadata && next.app_metadata.role === 'admin')
     } : null;
+    if (!next) sessionMeta = null;
     emit();
     return sessionUser;
   }
 
   function prepareScreen() {
     if (typeof root.document === 'undefined') return;
+    var flags = (cfg().authProviders) || {};
+    var googleOn = configured() && flags.google === true;
+    var appleOn = configured() && flags.apple === true;
+    ['google-login', 'apple-login'].forEach(function (id, index) {
+      var node = root.document.getElementById(id);
+      if (!node) return;
+      node.classList.toggle('hidden', index === 0 ? !googleOn : !appleOn);
+    });
+    var orLine = root.document.getElementById('auth-or');
+    if (orLine) orLine.classList.toggle('hidden', !(googleOn || appleOn));
     var authBox = root.document.getElementById('account-auth');
     var note = root.document.querySelector('.login-note');
     var demoIds = ['login-username', 'login-password', 'login-btn'];
@@ -216,12 +338,7 @@
     var divider = root.document.querySelector('#login-screen .divider');
     if (divider) divider.classList.add('hidden');
     if (authBox) authBox.classList.remove('hidden');
-    var apple = root.document.getElementById('github-login');
-    if (apple) {
-      var label = apple.querySelector('span');
-      if (label) label.textContent = 'Continue with Apple';
-    }
-    if (note) note.textContent = 'We email you a sign-in link. No password is stored. Google and Apple work after they are switched on for the project.';
+    if (note) note.textContent = 'First and last name are required. We email you a sign-in link. No password is stored.';
     var status = root.document.getElementById('account-status');
     if (status && !sessionUser) status.textContent = 'Sign in with the email link to keep this log on your account. Until then it stays on this device.';
   }
@@ -409,15 +526,26 @@
     return client && client.storage && typeof client.storage.from === 'function';
   }
 
-  function signInWithEmail(email) {
+  function signInWithEmail(email, first, last) {
     var address = clean(email, 200);
+    var given = clean(first, 40);
+    var family = clean(last, 40);
     if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+    if (!given || !family) return Promise.resolve({ ok: false, reason: 'name' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return Promise.resolve({ ok: false, reason: 'email' });
+    rememberPending(given, family);
     return loadSdk().then(function (api) {
       if (!api) return { ok: false, reason: 'unconfigured' };
       return api.auth.signInWithOtp({
         email: address,
-        options: { emailRedirectTo: redirectTo() }
+        options: {
+          emailRedirectTo: redirectTo(),
+          data: {
+            first_name: given,
+            last_name: family,
+            display_name: fullName(given, family)
+          }
+        }
       }).then(function (result) {
         if (result.error) return { ok: false, reason: 'send' };
         return { ok: true };
@@ -428,11 +556,16 @@
   function signInWithProvider(provider) {
     if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
     if (provider !== 'google' && provider !== 'apple') return Promise.resolve({ ok: false, reason: 'provider' });
+    var flags = cfg().authProviders || {};
+    if (flags[provider] !== true) return Promise.resolve({ ok: false, reason: 'provider-off' });
     return loadSdk().then(function (api) {
       if (!api) return { ok: false, reason: 'unconfigured' };
       return api.auth.signInWithOAuth({
         provider: provider,
-        options: { redirectTo: redirectTo() }
+        options: {
+          redirectTo: redirectTo(),
+          scopes: provider === 'apple' ? 'name email' : 'openid email profile'
+        }
       }).then(function (result) {
         if (result.error) return { ok: false, reason: 'provider-off' };
         return { ok: true };
@@ -477,6 +610,8 @@
     migratedFor = id;
     var snapshot = snapshotProvider() || {};
     return ensureProfile(snapshot.displayName).then(function () {
+      return loadNames();
+    }).then(function () {
       return migrate(snapshot);
     }).then(function (summary) {
       if (summary && summary.text) showMigration(summary.text);
@@ -531,10 +666,13 @@
     var send = root.document.getElementById('magic-send');
     if (send) send.addEventListener('click', function () {
       var input = root.document.getElementById('magic-email');
+      var first = root.document.getElementById('magic-first');
+      var last = root.document.getElementById('magic-last');
       var status = root.document.getElementById('magic-status');
-      signInWithEmail(input ? input.value : '').then(function (result) {
+      signInWithEmail(input ? input.value : '', first ? first.value : '', last ? last.value : '').then(function (result) {
         if (!status) return;
         if (result.ok) status.textContent = 'Check your email for the sign-in link. You can close this and come back from that link.';
+        else if (result.reason === 'name') status.textContent = 'Enter your first name and your last name.';
         else if (result.reason === 'email') status.textContent = 'Enter the email address you want the link sent to.';
         else if (result.reason === 'unconfigured') status.textContent = 'Accounts are not connected on this copy yet.';
         else status.textContent = 'The link could not be sent. Your log is still on this device.';
@@ -573,6 +711,8 @@
     publicShare: publicShare,
     planMigration: planMigration,
     chooseDisplayName: chooseDisplayName,
+    namesFromMetadata: namesFromMetadata,
+    saveNames: saveNames,
     redirectTo: redirectTo,
     migrationSentence: migrationSentence,
     boot: boot,

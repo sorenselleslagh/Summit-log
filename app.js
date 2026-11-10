@@ -141,11 +141,22 @@ function redrawTiles() {
 // ---- Auth ----
 function setScreen(mode) {
   var root = document.documentElement;
-  root.classList.remove('boot-app', 'show-intro', 'show-login');
-  root.classList.add(mode === 'app' ? 'boot-app' : mode === 'login' ? 'show-login' : 'show-intro');
+  root.classList.remove('boot-app', 'show-intro', 'show-login', 'show-name');
+  var screenClass = mode === 'app' ? 'boot-app' : mode === 'login' ? 'show-login' : mode === 'name' ? 'show-name' : 'show-intro';
+  root.classList.add(screenClass);
   document.getElementById('intro-screen').classList.toggle('hidden', mode !== 'intro');
   document.getElementById('login-screen').classList.toggle('hidden', mode !== 'login');
+  var names = document.getElementById('name-screen');
+  if (names) names.classList.toggle('hidden', mode !== 'name');
   document.getElementById('app').classList.toggle('hidden', mode !== 'app');
+}
+
+function showNameGate(user) {
+  setScreen('name');
+  var first = document.getElementById('name-first');
+  var last = document.getElementById('name-last');
+  if (first && !first.value && user && user.firstName) first.value = user.firstName;
+  if (last && !last.value && user && user.lastName) last.value = user.lastName;
 }
 
 function accountSnapshot() {
@@ -192,10 +203,20 @@ function showApp() {
   if (window.SummitAccount) {
     if (!accountButtonBound && SummitAccount.onChange) {
       accountButtonBound = true;
-      SummitAccount.onChange(refreshAccountButton);
+      SummitAccount.onChange(function (sessionUser) {
+        if (sessionUser && sessionUser.displayName && sessionUser.firstName && sessionUser.lastName) {
+          currentUser = Store.setDisplayName(sessionUser.displayName);
+        }
+        refreshAccountButton();
+        if (sessionUser && sessionUser.needsName) showNameGate(sessionUser);
+      });
     }
-    SummitAccount.boot(accountSnapshot).then(function () {
+    SummitAccount.boot(accountSnapshot).then(function (sessionUser) {
       refreshAccountButton();
+      if (sessionUser && sessionUser.needsName) {
+        showNameGate(sessionUser);
+        return;
+      }
       if (window.SummitChat) SummitChat.start();
     });
   }
@@ -233,7 +254,7 @@ document.getElementById('google-login').addEventListener('click', function () {
   alert('Google login coming soon.\n\nFor now, use any username and password below.');
 });
 
-document.getElementById('github-login').addEventListener('click', function () {
+document.getElementById('apple-login').addEventListener('click', function () {
   if (window.SummitAccount && SummitAccount.configured()) {
     var status = document.getElementById('magic-status');
     SummitAccount.signInWithProvider('apple').then(function (result) {
@@ -241,7 +262,26 @@ document.getElementById('github-login').addEventListener('click', function () {
     });
     return;
   }
-  alert('GitHub login coming soon.\n\nFor now, use any username and password below.');
+  alert('Apple login is not switched on yet.\n\nFor now, use any username and password below.');
+});
+
+document.getElementById('name-save').addEventListener('click', function () {
+  var first = document.getElementById('name-first');
+  var last = document.getElementById('name-last');
+  var status = document.getElementById('name-status');
+  if (!window.SummitAccount || !SummitAccount.saveNames) return;
+  SummitAccount.saveNames(first ? first.value : '', last ? last.value : '').then(function (result) {
+    if (!result || !result.ok) {
+      if (status) status.textContent = result && result.reason === 'name'
+        ? 'Enter both your first name and your last name.'
+        : 'The name could not be saved. Try again.';
+      return;
+    }
+    currentUser = Store.setDisplayName(result.displayName);
+    refreshAccountButton();
+    setScreen('app');
+    if (window.SummitChat) SummitChat.start();
+  });
 });
 
 document.getElementById('login-btn').addEventListener('click', function () {

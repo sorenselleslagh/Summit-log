@@ -13,8 +13,12 @@
     // Public half of the push key. Delivery stays off until the send-push
     // function is deployed with the private key.
     vapidPublicKey: 'BMpyOYWKiVip5rU3RUdQ8z_EsAooS1S_LaGYEwQaUtPjHMJTBjsfzRIySCYfD1vezqtn-_zROu4XV4xxyYx8B7w',
-    pushEnabled: true
+    pushEnabled: true,
   };
+  // Stay false until Google and Apple are enabled in the Supabase dashboard.
+  // The sign-in buttons stay hidden while a provider is false.
+  var AUTH_PROVIDERS = { google: false, apple: false };
+  file.authProviders = AUTH_PROVIDERS;
 
   // A loopback override lets a local check point at a dev API without
   // committing keys. Production hosts ignore it.
@@ -28,6 +32,12 @@
         file.supabaseAnonKey = String(extra.supabaseAnonKey);
         if (extra.vapidPublicKey) file.vapidPublicKey = String(extra.vapidPublicKey);
         if (typeof extra.pushEnabled === 'boolean') file.pushEnabled = extra.pushEnabled;
+        if (extra.authProviders && typeof extra.authProviders === 'object') {
+          file.authProviders = {
+            google: extra.authProviders.google === true,
+            apple: extra.authProviders.apple === true
+          };
+        }
       }
     } catch (err) {
       // A bad override must not break the page. The empty file config stands.

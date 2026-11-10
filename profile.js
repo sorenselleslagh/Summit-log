@@ -271,10 +271,17 @@
   function localProfile() {
     var repo = store();
     var profile = repo && repo.loadProfile ? repo.loadProfile() : { bio: '', homeBase: '', isPrivate: false };
-    var name = repo && repo.getDisplayName ? repo.getDisplayName() : '';
-    if (!name && signedIn()) name = account().user().displayName || '';
+    var accountUser = signedIn() ? account().user() : null;
+    var first = accountUser && accountUser.firstName ? accountUser.firstName : '';
+    var last = accountUser && accountUser.lastName ? accountUser.lastName : '';
+    var name = first && last ? (first + ' ' + last) : '';
+    if (!name && repo && repo.getDisplayName) name = repo.getDisplayName();
+    if (!name && accountUser) name = accountUser.displayName || '';
     return {
       name: name || 'You',
+      firstName: first,
+      lastName: last,
+      email: accountUser && accountUser.email ? accountUser.email : '',
       bio: profile.bio,
       homeBase: profile.homeBase,
       isPrivate: profile.isPrivate,
@@ -334,6 +341,7 @@
       el('article', { class: 'card profile-head-card' },
         photoNode(me.name, pendingPhoto),
         el('h2', { class: 'profile-name', text: me.name }),
+        !previewing && me.email ? el('p', { class: 'profile-email', text: me.email }) : null,
         me.bio && !(previewing && me.isPrivate) ? el('p', { text: me.bio }) : null,
         me.homeBase && !(previewing && me.isPrivate) ? el('p', { class: 'profile-home', text: me.homeBase }) : null,
         me.isPrivate ? el('p', { class: 'lock-mark', text: 'Private profile' }) : null,
@@ -448,8 +456,12 @@
 
   function paintEdit(host) {
     var me = localProfile();
-    var name = el('input', { id: 'profile-name', type: 'text', maxlength: '80', 'aria-label': 'Name' });
-    name.value = me.name === 'You' ? '' : me.name;
+    var stored = me.name === 'You' ? '' : me.name;
+    var parts = String(stored || '').trim().split(/\s+/).filter(Boolean);
+    var nameFirst = el('input', { id: 'profile-first', type: 'text', maxlength: '40', 'aria-label': 'First name', required: 'required' });
+    var nameLast = el('input', { id: 'profile-last', type: 'text', maxlength: '40', 'aria-label': 'Last name', required: 'required' });
+    nameFirst.value = me.firstName || (parts[0] || '');
+    nameLast.value = me.lastName || (parts.length > 1 ? parts.slice(1).join(' ') : '');
     var bio = el('textarea', { id: 'profile-bio', rows: '3', maxlength: '280', 'aria-label': 'Short bio' });
     bio.value = me.bio;
     var home = el('input', { id: 'profile-home', type: 'text', maxlength: '80', 'aria-label': 'Home base' });
@@ -492,8 +504,11 @@
     host.replaceChildren(el('article', { class: 'card profile-head-card' },
       preview,
       el('h2', { class: 'profile-name', text: 'Edit profile' }),
-      el('label', { class: 'field-label', for: 'profile-name', text: 'Name' }),
-      name,
+      el('label', { class: 'field-label', for: 'profile-first', text: 'First name' }),
+      nameFirst,
+      el('label', { class: 'field-label', for: 'profile-last', text: 'Last name' }),
+      nameLast,
+      el('p', { id: 'profile-edit-status', class: 'muted small', text: 'Both names are required. Other people see the name, not your email.' }),
       el('label', { class: 'field-label', for: 'profile-bio', text: 'Short bio' }),
       bio,
       el('label', { class: 'field-label', for: 'profile-home', text: 'Home base' }),
@@ -533,7 +548,14 @@
 
   function saveEdit() {
     var repo = store();
-    var name = document.getElementById('profile-name').value.trim().slice(0, 80);
+    var first = document.getElementById('profile-first').value.trim().slice(0, 40);
+    var last = document.getElementById('profile-last').value.trim().slice(0, 40);
+    var editStatus = document.getElementById('profile-edit-status');
+    if (!first || !last) {
+      if (editStatus) editStatus.textContent = 'Enter both your first name and your last name.';
+      return;
+    }
+    var name = (first + ' ' + last).slice(0, 80);
     var bio = document.getElementById('profile-bio').value.trim().slice(0, 280);
     var home = document.getElementById('profile-home').value.trim().slice(0, 80);
     var isPrivate = document.getElementById('profile-private').checked;
@@ -550,7 +572,8 @@
     if (repo.saveCredentials) repo.saveCredentials(next);
     var photoDone = pendingPhotoBlob && root.SummitPhotos && root.SummitPhotos.setAvatar
       ? root.SummitPhotos.setAvatar(pendingPhotoBlob) : Promise.resolve();
-    photoDone.then(function () { return pushRemote(name, bio, home, isPrivate, next); }).then(function () {
+    var namesSaved = signedIn() && account().saveNames ? account().saveNames(first, last) : Promise.resolve({ ok: true });
+    photoDone.then(function () { return namesSaved; }).then(function () { return pushRemote(first, last, bio, home, isPrivate, next); }).then(function () {
       editing = false;
       pendingPhotoBlob = null;
       proofFiles = {};
@@ -563,7 +586,7 @@
     });
   }
 
-  function pushRemote(name, bio, home, isPrivate, creds) {
+  function pushRemote(first, last, bio, home, isPrivate, creds) {
     if (!signedIn()) return Promise.resolve();
     var db = account().client();
     var id = account().user().id;
@@ -575,11 +598,21 @@
       updated_at: new Date().toISOString()
     }, { onConflict: 'profile_id' });
     var area = isPrivate ? '' : home;
+    var display = (String(first || '').trim() + ' ' + String(last || '').trim()).slice(0, 80);
     var named = db.from('profiles').update({
-      display_name: name || account().user().displayName || '',
+      first_name: first,
+      last_name: last,
+      display_name: display || account().user().displayName || '',
       region_label: area,
       updated_at: new Date().toISOString()
-    }).eq('id', id);
+    }).eq('id', id).then(function (result) {
+      if (!result.error) return result;
+      return db.from('profiles').update({
+        display_name: display || account().user().displayName || '',
+        region_label: area,
+        updated_at: new Date().toISOString()
+      }).eq('id', id);
+    });
     return Promise.all([detail, named]).then(function () {
       return Promise.all(creds.map(function (row) {
         return db.from('profile_credentials').upsert({
@@ -728,6 +761,13 @@
     paint();
     if (!signedIn() || !person.userId) return;
     var db = account().client();
+    db.from('profiles').select('display_name, first_name, last_name').eq('id', person.userId).maybeSingle().then(function (result) {
+      if (!other || other.id !== person.userId || !result.data) return;
+      var row = result.data;
+      var full = (row.first_name && row.last_name) ? (row.first_name + ' ' + row.last_name) : (row.display_name || '');
+      if (full) other.name = full;
+      paint();
+    }).catch(function () {});
     db.from('profile_details').select('bio, home_base, is_private').eq('profile_id', person.userId).maybeSingle().then(function (result) {
       if (!other || other.id !== person.userId) return;
       if (result.data) {

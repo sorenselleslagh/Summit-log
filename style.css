@@ -20,14 +20,21 @@ html { color-scheme: dark; }
 /* Screen switches. boot-app is set before paint for returning visits. */
 html.boot-app #intro-screen,
 html.boot-app #login-screen,
+html.boot-app #name-screen,
 html.show-login #intro-screen,
+html.show-login #name-screen,
 html.show-intro #login-screen,
+html.show-intro #name-screen,
 html.show-intro #app,
-html.show-login #app { display: none !important; }
+html.show-login #app,
+html.show-name #intro-screen,
+html.show-name #login-screen,
+html.show-name #app { display: none !important; }
 
 html.boot-app #app,
 html.show-intro #intro-screen,
-html.show-login #login-screen { display: flex !important; }
+html.show-login #login-screen,
+html.show-name #name-screen { display: flex !important; }
 
 /* The app is one screen. The document does not scroll, so the browser toolbar
    and a sticky header cannot slide over the map or the lists. */
@@ -1591,6 +1598,12 @@ p { margin: 0.25rem 0; }
 }
 
 .login-card .login-note { margin-bottom: 0; }
+.login-card .field-label { text-align: left; margin-top: 0.15rem; }
+.login-card #magic-status,
+.login-card #name-status,
+.login-card #auth-or { margin-bottom: 0.75rem; }
+.social-btn.apple { border-color: #d1d5db; }
+.profile-email { color: var(--muted); margin: 0; font-size: 0.95rem; }
 
 .login-card input {
   margin-bottom: 0.75rem;

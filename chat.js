@@ -101,6 +101,25 @@
     return (got && got.data && got.data.publicUrl) || '';
   }
 
+  function profileName(row) {
+    if (!row) return '';
+    var first = String(row.first_name || '').trim();
+    var last = String(row.last_name || '').trim();
+    if (first && last) return (first + ' ' + last).slice(0, 80);
+    return String(row.display_name || '').trim();
+  }
+
+  function loadProfileRows(ids, withRegion) {
+    var rich = withRegion
+      ? 'id, display_name, first_name, last_name, region_label'
+      : 'id, display_name, first_name, last_name';
+    var plain = withRegion ? 'id, display_name, region_label' : 'id, display_name';
+    return db().from('profiles').select(rich).in('id', ids).then(function (result) {
+      if (!result.error) return result;
+      return db().from('profiles').select(plain).in('id', ids);
+    });
+  }
+
   function nameFor(userId) {
     if (userId && userId === uid()) {
       var me = account() && account().user && account().user();
@@ -116,7 +135,7 @@
     });
     if (!list.length || !ready()) return Promise.resolve();
     return Promise.all([
-      db().from('profiles').select('id, display_name').in('id', list),
+      loadProfileRows(list, false),
       db().from('profile_details').select('profile_id, avatar_path').in('profile_id', list)
     ]).then(function (parts) {
       var paths = {};
@@ -124,7 +143,7 @@
         paths[row.profile_id] = row.avatar_path || '';
       });
       ((parts[0] && parts[0].data) || []).forEach(function (row) {
-        nameCache[row.id] = row.display_name || '';
+        nameCache[row.id] = profileName(row);
       });
       list.forEach(function (id) {
         if (nameCache[id] == null) nameCache[id] = '';
@@ -280,7 +299,7 @@
           if (row.owner_id && row.owner_id !== uid() && ids.indexOf(row.owner_id) < 0) ids.push(row.owner_id);
         });
         var profiles = ids.length
-          ? db().from('profiles').select('id, display_name, region_label').in('id', ids)
+          ? loadProfileRows(ids, true)
           : Promise.resolve({ data: [] });
         return profiles.then(function (people) {
           var names = {};
@@ -296,8 +315,8 @@
               account: true,
               demo: false,
               planId: row.id,
-              name: profile.display_name || 'Climber',
-              initials: initials(profile.display_name || 'Climber'),
+              name: profileName(profile) || 'Climber',
+              initials: initials(profileName(profile) || 'Climber'),
               level: profile.region_label ? 'Near ' + profile.region_label : '',
               dates: when,
               note: row.share_note || '',
