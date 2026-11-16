@@ -172,4 +172,25 @@ assert.ok(app.includes('Sign in to be visible to others'));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 
+var unauthorized = account.describeAuthError({ message: 'Email address not authorized', code: 'email_address_not_authorized' });
+assert.strictEqual(unauthorized.reason, 'unauthorized');
+assert.ok(unauthorized.message.indexOf('not authorized') >= 0);
+var invalid = account.describeAuthError({ code: 'email_address_invalid', message: 'Email address "a@example.com" is invalid' });
+assert.strictEqual(invalid.reason, 'email');
+assert.ok(invalid.message.indexOf('invalid') >= 0);
+var limited = account.describeAuthError({ message: 'Email rate limit exceeded', code: 'over_email_send_rate_limit' });
+assert.strictEqual(limited.reason, 'rate');
+var duplicate = account.signupOutcome({ data: { user: { identities: [] }, session: null }, error: null });
+assert.strictEqual(duplicate.reason, 'exists');
+assert.ok(duplicate.message.indexOf('No new confirmation') >= 0);
+var fresh = account.signupOutcome({ data: { user: { identities: [{ id: '1' }] }, session: null }, error: null });
+assert.strictEqual(fresh.ok, true);
+assert.strictEqual(fresh.pending, true);
+assert.ok(html.includes('Check your spam'));
+assert.ok(html.includes('id="auth-pending-address"'));
+assert.ok(html.includes('Use a different email'));
+assert.ok(app.includes('startResendCooldown(60)'));
+assert.ok(app.includes("type: 'signup'") || accountJs.includes("type: 'signup'"));
+assert.ok(accountJs.includes('email_address_not_authorized'));
+
 console.log('account tests ok');

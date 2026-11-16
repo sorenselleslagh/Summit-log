@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v32'"));
+assert.ok(sw.includes("VERSION = 'v33'"));
 var planCard = app.slice(app.indexOf('function renderPlanCard'), app.indexOf('function renderMine'));
 assert.ok(planCard.indexOf('Move up') < 0);
 assert.ok(planCard.indexOf('Move down') < 0);

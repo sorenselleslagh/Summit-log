@@ -115,8 +115,11 @@
         </div>
         <div id="auth-pending" class="hidden">
           <h2 class="auth-title">Confirm your email</h2>
-          <p class="auth-copy" id="auth-pending-copy">Open the confirmation link we sent. Then come back here and sign in.</p>
+          <p class="auth-copy" id="auth-pending-copy">Open the confirmation link, then come back here and sign in.</p>
+          <p class="auth-address" id="auth-pending-address"></p>
+          <p class="auth-copy">Check your spam or junk folder if it is not in your inbox. The message can take a minute.</p>
           <button class="primary btn-block" id="auth-resend" type="button">Resend email</button>
+          <p class="muted small" id="auth-resend-wait" role="status"></p>
           <button class="text-btn" id="auth-pending-signin" type="button">I already confirmed? Sign in</button>
           <button class="text-btn" id="auth-pending-register" type="button">Use a different email</button>
         </div>

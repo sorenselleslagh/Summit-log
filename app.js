@@ -225,6 +225,69 @@ function authStatus(text) {
   if (status) status.textContent = text || '';
 }
 
+function authFailureText(result, fallback) {
+  var message = result && result.message ? String(result.message) : '';
+  if (result && result.reason === 'unauthorized') {
+    var lead = message || 'Email address not authorized';
+    return lead + ' The built-in email sender only delivers to members of this Supabase project until custom SMTP is turned on, so no confirmation was sent.';
+  }
+  if (result && result.reason === 'rate') return message || 'Too many emails were requested. Wait a minute, then try again.';
+  if (result && result.reason === 'exists') return message || 'That email already has an account. Sign in instead.';
+  if (result && result.reason === 'email') return message || 'Enter an email address that can receive mail.';
+  if (result && result.reason === 'sdk') return message || 'The account service did not load. Check your connection and try again.';
+  if (message) return message;
+  return fallback;
+}
+
+var resendReadyAt = 0;
+var resendTimer = null;
+
+function clearResendCooldown() {
+  resendReadyAt = 0;
+  clearTimeout(resendTimer);
+  resendTimer = null;
+  var button = document.getElementById('auth-resend');
+  if (button) {
+    button.disabled = false;
+    button.textContent = 'Resend email';
+  }
+  var wait = document.getElementById('auth-resend-wait');
+  if (wait) wait.textContent = '';
+}
+
+function startResendCooldown(seconds) {
+  resendReadyAt = Date.now() + seconds * 1000;
+  clearTimeout(resendTimer);
+  function tick() {
+    var left = Math.ceil((resendReadyAt - Date.now()) / 1000);
+    var button = document.getElementById('auth-resend');
+    var wait = document.getElementById('auth-resend-wait');
+    if (left <= 0) {
+      clearResendCooldown();
+      return;
+    }
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Resend email (' + left + 's)';
+    }
+    if (wait) wait.textContent = 'You can send another email in ' + left + ' seconds.';
+    resendTimer = setTimeout(tick, 1000);
+  }
+  tick();
+}
+
+function showPending(email, justSent) {
+  pendingEmail = email || pendingEmail;
+  var copy = document.getElementById('auth-pending-copy');
+  if (copy) copy.textContent = 'Open the confirmation link, then come back here and sign in.';
+  var address = document.getElementById('auth-pending-address');
+  if (address) address.textContent = pendingEmail || '';
+  authStatus('');
+  paintAuthMode('pending');
+  if (justSent) startResendCooldown(60);
+  else clearResendCooldown();
+}
+
 function paintAuthMode(mode) {
   authChosen = true;
   var name = mode || 'register';
@@ -364,6 +427,7 @@ document.getElementById('auth-pending-signin').addEventListener('click', functio
 });
 document.getElementById('auth-pending-register').addEventListener('click', function () {
   authStatus('');
+  clearResendCooldown();
   paintAuthMode('register');
 });
 document.getElementById('auth-retry').addEventListener('click', function () {
@@ -376,26 +440,28 @@ document.getElementById('auth-retry').addEventListener('click', function () {
 });
 document.getElementById('register-send').addEventListener('click', function () {
   if (!window.SummitAccount) return;
+  var button = document.getElementById('register-send');
   var email = document.getElementById('magic-email').value;
   var first = document.getElementById('magic-first').value;
   var last = document.getElementById('magic-last').value;
   var password = document.getElementById('register-password').value;
+  if (button) button.disabled = true;
+  authStatus('Creating your account…');
   SummitAccount.registerWithEmail(email, password, first, last).then(function (result) {
+    if (button) button.disabled = false;
     if (result && result.ok && result.pending) {
-      pendingEmail = result.email || email;
-      var copy = document.getElementById('auth-pending-copy');
-      if (copy) copy.textContent = 'We sent a confirmation link to ' + pendingEmail + '. Open it on this device, then come back and sign in.';
-      authStatus('');
-      paintAuthMode('pending');
+      showPending(result.email || email, true);
       return;
     }
     if (result && result.ok) return;
     if (result && result.reason === 'name') authStatus('Enter your first name and your last name.');
-    else if (result && result.reason === 'email') authStatus('Enter the email address for this account.');
+    else if (result && result.reason === 'email' && !(result && result.message)) authStatus('Enter the email address for this account.');
     else if (result && result.reason === 'password') authStatus('Use a password of at least 8 characters.');
-    else if (result && result.reason === 'exists') authStatus('That email already has an account. Sign in instead.');
     else if (result && result.reason === 'offline') paintAuthMode('offline');
-    else authStatus('The account could not be created. Your log is still on this device.');
+    else authStatus(authFailureText(result, 'The account could not be created. Nothing was sent.'));
+  }, function (err) {
+    if (button) button.disabled = false;
+    authStatus(err && err.message ? String(err.message) : 'The account could not be created. Nothing was sent.');
   });
 });
 document.getElementById('password-signin').addEventListener('click', function () {
@@ -405,15 +471,16 @@ document.getElementById('password-signin').addEventListener('click', function ()
   SummitAccount.signInWithPassword(email, password).then(function (result) {
     if (result && result.ok) return;
     if (result && result.reason === 'confirm') {
-      pendingEmail = result.email || email;
+      showPending(result.email || email, false);
       var copy = document.getElementById('auth-pending-copy');
-      if (copy) copy.textContent = 'Confirm ' + pendingEmail + ' before signing in. Open the link in your email, or send a new one.';
-      authStatus('');
-      paintAuthMode('pending');
+      if (copy) copy.textContent = 'Confirm this address before signing in. Open the link in your email, or send a new one.';
       return;
     }
     if (result && result.reason === 'offline') paintAuthMode('offline');
+    else if (result && result.message) authStatus(authFailureText(result, 'That email and password did not match. You can reset the password or create an account.'));
     else authStatus('That email and password did not match. You can reset the password or create an account.');
+  }, function (err) {
+    authStatus(err && err.message ? String(err.message) : 'Sign-in did not finish. Try again.');
   });
 });
 document.getElementById('auth-reset').addEventListener('click', function () {
@@ -421,18 +488,31 @@ document.getElementById('auth-reset').addEventListener('click', function () {
   var email = document.getElementById('reset-email').value;
   SummitAccount.resetPassword(email).then(function (result) {
     if (result && result.ok) authStatus('If an account uses that email, a reset link is on its way. Open it, choose a new password, then sign in.');
-    else if (result && result.reason === 'email') authStatus('Enter the email address on the account.');
+    else if (result && result.reason === 'email' && !(result && result.message)) authStatus('Enter the email address on the account.');
     else if (result && result.reason === 'offline') paintAuthMode('offline');
-    else authStatus('The reset link could not be sent. You can try again, or create an account.');
+    else authStatus(authFailureText(result, 'The reset link could not be sent. You can try again, or create an account.'));
+  }, function (err) {
+    authStatus(err && err.message ? String(err.message) : 'The reset link could not be sent.');
   });
 });
 document.getElementById('auth-resend').addEventListener('click', function () {
   if (!window.SummitAccount) return;
+  if (Date.now() < resendReadyAt) return;
+  var button = document.getElementById('auth-resend');
   var email = pendingEmail || (document.getElementById('magic-email') && document.getElementById('magic-email').value);
+  if (button) button.disabled = true;
   SummitAccount.resendConfirmation(email).then(function (result) {
-    if (result && result.ok) authStatus('A new confirmation email is on its way. Open the link, then sign in.');
-    else if (result && result.reason === 'offline') paintAuthMode('offline');
-    else authStatus('The email could not be sent. Check the address, or go back and sign in.');
+    if (result && result.ok) {
+      authStatus('A new confirmation email is on its way to ' + email + '. Check your spam folder too.');
+      startResendCooldown(60);
+      return;
+    }
+    if (button) button.disabled = false;
+    if (result && result.reason === 'offline') paintAuthMode('offline');
+    else authStatus(authFailureText(result, 'The email could not be sent. Check the address, or go back and sign in.'));
+  }, function (err) {
+    if (button) button.disabled = false;
+    authStatus(err && err.message ? String(err.message) : 'The email could not be sent.');
   });
 });
 document.getElementById('auth-recovery-save').addEventListener('click', function () {

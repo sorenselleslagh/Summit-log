@@ -1667,6 +1667,9 @@ p { margin: 0.25rem 0; }
 .login-card .login-note { margin-bottom: 0; }
 .login-card .field-label { text-align: left; margin-top: 0.15rem; }
 .login-card .auth-copy { display: block; margin: 0 0 0.9rem; text-align: left; color: var(--muted); }
+.auth-address { font-weight: 650; overflow-wrap: anywhere; margin: 0 0 0.75rem; text-align: left; }
+#auth-resend:disabled,
+#register-send:disabled { opacity: 0.55; }
 .auth-title { font-family: Fraunces, Georgia, serif; font-size: 1.45rem; font-weight: 560; margin: 0 0 0.45rem; text-align: left; }
 .text-btn {
   width: 100%;
