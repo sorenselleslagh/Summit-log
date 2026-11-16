@@ -478,6 +478,17 @@
     });
   }
 
+  function removePlan(item, membership) {
+    if (!client || !sessionUser || !item || !item.id) return Promise.resolve(null);
+    var id = String(item.id);
+    var share = client.from('plan_shares').delete().eq('owner_id', sessionUser.id).eq('local_id', id);
+    var record = client.from('account_records').delete().eq('owner_id', sessionUser.id).eq('kind', 'item').eq('local_id', id);
+    var member = membership && membership.id
+      ? client.from('account_records').delete().eq('owner_id', sessionUser.id).eq('kind', 'membership').eq('local_id', String(membership.id))
+      : Promise.resolve({ error: null });
+    return Promise.all([share, record, member]).then(function () { return { ok: true }; }, function () { return { ok: false }; });
+  }
+
   function publishMembership(objective, membership, planItem) {
     var source = planItem ? Object.assign({}, planItem) : {
       id: membership && membership.id,
@@ -924,6 +935,7 @@
     signOut: signOut,
     useAccessToken: useAccessToken,
     publishItem: publishItem,
+    removePlan: removePlan,
     publishMembership: publishMembership,
     saveArea: saveArea,
     PUBLIC_KEYS: PUBLIC_KEYS
