@@ -644,19 +644,50 @@
     }, function () { return { ok: false, reason: 'sdk' }; });
   }
 
+  function describeAuthError(error) {
+    var message = error && error.message ? String(error.message) : '';
+    var code = error && (error.code || error.error_code) ? String(error.code || error.error_code) : '';
+    var hay = (message + ' ' + code).toLowerCase();
+    var reason = 'send';
+    if (hay.indexOf('not authorized') >= 0 || hay.indexOf('email_address_not_authorized') >= 0) reason = 'unauthorized';
+    else if (hay.indexOf('already') >= 0 || hay.indexOf('registered') >= 0 || hay.indexOf('user_already_exists') >= 0) reason = 'exists';
+    else if (hay.indexOf('rate limit') >= 0 || hay.indexOf('rate_limit') >= 0 || hay.indexOf('too many') >= 0) reason = 'rate';
+    else if ((hay.indexOf('invalid') >= 0 && hay.indexOf('email') >= 0) || hay.indexOf('email_address_invalid') >= 0) reason = 'email';
+    else if (hay.indexOf('confirm') >= 0) reason = 'confirm';
+    return { ok: false, reason: reason, message: message, code: code };
+  }
+
+  function signupOutcome(result) {
+    if (!result) return { ok: false, reason: 'send', message: 'The account service did not answer.' };
+    if (result.error) return describeAuthError(result.error);
+    var user = result.data && result.data.user;
+    var identities = user && user.identities;
+    // An existing account comes back with no error and no identity, and no email is sent.
+    if (user && Array.isArray(identities) && identities.length === 0) {
+      return {
+        ok: false,
+        reason: 'exists',
+        message: 'That email already has an account. Sign in instead. No new confirmation email was sent.'
+      };
+    }
+    var session = result.data && result.data.session;
+    if (session) setUserFromSession(session);
+    return { ok: true, pending: !session };
+  }
+
   function registerWithEmail(email, password, first, last) {
     var address = clean(email, 200);
     var given = clean(first, 40);
     var family = clean(last, 40);
     var secret = String(password || '');
-    if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured' });
+    if (!configured()) return Promise.resolve({ ok: false, reason: 'unconfigured', message: 'An account server is not connected yet.' });
     if (!online()) return Promise.resolve({ ok: false, reason: 'offline' });
     if (!given || !family) return Promise.resolve({ ok: false, reason: 'name' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return Promise.resolve({ ok: false, reason: 'email' });
     if (secret.length < 8) return Promise.resolve({ ok: false, reason: 'password' });
     rememberPending(given, family);
-    return loadSdk().then(function (api) {
-      if (!api) return { ok: false, reason: 'unconfigured' };
+    return withTimeout(loadSdk(), 8000).then(function (api) {
+      if (!api) return { ok: false, reason: 'sdk', message: 'The account service did not load. Check your connection and try again.' };
       return api.auth.signUp({
         email: address,
         password: secret,
@@ -669,16 +700,13 @@
           }
         }
       }).then(function (result) {
-        if (result.error) {
-          var message = String(result.error.message || '').toLowerCase();
-          if (message.indexOf('already') >= 0 || message.indexOf('registered') >= 0) return { ok: false, reason: 'exists' };
-          return { ok: false, reason: 'send' };
-        }
-        var session = result.data && result.data.session;
-        if (session) setUserFromSession(session);
-        return { ok: true, pending: !session, email: address };
+        var outcome = signupOutcome(result);
+        if (outcome.ok) outcome.email = address;
+        return outcome;
+      }, function (err) {
+        return describeAuthError(err);
       });
-    }, function () { return { ok: false, reason: 'sdk' }; });
+    });
   }
 
   function signInWithPassword(email, password) {
@@ -691,14 +719,22 @@
       if (!api) return { ok: false, reason: 'unconfigured' };
       return api.auth.signInWithPassword({ email: address, password: secret }).then(function (result) {
         if (result.error) {
-          var message = String(result.error.message || '').toLowerCase();
-          if (message.indexOf('confirm') >= 0) return { ok: false, reason: 'confirm', email: address };
-          return { ok: false, reason: 'credentials' };
+          var failure = describeAuthError(result.error);
+          failure.email = address;
+          if (failure.reason === 'send') failure.reason = 'credentials';
+          return failure;
         }
         setUserFromSession(result.data && result.data.session);
         return runMigration().then(function () { return { ok: true, user: sessionUser }; });
+      }, function (err) {
+        var failure = describeAuthError(err);
+        failure.email = address;
+        if (!failure.message) failure.message = 'The account service did not answer.';
+        return failure;
       });
-    }, function () { return { ok: false, reason: 'sdk' }; });
+    }, function () {
+      return { ok: false, reason: 'sdk', email: address, message: 'The account service did not load. Check your connection and try again.' };
+    });
   }
 
   function resetPassword(email) {
@@ -709,10 +745,12 @@
     return loadSdk().then(function (api) {
       if (!api) return { ok: false, reason: 'unconfigured' };
       return api.auth.resetPasswordForEmail(address, { redirectTo: redirectTo() }).then(function (result) {
-        if (result.error) return { ok: false, reason: 'send' };
+        if (result.error) return describeAuthError(result.error);
         return { ok: true, email: address };
-      });
-    }, function () { return { ok: false, reason: 'sdk' }; });
+      }, function (err) { return describeAuthError(err); });
+    }, function () {
+      return { ok: false, reason: 'sdk', message: 'The account service did not load. Check your connection and try again.' };
+    });
   }
 
   function resendConfirmation(email) {
@@ -727,10 +765,12 @@
         email: address,
         options: { emailRedirectTo: redirectTo() }
       }).then(function (result) {
-        if (result.error) return { ok: false, reason: 'send' };
-        return { ok: true };
-      });
-    }, function () { return { ok: false, reason: 'sdk' }; });
+        if (result.error) return describeAuthError(result.error);
+        return { ok: true, email: address };
+      }, function (err) { return describeAuthError(err); });
+    }, function () {
+      return { ok: false, reason: 'sdk', message: 'The account service did not load. Check your connection and try again.' };
+    });
   }
 
   function updatePassword(password) {
@@ -922,6 +962,8 @@
     entryChoice: entryChoice,
     hasCachedSession: hasCachedSession,
     keepStoredSession: keepStoredSession,
+    describeAuthError: describeAuthError,
+    signupOutcome: signupOutcome,
     registerWithEmail: registerWithEmail,
     signInWithPassword: signInWithPassword,
     resetPassword: resetPassword,
