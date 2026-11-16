@@ -1426,6 +1426,39 @@ p { margin: 0.25rem 0; }
 #add-form.form-brief #peak-links,
 #add-form.form-brief #notes { display: none !important; }
 
+.plan-swipe {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0.9rem;
+  border-radius: var(--radius);
+  max-width: 100%;
+  min-width: 0;
+}
+.plan-swipe-delete {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 96px;
+  border: none;
+  border-radius: 0;
+  background: var(--danger);
+  color: white;
+  font-weight: 700;
+}
+.plan-swipe > .plan-record {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0;
+  cursor: pointer;
+  touch-action: pan-y;
+  transition: transform 0.18s ease;
+}
+.plan-swipe.is-open > .plan-record { transform: translateX(-96px); }
+@media (prefers-reduced-motion: reduce) {
+  .plan-swipe > .plan-record { transition: none; }
+}
+.plan-delete-page { width: 100%; margin-top: 0.8rem; }
 .plan-record { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 0.35rem 0.75rem; align-items: start; min-width: 0; max-width: 100%; }
 .plan-record-body { min-width: 0; }
 .plan-thumb { width: 96px; height: 112px; object-fit: cover; border-radius: 12px; grid-row: span 1; }

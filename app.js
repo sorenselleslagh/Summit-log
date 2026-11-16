@@ -837,6 +837,64 @@ function planStatusLine(item) {
   return count + (count === 1 ? ' in the queue · ' : ' in the queue · ') + label;
 }
 
+function bindPlanSwipe(row, card, item) {
+  var startX = 0;
+  var startY = 0;
+  var dx = 0;
+  var tracking = false;
+  var pointer = null;
+  card.addEventListener('pointerdown', function (event) {
+    if (event.target.closest && event.target.closest('button')) return;
+    tracking = true;
+    pointer = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    dx = 0;
+    try { card.setPointerCapture(event.pointerId); } catch (err) { /* a synthetic pointer has no capture */ }
+  });
+  card.addEventListener('pointermove', function (event) {
+    if (!tracking || event.pointerId !== pointer) return;
+    var next = event.clientX - startX;
+    var dy = event.clientY - startY;
+    if (Math.abs(next) < 8 || Math.abs(next) < Math.abs(dy)) return;
+    dx = next;
+    card.draggable = false;
+    var base = row.classList.contains('is-open') ? -96 : 0;
+    var shift = Math.min(0, Math.max(-96, base + dx));
+    card.style.transform = 'translateX(' + shift + 'px)';
+  });
+  function end(event) {
+    if (!tracking || (event && event.pointerId !== pointer)) return;
+    tracking = false;
+    card.style.transform = '';
+    card.draggable = true;
+    if (dx <= -48) {
+      document.querySelectorAll('.plan-swipe.is-open').forEach(function (open) {
+        if (open !== row) open.classList.remove('is-open');
+      });
+      row.classList.add('is-open');
+    } else {
+      row.classList.remove('is-open');
+    }
+    dx = 0;
+  }
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', end);
+  card.addEventListener('click', function (event) {
+    if (event.target.closest && event.target.closest('button')) return;
+    if (row.classList.contains('is-open')) return;
+    showPlanDetail(item.id);
+  });
+  card.addEventListener('dragstart', function (event) {
+    if (Math.abs(dx) > 8) {
+      event.preventDefault();
+      return;
+    }
+    event.dataTransfer.setData('text/plain', item.id);
+    event.dataTransfer.effectAllowed = 'move';
+  });
+}
+
 function renderPlanCard(item) {
   var when = item.fixedDate ? prettyDate(item.fixedDate) : (item.timeframe || 'Date not set');
   var card = el('article', { class: 'card plan-record', draggable: 'true', 'data-id': item.id },
@@ -849,21 +907,25 @@ function renderPlanCard(item) {
       el('p', { class: 'plan-status', text: planStatusLine(item) })
     ),
     el('div', { class: 'log-actions' },
-      el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'up', 'data-id': item.id, 'aria-label': 'Move up', text: '↑' }),
-      el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'down', 'data-id': item.id, 'aria-label': 'Move down', text: '↓' }),
-      el('button', { class: 'primary', type: 'button', 'data-action': 'open', 'data-id': item.id, text: 'Open' })
+      el('button', { class: 'primary', type: 'button', 'data-action': 'open', 'data-id': item.id, text: 'Open' }),
+      el('button', { class: 'danger icon-btn plan-delete', type: 'button', 'data-action': 'delete', 'data-id': item.id, 'aria-label': 'Delete plan', text: 'Delete' })
     )
   );
-  card.addEventListener('dragstart', function (event) {
-    event.dataTransfer.setData('text/plain', item.id);
-    event.dataTransfer.effectAllowed = 'move';
-  });
   card.addEventListener('dragover', function (event) { event.preventDefault(); });
   card.addEventListener('drop', function (event) {
     event.preventDefault();
     reorderPlannedTo(event.dataTransfer.getData('text/plain'), item.id);
   });
-  return card;
+  var reveal = el('button', {
+    class: 'plan-swipe-delete',
+    type: 'button',
+    'data-action': 'delete',
+    'data-id': item.id,
+    text: 'Delete'
+  });
+  var row = el('div', { class: 'plan-swipe', 'data-swipe': item.id }, reveal, card);
+  bindPlanSwipe(row, card, item);
+  return row;
 }
 
 function renderMine() {
@@ -930,7 +992,10 @@ function onItemClick(event) {
   var id = button.getAttribute('data-id');
   var action = button.getAttribute('data-action');
   if (action === 'edit') editItem(id);
-  if (action === 'delete') deleteItem(id);
+  if (action === 'delete') {
+    if (plannedItems().some(function (item) { return item.id === id; })) deletePlan(id);
+    else deleteItem(id);
+  }
   if (action === 'done') openDonePrompt(id);
   if (action === 'open') showPlanDetail(id);
   if (action === 'memory') showMemory(id);
@@ -1340,10 +1405,11 @@ function addCatalogItem(place) {
 }
 
 var toastUndoId = '';
+var planUndo = null;
 var peakPagePeak = null;
 var peakPageStack = [];
 
-function showToast(message, actions) {
+function showToast(message, actions, duration) {
   var toast = document.getElementById('plan-toast');
   if (!toast) return;
   var buttons = (actions || []).map(function (action) {
@@ -1357,12 +1423,85 @@ function showToast(message, actions) {
   toast.replaceChildren(el('p', { text: message }), el('div', { class: 'plan-toast-actions' }, buttons));
   toast.classList.remove('hidden');
   clearTimeout(toast._timer);
-  toast._timer = setTimeout(hideToast, 4200);
+  toast._timer = setTimeout(hideToast, duration || 4200);
 }
 
 function hideToast() {
   var toast = document.getElementById('plan-toast');
   if (toast) toast.classList.add('hidden');
+}
+
+function planQueueLink(item) {
+  if (!item) return { objective: { id: '', name: '' }, membership: null };
+  rebuildObjectives();
+  var objective = Partners.resolveObjective(objectiveCatalog, item);
+  var named = objective ? objective.name : item.name;
+  var objectiveId = objective ? objective.id : '';
+  var membership = null;
+  memberships.forEach(function (row) {
+    if (!row) return;
+    var sameId = objectiveId && row.objectiveId && row.objectiveId === objectiveId;
+    var sameName = Partners.fold(row.objectiveName) === Partners.fold(named);
+    if (sameId || sameName) membership = row;
+  });
+  return {
+    objective: { id: objectiveId, name: named },
+    membership: membership
+  };
+}
+
+function deletePlan(id) {
+  var index = items.findIndex(function (item) { return item.id === id && item.status === 'planned'; });
+  if (index < 0) return;
+  var item = items[index];
+  var link = planQueueLink(item);
+  var snapshot = {
+    item: JSON.parse(JSON.stringify(item)),
+    membership: link.membership ? JSON.parse(JSON.stringify(link.membership)) : null,
+    objective: link.objective
+  };
+  items.splice(index, 1);
+  if (link.membership) {
+    memberships = Store.saveMemberships(Partners.removeMembership(memberships, link.objective));
+  }
+  saveItems();
+  if (activePlanId === id) showPlanHome();
+  renderMine();
+  if (window.SummitAccount && SummitAccount.removePlan) SummitAccount.removePlan(snapshot.item, snapshot.membership);
+  planUndo = snapshot;
+  showToast(item.name + ' deleted', [
+    { label: 'Undo', run: undoDeletePlan }
+  ], 5000);
+}
+
+function undoDeletePlan() {
+  var snapshot = planUndo;
+  planUndo = null;
+  if (!snapshot || !snapshot.item) return;
+  if (items.some(function (item) { return item.id === snapshot.item.id; })) return;
+  if (plannedItems().some(function (item) { return Partners.fold(item.name) === Partners.fold(snapshot.item.name); })) {
+    showToast(snapshot.item.name + ' is already in your plan', []);
+    return;
+  }
+  items.push(snapshot.item);
+  saveItems();
+  if (snapshot.membership) {
+    var present = false;
+    memberships.forEach(function (row) {
+      if (!row) return;
+      if (snapshot.objective.id && row.objectiveId === snapshot.objective.id) present = true;
+      if (Partners.fold(row.objectiveName) === Partners.fold(snapshot.objective.name)) present = true;
+    });
+    if (!present) memberships = Store.saveMemberships(memberships.concat([snapshot.membership]));
+  }
+  renderMine();
+  if (window.SummitAccount && SummitAccount.user() && SummitAccount.publishItem) {
+    SummitAccount.publishItem(snapshot.item);
+    if (snapshot.membership && SummitAccount.publishMembership) {
+      SummitAccount.publishMembership(snapshot.objective, snapshot.membership, snapshot.item);
+    }
+  }
+  if (peakPagePeak) renderPeakPage(peakPagePeak);
 }
 
 function undoPlan(id) {
@@ -3732,6 +3871,8 @@ function planDetailNode(item) {
   var partnerBlock = planPartnersNode(item, partners);
   var done = el('button', { class: 'primary plan-done', type: 'button', text: 'Mark as done' });
   done.addEventListener('click', function () { openDonePrompt(item.id); });
+  var removePlanButton = el('button', { class: 'danger plan-delete-page', type: 'button', text: 'Delete plan' });
+  removePlanButton.addEventListener('click', function () { deletePlan(item.id); });
   return el('div', { class: 'plan-sheet' },
     back,
     el('h2', { text: item.name }),
@@ -3763,7 +3904,8 @@ function planDetailNode(item) {
     saveNotes,
     checklistNode(item),
     partnerBlock,
-    done
+    done,
+    removePlanButton
   );
 }
 
