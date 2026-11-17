@@ -2181,21 +2181,34 @@ html.explore-map .map-chips {
 html.explore-map .map-summary { display: none; }
 
 .leaflet-control-attribution {
-  max-width: 42vw;
+  max-width: calc(100vw - 5.2rem);
   margin: 0 0 0.35rem 0.35rem !important;
-  padding: 1px 6px !important;
+  padding: 2px 6px !important;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.72) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
   color: #5c564e;
   font-size: 10px !important;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  white-space: normal;
   box-shadow: none;
 }
 html.explore-map .leaflet-bottom.leaflet-left {
   bottom: calc(4.4rem + env(safe-area-inset-bottom, 0px));
+}
+.map-credits {
+  position: absolute;
+  left: 0.45rem;
+  right: 4.6rem;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  z-index: 1404;
+  margin: 0;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #5c564e;
+  font-size: 10px;
+  line-height: 1.35;
+  pointer-events: none;
 }
 .leaflet-control-attribution a { color: inherit; }
 

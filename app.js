@@ -2220,7 +2220,7 @@ function initMap() {
       var mapTap = null;
       var mapEl = document.getElementById('map-container');
       mapEl.addEventListener('pointerdown', function (event) {
-        if (event.target.closest && event.target.closest('.leaflet-control, .leaflet-marker-icon, .photo-pin, .pin-dot, .pin-cluster')) return;
+        if (event.target.closest && event.target.closest('.leaflet-control, .leaflet-interactive, .leaflet-marker-icon, .photo-pin, .pin-dot, .pin-cluster')) return;
         mapTap = { id: event.pointerId, x: event.clientX, y: event.clientY, t: Date.now() };
       });
       mapEl.addEventListener('pointerup', function (event) {
@@ -2243,7 +2243,7 @@ function initMap() {
 
 function mutedTiles() {
   return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '© Esri, OSM',
+    attribution: '',
     maxZoom: 16,
     errorTileUrl: 'icons/tile-offline.svg'
   });
@@ -2278,12 +2278,14 @@ function featureMatchesQuery(name) {
 function mapFeatures() {
   var list = [];
   var active = activeCollectionRecord();
-  var showPeaks = mapFilter === 'all' || mapFilter === '4000' || mapFilter === 'planned' || mapFilter === 'done';
+  var mountaineering = !window.SummitLayers || !SummitLayers.on || SummitLayers.on('mountaineering');
+  var showPeaks = mountaineering && (mapFilter === 'all' || mapFilter === '4000' || mapFilter === 'planned' || mapFilter === 'done');
   var showTreks = mapFilter === 'all' || mapFilter === 'treks';
   if (active && active.kind === 'treks') {
     showPeaks = false;
     showTreks = true;
   } else if (active && active.peaks) {
+    if (!mountaineering) return [];
     showTreks = false;
     active.peaks.forEach(function (peak) {
       if (!featureMatchesQuery(peak.name)) return;
@@ -2542,6 +2544,7 @@ function updateMapMarkers() {
     addDivMarker(spec.lat, spec.lng, spec.icon, spec.onClick, spec.key, animate);
   });
   markers = Object.keys(liveMarkers).map(function (key) { return liveMarkers[key]; });
+  if (window.SummitLayers) SummitLayers.draw(map);
 }
 
 function loadPeaksInView() {
@@ -3530,6 +3533,144 @@ function showPeakDetail(peak) {
   if (map) {
     map.setView([peak.lat, peak.lng], Math.max(map.getZoom(), 10), { animate: !prefersReducedMotion() });
   }
+}
+
+function saveBoulder(problem, status) {
+  if (!problem || !problem.name) return;
+  var key = 'boolder-' + problem.id;
+  var existing = null;
+  items.forEach(function (item) {
+    if (item.collectionId === key) existing = item;
+  });
+  if (existing && status === 'planned' && existing.status === 'planned') {
+    showToast(problem.name + ' is already in your plan');
+    return;
+  }
+  var circuit = [problem.circuitColor, problem.circuitNumber].filter(Boolean).join(' ');
+  var fields = {
+    kind: 'route',
+    name: problem.name,
+    activity: 'bouldering',
+    grade: problem.grade || '',
+    crag: problem.area || '',
+    lat: problem.lat,
+    lng: problem.lng,
+    notes: circuit ? 'Circuit ' + circuit : '',
+    collectionId: key,
+    status: status,
+    date: status === 'done' ? Lgc.todayISO() : ''
+  };
+  if (existing) {
+    items = items.map(function (item) {
+      if (item.collectionId !== key) return item;
+      return Lgc.updateLog(item, fields) || item;
+    });
+  } else {
+    var entry = Lgc.createLog(fields);
+    if (!entry) return;
+    items.push(entry);
+  }
+  saveItems();
+  renderMine();
+  showToast(status === 'done' ? 'Logged ' + problem.name : 'Added ' + problem.name);
+}
+
+function showClimbProblem(problem) {
+  var box = document.getElementById('peak-detail');
+  if (!box || !problem) return;
+  var circuit = [problem.circuitColor, problem.circuitNumber].filter(Boolean).join(' ');
+  var add = el('button', { class: 'primary', type: 'button', text: 'Add to plan' });
+  var log = el('button', { class: 'secondary', type: 'button', text: 'Log it' });
+  add.addEventListener('click', function () { saveBoulder(problem, 'planned'); });
+  log.addEventListener('click', function () { saveBoulder(problem, 'done'); });
+  box.replaceChildren(
+    el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' }),
+    sheetCloseButton(),
+    el('div', { class: 'detail-copy compact-card' },
+      el('p', { class: 'field-label', text: problem.area || 'Fontainebleau' }),
+      el('h2', { class: 'summit-name', text: problem.name }),
+      el('p', { class: 'sheet-meta' },
+        problem.grade ? el('span', { class: 'grade-badge', text: problem.grade }) : null,
+        circuit ? el('span', { text: 'Circuit ' + circuit }) : null
+      ),
+      el('div', { class: 'log-actions' }, add, log)
+    )
+  );
+  box.classList.remove('hidden');
+  if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
+  else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
+}
+
+function showTrekLine(trek) {
+  if (!trek) return;
+  var known = famousByName(trek.name);
+  if (known) {
+    showTrailSheet(known);
+    return;
+  }
+  var box = document.getElementById('peak-detail');
+  if (!box) return;
+  var add = el('button', { class: 'primary', type: 'button', text: 'Add to plan' });
+  add.addEventListener('click', function () {
+    var entry = Lgc.createLog({
+      kind: 'hike',
+      name: trek.name,
+      status: 'planned',
+      notes: 'Famous trek'
+    });
+    if (!entry) return;
+    items.push(entry);
+    saveItems();
+    renderMine();
+    showToast('Added ' + trek.name);
+  });
+  box.replaceChildren(
+    el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' }),
+    sheetCloseButton(),
+    el('div', { class: 'detail-copy compact-card' },
+      el('p', { class: 'field-label', text: 'Trek' }),
+      el('h2', { class: 'summit-name', text: trek.name }),
+      el('p', { class: 'muted', text: (trek.huts ? trek.huts.length : 0) ? 'Alpine huts are marked along the line.' : '' }),
+      el('div', { class: 'log-actions' }, add)
+    )
+  );
+  box.classList.remove('hidden');
+  if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
+  else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
+}
+
+function showHutStop(hut, trek) {
+  var box = document.getElementById('peak-detail');
+  if (!box || !hut) return;
+  var add = el('button', { class: 'primary', type: 'button', text: 'Add to plan' });
+  add.addEventListener('click', function () {
+    var entry = Lgc.createLog({
+      kind: 'hike',
+      name: hut.name,
+      lat: hut.lat,
+      lng: hut.lng,
+      status: 'planned',
+      notes: trek && trek.name ? 'Hut on ' + trek.name : 'Alpine hut'
+    });
+    if (!entry) return;
+    items.push(entry);
+    saveItems();
+    renderMine();
+    showToast('Added ' + hut.name);
+  });
+  box.replaceChildren(
+    el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' }),
+    sheetCloseButton(),
+    el('div', { class: 'detail-copy compact-card' },
+      el('p', { class: 'field-label', text: 'Alpine hut' }),
+      el('h2', { class: 'summit-name', text: hut.name }),
+      trek && trek.name ? el('p', { text: trek.name }) : null,
+      el('div', { class: 'log-actions' }, add)
+    )
+  );
+  box.classList.remove('hidden');
+  if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
+  else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');
 }
 
 function sheetCloseButton() {
@@ -5111,6 +5252,16 @@ function addExploreObjective(id) {
 document.getElementById('plan-quick-add').addEventListener('click', function () { finishQuickPlan(true); });
 document.getElementById('plan-quick-skip').addEventListener('click', function () { finishQuickPlan(false); });
 document.getElementById('map-chips').addEventListener('click', function (event) {
+  var layerButton = event.target.closest ? event.target.closest('[data-layer]') : null;
+  if (layerButton && window.SummitLayers) {
+    var layerName = layerButton.getAttribute('data-layer');
+    var enabled = SummitLayers.toggle(layerName);
+    layerButton.classList.toggle('active', enabled);
+    layerButton.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    if (enabled) SummitLayers.focus(layerName);
+    updateMapMarkers();
+    return;
+  }
   var button = event.target.closest ? event.target.closest('[data-map-filter]') : null;
   if (!button) return;
   mapFilter = button.getAttribute('data-map-filter');

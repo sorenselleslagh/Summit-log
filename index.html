@@ -399,7 +399,10 @@
                 <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
               </div>
             </div>
-            <div class="map-chips" id="map-chips" role="group" aria-label="Map filters">
+            <div class="map-chips" id="map-chips" role="group" aria-label="Map layers">
+              <button type="button" class="map-chip" data-layer="climbing" aria-pressed="false">Climbing</button>
+              <button type="button" class="map-chip active" data-layer="mountaineering" aria-pressed="true">Mountaineering</button>
+              <button type="button" class="map-chip" data-layer="hiking" aria-pressed="false">Hiking</button>
               <button type="button" class="map-chip active" data-map-filter="all" aria-pressed="true">All</button>
               <button type="button" class="map-chip" data-map-filter="4000" aria-pressed="false">4000ers</button>
               <button type="button" class="map-chip" data-map-filter="treks" aria-pressed="false">Treks</button>
@@ -414,6 +417,7 @@
             </button>
           </div>
           <p id="map-status" class="map-status hidden" role="status"></p>
+          <p class="map-credits">© OpenStreetMap contributors (ODbL) · Boolder (CC BY 4.0) · Esri</p>
           <div id="explore-sheet" class="explore-sheet is-peek">
             <button class="sheet-grab" id="explore-grab" type="button" aria-label="Drag the collections sheet"></button>
             <div id="explore-sheet-head"><p class="sheet-kicker">Find your next peak</p></div>
@@ -599,6 +603,7 @@
   <script src="chat.js"></script>
   <script src="profile.js"></script>
   <script src="connections.js"></script>
+  <script src="map-layers.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
