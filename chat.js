@@ -111,8 +111,8 @@
 
   function loadProfileRows(ids, withRegion) {
     var rich = withRegion
-      ? 'id, display_name, first_name, last_name, region_label'
-      : 'id, display_name, first_name, last_name';
+      ? 'id, display_name, first_name, last_name, region_label, avatar_path'
+      : 'id, display_name, first_name, last_name, avatar_path';
     var plain = withRegion ? 'id, display_name, region_label' : 'id, display_name';
     return db().from('profiles').select(rich).in('id', ids).then(function (result) {
       if (!result.error) return result;
@@ -131,7 +131,7 @@
   function rememberProfiles(ids) {
     var list = [];
     (ids || []).forEach(function (id) {
-      if (id && nameCache[id] == null && list.indexOf(id) < 0) list.push(id);
+      if (id && (nameCache[id] == null || avatarCache[id] == null) && list.indexOf(id) < 0) list.push(id);
     });
     if (!list.length || !ready()) return Promise.resolve();
     return Promise.all([
@@ -153,10 +153,11 @@
       });
       ((parts[0] && parts[0].data) || []).forEach(function (row) {
         nameCache[row.id] = profileName(row);
+        if (row.avatar_path) paths[row.id] = row.avatar_path;
       });
       list.forEach(function (id) {
         if (nameCache[id] == null) nameCache[id] = '';
-        if (avatarCache[id] == null) avatarCache[id] = paths[id] ? publicAvatarUrl(paths[id]) : '';
+        avatarCache[id] = paths[id] ? publicAvatarUrl(paths[id]) : '';
       });
     }).catch(function () {
       list.forEach(function (id) {
@@ -1324,6 +1325,10 @@
     enablePush: enablePush,
     paintAvatar: paintAvatar,
     clearAvatarCache: function () { avatarCache = {}; },
+    rememberAvatar: function (userId, path) {
+      if (!userId) return;
+      avatarCache[userId] = path ? publicAvatarUrl(path) : '';
+    },
     forgetAvatar: function (userId) {
       if (!userId) return;
       delete nameCache[userId];

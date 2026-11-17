@@ -71,7 +71,7 @@
 
   var MOCK = {
     accepted: [
-      { id: 'c-ada', otherId: '11111111-1111-4111-8111-111111111111', name: 'Ada Lovelace', avatarUrl: '', credential: 'IFMGA guide' },
+      { id: 'c-ada', otherId: '11111111-1111-4111-8111-111111111111', name: 'Ada Lovelace', avatarUrl: 'icons/icon-192.png', credential: 'IFMGA guide' },
       { id: 'c-blair', otherId: '22222222-2222-4222-8222-222222222222', name: 'Blair Tremblay', avatarUrl: '', credential: 'First aid' }
     ],
     incoming: [
@@ -396,12 +396,21 @@
         paint();
         return rows;
       }
-      return db().from('profiles').select('id, display_name, first_name, last_name').in('id', ids).then(function (people) {
+      return db().from('profiles').select('id, display_name, first_name, last_name, avatar_path').in('id', ids).then(function (people) {
+        if (people && people.error) {
+          return db().from('profiles').select('id, display_name, first_name, last_name').in('id', ids);
+        }
+        return people;
+      }).then(function (people) {
         var names = {};
-        ((people && people.data) || []).forEach(function (row) { names[row.id] = fullName(row) || 'Climber'; });
+        var photos = {};
+        ((people && people.data) || []).forEach(function (row) {
+          names[row.id] = fullName(row) || 'Climber';
+          photos[row.id] = row.avatar_path || '';
+        });
         next.forEach(function (row) {
           row.name = names[row.otherId] || 'Climber';
-          row.avatarUrl = '';
+          row.avatarUrl = avatarUrl(row.otherId, photos[row.otherId]);
         });
         rows = next;
         paint();

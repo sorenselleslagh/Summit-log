@@ -165,9 +165,21 @@
     });
   }
 
+  function publicAvatar(path) {
+    if (!path) return '';
+    if (String(path).indexOf('http') === 0) return path;
+    var client = account() && account().client && account().client();
+    if (!client || !client.storage) return '';
+    var got = client.storage.from('avatars').getPublicUrl(path);
+    return (got && got.data && got.data.publicUrl) || '';
+  }
+
   function photoNode(name, url) {
     if (url) {
       var img = el('img', { class: 'profile-photo', alt: '' });
+      img.addEventListener('error', function () {
+        img.replaceWith(el('span', { class: 'profile-photo profile-initials', text: initials(name) }));
+      });
       img.src = url;
       return img;
     }
@@ -573,15 +585,20 @@
     var photoDone = pendingPhotoBlob && root.SummitPhotos && root.SummitPhotos.setAvatar
       ? root.SummitPhotos.setAvatar(pendingPhotoBlob) : Promise.resolve();
     var namesSaved = signedIn() && account().saveNames ? account().saveNames(first, last) : Promise.resolve({ ok: true });
-    photoDone.then(function () { return namesSaved; }).then(function () { return pushRemote(first, last, bio, home, isPrivate, next); }).then(function () {
+    photoDone.then(function () { return namesSaved; }).then(function () { return pushRemote(first, last, bio, home, isPrivate, next); }).then(function (remote) {
+      if (remote && remote.ok === false) {
+        if (editStatus) editStatus.textContent = remote.message || 'The photo could not be saved.';
+        paint();
+        return;
+      }
       editing = false;
       pendingPhotoBlob = null;
       proofFiles = {};
       if (signedIn() && root.SummitChat && SummitChat.forgetAvatar) SummitChat.forgetAvatar(account().user().id);
       paint();
       paintAvatarButtons(name || 'You');
-    }).catch(function () {
-      editing = false;
+    }).catch(function (err) {
+      if (editStatus) editStatus.textContent = (err && err.message) || 'The profile could not be saved.';
       paint();
     });
   }
@@ -637,19 +654,41 @@
         });
       }));
     }).then(function () {
-      if (!pendingPhotoBlob) return null;
-      var path = id + '/avatar-' + Date.now() + '.jpg';
-      return db.storage.from('avatars').upload(path, pendingPhotoBlob, { upsert: false, contentType: 'image/jpeg' }).then(function (upload) {
-        if (upload.error) return null;
-        return db.from('profiles').update({
-          avatar_path: path,
-          updated_at: new Date().toISOString()
-        }).eq('id', id).then(function (saved) {
-          if (!saved.error) return saved;
-          return db.from('profile_details').update({ avatar_path: path }).eq('profile_id', id);
-        });
+      if (!pendingPhotoBlob) return { ok: true };
+      return uploadAvatar(id, pendingPhotoBlob);
+    }).catch(function (err) {
+      return { ok: false, message: (err && err.message) || 'The profile could not be saved.' };
+    });
+  }
+
+  function saveAvatarPath(db, id, path) {
+    function write() {
+      return db.from('profiles').update({
+        avatar_path: path,
+        updated_at: new Date().toISOString()
+      }).eq('id', id);
+    }
+    return write().then(function (saved) {
+      if (!saved.error) return { ok: true, path: path };
+      return write().then(function (again) {
+        if (!again.error) return { ok: true, path: path };
+        return { ok: false, message: again.error.message || 'The photo uploaded, but the profile did not save it.' };
       });
-    }).catch(function () { return null; });
+    });
+  }
+
+  function uploadAvatar(id, blob) {
+    var db = account().client();
+    var path = id + '/avatar-' + Date.now() + '.jpg';
+    return db.storage.from('avatars').upload(path, blob, { upsert: false, contentType: 'image/jpeg' }).then(function (upload) {
+      if (upload.error) return { ok: false, message: upload.error.message || 'The photo could not be uploaded.' };
+      return saveAvatarPath(db, id, path).then(function (saved) {
+        if (saved.ok && root.SummitChat && SummitChat.rememberAvatar) SummitChat.rememberAvatar(id, path);
+        return saved;
+      });
+    }, function (err) {
+      return { ok: false, message: (err && err.message) || 'The photo could not be uploaded.' };
+    });
   }
 
   function paintOther(host) {
@@ -750,6 +789,26 @@
   function pullOwn() {
     var db = account().client();
     var id = account().user().id;
+    db.from('profiles').select('avatar_path').eq('id', id).maybeSingle().then(function (result) {
+      if (result.error || !result.data) return;
+      var path = result.data.avatar_path || '';
+      if (path) {
+        if (root.SummitChat && SummitChat.rememberAvatar) SummitChat.rememberAvatar(id, path);
+        if (screenMode === 'own' && !editing) paint();
+        paintAvatarButtons(localProfile().name);
+        return;
+      }
+      var photos = root.SummitPhotos;
+      if (!photos || !photos.getAvatar) return;
+      photos.getAvatar().then(function (row) {
+        if (!row || !row.blob) return;
+        return uploadAvatar(id, row.blob);
+      }).then(function (saved) {
+        if (saved && saved.ok === false) return;
+        if (screenMode === 'own' && !editing) paint();
+        paintAvatarButtons(localProfile().name);
+      }).catch(function () {});
+    }).catch(function () {});
     db.from('profile_details').select('bio, home_base, is_private').eq('profile_id', id).maybeSingle().then(function (result) {
       if (result.error || !result.data || !store()) return;
       store().saveProfile({
@@ -788,11 +847,17 @@
     paint();
     if (!signedIn() || !person.userId) return;
     var db = account().client();
-    db.from('profiles').select('display_name, first_name, last_name').eq('id', person.userId).maybeSingle().then(function (result) {
-      if (!other || other.id !== person.userId || !result.data) return;
+    db.from('profiles').select('display_name, first_name, last_name, avatar_path').eq('id', person.userId).maybeSingle().then(function (result) {
+      if (result.error) {
+        return db.from('profiles').select('display_name, first_name, last_name').eq('id', person.userId).maybeSingle();
+      }
+      return result;
+    }).then(function (result) {
+      if (!other || other.id !== person.userId || !result || !result.data) return;
       var row = result.data;
       var full = (row.first_name && row.last_name) ? (row.first_name + ' ' + row.last_name) : (row.display_name || '');
       if (full) other.name = full;
+      if (row.avatar_path) other.avatarUrl = publicAvatar(row.avatar_path);
       paint();
     }).catch(function () {});
     db.from('profile_details').select('bio, home_base, is_private').eq('profile_id', person.userId).maybeSingle().then(function (result) {
