@@ -694,10 +694,19 @@
   function paintOther(host) {
     var person = other || { name: 'Climber', bio: '', homeBase: '', credentials: [], plans: [], together: [] };
     var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
-    back.addEventListener('click', function () { screenMode = 'own'; other = null; paint(); });
+    back.addEventListener('click', function () {
+      var returnToMessages = other && other.fromMessages;
+      screenMode = 'own';
+      other = null;
+      if (returnToMessages && root.SummitChat && root.SummitChat.openInbox) {
+        root.SummitChat.openInbox();
+        return;
+      }
+      paint();
+    });
     var partnerState = root.SummitConnections && person.id ? root.SummitConnections.stateFor(person.id) : 'none';
-    var request = el('button', { class: 'secondary', type: 'button', text: 'Request to climb together' });
-    var message = el('button', { class: partnerState === 'accepted' ? 'primary' : 'secondary', type: 'button', text: 'Message' });
+    var climb = el('button', { class: 'primary', type: 'button', text: 'Request a climb' });
+    var message = el('button', { class: 'secondary', type: 'button', text: 'Message' });
     var addLabel = partnerState === 'accepted' ? 'Remove partner' : partnerState === 'requested' ? 'Requested' : 'Add partner';
     var addPartner = el('button', { class: partnerState === 'none' ? 'primary' : 'secondary', type: 'button', text: addLabel });
     if (partnerState === 'requested') addPartner.disabled = true;
@@ -717,25 +726,9 @@
       if (partnerState !== 'none') return;
       root.SummitConnections.request({ id: person.id, name: person.name }).then(function () { paint(); });
     });
-    request.addEventListener('click', function () {
-      if (!signedIn()) { hooks.signIn(); return; }
-      var plan = person.planRows && person.planRows[0];
-      if (!plan) {
-        request.textContent = 'They have no shared objective yet';
-        request.disabled = true;
-        return;
-      }
-      account().client().from('partner_requests').insert({
-        to_user: person.id,
-        plan_id: plan.id,
-        objective_name: plan.name,
-        route_name: plan.route_name || '',
-        dates: plan.fixed_date || plan.timeframe || '',
-        stage: plan.stage || ''
-      }).then(function (result) {
-        request.textContent = result.error ? 'Could not send' : 'Request sent';
-        request.disabled = true;
-      });
+    climb.addEventListener('click', function () {
+      if (!root.SummitChat || !root.SummitChat.openClimbSheet) return;
+      root.SummitChat.openClimbSheet({ id: person.id, userId: person.id, name: person.name });
     });
     var chips = publicCredentials(person.credentials).map(function (row) {
       var type = byCode(row.code);
@@ -749,7 +742,7 @@
         person.privateProfile ? el('p', { class: 'lock-mark', text: 'Private profile' }) : null,
         !person.privateProfile && person.bio ? el('p', { text: person.bio }) : null,
         !person.privateProfile && person.homeBase ? el('p', { class: 'profile-home', text: person.homeBase }) : null,
-        el('div', { class: 'profile-actions' }, message, addPartner, request)
+        el('div', { class: 'profile-actions' }, message, climb, addPartner)
       ),
       el('section', { class: 'card' },
         el('h3', { text: 'Credentials' }),
@@ -837,6 +830,7 @@
       id: person.userId,
       name: person.name || 'Climber',
       avatarUrl: person.avatarUrl || '',
+      fromMessages: person.fromMessages === true,
       bio: '',
       homeBase: person.level && person.level.indexOf('Near ') === 0 ? person.level.slice(5) : '',
       credentials: [],

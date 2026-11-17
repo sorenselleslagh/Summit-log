@@ -207,10 +207,16 @@
     }).catch(function () { showInitials(slot, name); });
   }
 
+  function partnerAvatar(userId) {
+    var api = root.SummitConnections;
+    if (!api || !api.avatarFor || !userId) return '';
+    return api.avatarFor(userId) || '';
+  }
+
   function messageAvatar(userId, name) {
     var slot = el('span', { class: 'msg-avatar', 'aria-hidden': 'true' });
     var label = name || nameFor(userId);
-    var url = userId ? avatarCache[userId] : '';
+    var url = userId ? (avatarCache[userId] || partnerAvatar(userId)) : '';
     if (url) photoInto(slot, url, userId, label);
     else if (userId && userId === uid()) localPhoto(slot, label);
     else showInitials(slot, label);
@@ -258,11 +264,11 @@
 
   function setStatus(text) {
     var node = byId('messages-status');
-    if (node && text) node.textContent = text;
+    if (node) node.textContent = text || '';
   }
 
   function setBadge(count) {
-    ['nav-unread', 'chat-unread', 'map-chat-unread'].forEach(function (id) {
+    ['chat-unread', 'map-chat-unread'].forEach(function (id) {
       var badge = byId(id);
       if (!badge) return;
       if (!count) {
@@ -582,19 +588,29 @@
     return db().rpc('decline_partner_request', { request_id: id }).then(function () { return refresh(); });
   }
 
-  function showChatShell() {
-    if (hooks.selectPartners) hooks.selectPartners();
-    var flow = byId('partner-flow');
-    var panel = byId('messages-panel');
-    var screen = byId('chat-screen');
+  function showMessagesScreen() {
+    var screen = byId('messages-screen');
+    if (screen) screen.classList.remove('hidden');
+    var home = byId('messages-home');
+    if (home) home.classList.remove('hidden');
+    var chat = byId('chat-screen');
+    if (chat) chat.classList.add('hidden');
     var shared = byId('shared-plan-view');
-  if (flow) flow.classList.add('hidden');
-  if (panel) panel.classList.add('hidden');
-  var find = byId('partner-find');
-  if (find) find.classList.add('hidden');
-    var mine = byId('my-partners');
-    if (mine) mine.classList.add('hidden');
     if (shared) shared.classList.add('hidden');
+    if (root.SummitConnections) root.SummitConnections.refresh();
+  }
+
+  function hideMessagesScreen() {
+    var screen = byId('messages-screen');
+    if (screen) screen.classList.add('hidden');
+    active = null;
+  }
+
+  function showChatShell() {
+    showMessagesScreen();
+    var home = byId('messages-home');
+    if (home) home.classList.add('hidden');
+    var screen = byId('chat-screen');
     if (screen) screen.classList.remove('hidden');
   }
 
@@ -710,8 +726,8 @@
         el('div', { class: 'chat-head-row' },
           messageAvatar(active.otherId, otherName),
           el('div', { class: 'chat-head-copy' },
-            el('h2', { text: conversation.objective_name || 'Conversation' }),
-            el('p', { class: 'chat-objective', text: headerLine(conversation) || 'Objective' })
+            el('h2', { text: otherName || conversation.objective_name || 'Conversation' }),
+            el('p', { class: 'chat-objective', text: headerLine(conversation) || conversation.objective_name || '' })
           )
         ),
         plan
@@ -730,7 +746,8 @@
     var mine = message.sender_id === uid();
     var failed = message.failed ? el('span', { class: 'bubble-failed', text: 'Not sent yet. It will retry.' }) : null;
     var body;
-    if (message.kind === 'date_proposal') body = dateCard(message, mine);
+    if (message.kind === 'climb_request') body = climbCard(message, mine);
+    else if (message.kind === 'date_proposal') body = dateCard(message, mine);
     else if (message.kind === 'gear_checklist') {
       var items = (message.payload && message.payload.items) || [];
       var list = el('ul', { class: 'gear-list' });
@@ -752,6 +769,66 @@
       messageAvatar(message.sender_id, nameFor(message.sender_id)),
       body
     );
+  }
+
+  function climbCard(message, mine) {
+    var payload = message.payload || {};
+    var status = payload.status || 'pending';
+    var lines = [payload.dates || '', payload.note || ''].filter(Boolean).join(' · ');
+    var actions = null;
+    if (!mine && status === 'pending') {
+      var accept = el('button', { class: 'primary', type: 'button', text: 'Accept' });
+      var decline = el('button', { class: 'secondary', type: 'button', text: 'Decline' });
+      var suggest = el('button', { class: 'secondary', type: 'button', text: 'Suggest another date' });
+      accept.addEventListener('click', function () { respondClimb(message, 'accepted', ''); });
+      decline.addEventListener('click', function () { respondClimb(message, 'declined', ''); });
+      suggest.addEventListener('click', function () {
+        var field = el('input', { type: 'text', maxlength: '120', placeholder: 'Another date', 'aria-label': 'Another date' });
+        var send = el('button', { class: 'primary', type: 'button', text: 'Send date' });
+        send.addEventListener('click', function () {
+          var next = field.value.trim().slice(0, 120);
+          if (!next) return;
+          respondClimb(message, 'suggested', next);
+        });
+        suggest.replaceWith(el('div', { class: 'partner-actions' }, field, send));
+      });
+      actions = el('div', { class: 'partner-actions' }, accept, decline, suggest);
+    } else if (mine && status === 'suggested') {
+      var take = el('button', { class: 'primary', type: 'button', text: 'Accept this date' });
+      var no = el('button', { class: 'secondary', type: 'button', text: 'Decline' });
+      take.addEventListener('click', function () { respondClimb(message, 'accepted', payload.suggestion || ''); });
+      no.addEventListener('click', function () { respondClimb(message, 'declined', ''); });
+      actions = el('div', { class: 'partner-actions' }, take, no);
+    }
+    var state = status === 'pending' ? 'Waiting for an answer' : status === 'accepted' ? 'Accepted' : status === 'suggested' ? 'Suggested ' + (payload.suggestion || 'another date') : 'Declined';
+    return el('article', { class: 'climb-card' },
+      el('p', { class: 'field-label', text: 'Climb request' }),
+      el('h3', { text: payload.name || message.body || 'Objective' }),
+      lines ? el('p', { text: lines }) : null,
+      el('p', { class: 'muted small', text: state }),
+      actions
+    );
+  }
+
+  function respondClimb(message, status, suggestion) {
+    if (!message || !message.id || String(message.id).indexOf('preview') === 0) {
+      if (message && message.payload) {
+        message.payload.status = status;
+        if (suggestion) message.payload.suggestion = suggestion;
+        paintChat();
+      }
+      return;
+    }
+    var payload = Object.assign({}, message.payload || {}, { status: status });
+    if (suggestion) payload.suggestion = suggestion;
+    db().from('messages').update({ payload: payload }).eq('id', message.id).then(function (result) {
+      if (result.error) {
+        setStatus(result.error.message || 'The climb request could not be updated. Apply the climb request update, then try again.');
+        return;
+      }
+      message.payload = payload;
+      paintChat();
+    });
   }
 
   function dateCard(message, mine) {
@@ -1030,22 +1107,10 @@
     active = null;
     var screen = byId('chat-screen');
     var shared = byId('shared-plan-view');
-    var flow = byId('partner-flow');
-    var panel = byId('messages-panel');
+    var home = byId('messages-home');
     if (screen) screen.classList.add('hidden');
     if (shared) shared.classList.add('hidden');
-    if (flow) flow.classList.remove('hidden');
-    if (panel) panel.classList.remove('hidden');
-  var find = byId('partner-find');
-  if (find) find.classList.remove('hidden');
-    var mine = byId('my-partners');
-    if (mine) mine.classList.remove('hidden');
-    var home = byId('partner-home');
-    var page = byId('objective-page');
-    var profile = byId('partner-profile');
     if (home) home.classList.remove('hidden');
-    if (page) page.classList.add('hidden');
-    if (profile) profile.classList.add('hidden');
     refresh();
   }
 
@@ -1203,12 +1268,105 @@
   }
 
   function openInbox() {
-    if (!ready()) {
-      if (hooks.signIn) hooks.signIn();
+    active = null;
+    showMessagesScreen();
+    if (root.SummitConnections && root.SummitConnections.mockMode && root.SummitConnections.mockMode() && root.SummitConnections.previewInbox) {
+      var sample = root.SummitConnections.previewInbox() || [];
+      paintPreview(sample);
+      setBadge(sample.filter(function (thread) { return thread.unread; }).length);
+      setStatus('');
       return;
     }
-    active = null;
-    if (typeof root.selectTab === 'function') root.selectTab('partners');
+    if (!ready()) {
+      setStatus('Sign in to message your partners.');
+      var direct = byId('messages-direct');
+      if (direct && !(root.SummitConnections && root.SummitConnections.mockMode && root.SummitConnections.mockMode())) {
+        direct.replaceChildren(el('p', { class: 'muted', text: 'No direct messages yet.' }));
+      }
+      return;
+    }
+    refresh();
+  }
+
+  var climbPerson = null;
+
+  function openClimbSheet(person) {
+    climbPerson = person || null;
+    var sheet = byId('climb-sheet');
+    var status = byId('climb-status');
+    if (status) status.textContent = '';
+    if (sheet) sheet.classList.remove('hidden');
+    var input = byId('climb-query');
+    if (input) input.focus();
+  }
+
+  function closeClimbSheet() {
+    var sheet = byId('climb-sheet');
+    if (sheet) sheet.classList.add('hidden');
+  }
+
+  function sendClimb(person, fields) {
+    var target = person || climbPerson;
+    if (!target || !fields || !fields.name) return Promise.resolve(false);
+    closeClimbSheet();
+    if (!ready()) {
+      showClimbPreview(target, fields);
+      return Promise.resolve(true);
+    }
+    var userId = target.id || target.userId;
+    return openOrCreateWith(userId).then(function (opened) {
+      if (!opened || !active) {
+        setStatus('Open a chat with this partner before sending a climb request.');
+        return false;
+      }
+      return sendMessage({
+        kind: 'climb_request',
+        body: 'Climb request: ' + fields.name + (fields.dates ? ' · ' + fields.dates : ''),
+        payload: {
+          name: fields.name,
+          kind: fields.kind || 'peak',
+          dates: fields.dates || '',
+          note: fields.note || '',
+          status: 'pending',
+          suggestion: ''
+        }
+      }).then(function () { return true; }, function (err) {
+        setStatus((err && err.message) || 'The climb request could not be sent. Apply the climb request update, then try again.');
+        return false;
+      });
+    });
+  }
+
+  function showClimbPreview(person, fields) {
+    showMessagesScreen();
+    var home = byId('messages-home');
+    if (home) home.classList.add('hidden');
+    var screen = byId('chat-screen');
+    if (!screen) return;
+    screen.classList.remove('hidden');
+    var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
+    back.addEventListener('click', function () {
+      screen.classList.add('hidden');
+      if (home) home.classList.remove('hidden');
+    });
+    var message = {
+      id: 'preview-climb',
+      sender_id: (person && (person.id || person.userId)) || 'partner',
+      created_at: new Date().toISOString(),
+      kind: 'climb_request',
+      body: 'Climb request: ' + fields.name,
+      payload: {
+        name: fields.name,
+        dates: fields.dates || '',
+        note: fields.note || '',
+        status: 'pending',
+        suggestion: ''
+      }
+    };
+    screen.replaceChildren(
+      el('div', { class: 'chat-head' }, back, el('h2', { text: (person && person.name) || 'Partner' })),
+      el('div', { class: 'chat-log' }, messageNode(message))
+    );
   }
 
   function messageAbout(name) {
@@ -1222,7 +1380,6 @@
       if (root.SummitPartners.fold(thread.objective) === key) found = thread;
     });
     if (found) {
-      if (typeof root.selectTab === 'function') root.selectTab('partners');
       openConversation(found.id);
       return;
     }
@@ -1238,7 +1395,6 @@
       if (opened) return true;
       return db().rpc('open_partner_chat', { other_id: userId }).then(function (result) {
         if (result.error || !result.data) return false;
-        if (typeof root.selectTab === 'function') root.selectTab('partners');
         openConversation(result.data);
         return true;
       }).catch(function () { return false; });
@@ -1269,7 +1425,6 @@
       var found = null;
       Object.keys(mine).forEach(function (id) { if (theirs[id]) found = id; });
       if (!found) return false;
-      if (typeof root.selectTab === 'function') root.selectTab('partners');
       openConversation(found);
       return true;
     }).catch(function () { return false; });
@@ -1307,6 +1462,21 @@
     hooks = Object.assign(hooks, next || {});
   }
 
+  function bindChrome() {
+    var back = byId('messages-back');
+    if (back) back.addEventListener('click', hideMessagesScreen);
+    function closeSheet() {
+      var sheet = byId('climb-sheet');
+      if (sheet) sheet.classList.add('hidden');
+    }
+    var close = byId('climb-close');
+    var cancel = byId('climb-cancel');
+    if (close) close.addEventListener('click', closeSheet);
+    if (cancel) cancel.addEventListener('click', closeSheet);
+  }
+
+  bindChrome();
+
   return {
     bind: bind,
     start: start,
@@ -1318,6 +1488,10 @@
     actionsForPerson: actionsForPerson,
     openConversation: openConversation,
     openInbox: openInbox,
+    hideMessages: hideMessagesScreen,
+    openClimbSheet: openClimbSheet,
+    sendClimb: sendClimb,
+    showClimbPreview: showClimbPreview,
     messageAbout: messageAbout,
     openWithUser: openWithUser,
     openOrCreateWith: openOrCreateWith,

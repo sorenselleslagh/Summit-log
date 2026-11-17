@@ -2667,6 +2667,10 @@ function openSuggestion(id) {
   objectiveCatalog.forEach(function (objective) {
     if (objective.id === id) found = objective;
   });
+  var list = document.getElementById('objective-suggestions');
+  if (list) list.replaceChildren();
+  var input = document.getElementById('objective-query');
+  if (input) input.setAttribute('aria-expanded', 'false');
   if (found) showObjective(found);
 }
 
@@ -2757,7 +2761,7 @@ function renderJoinPanel(membership) {
   }
   if (!joinFormOpen) {
     panel.replaceChildren(
-      el('button', { class: 'primary btn-block', type: 'button', id: 'join-queue', text: 'Join the queue' }),
+      el('button', { class: 'primary btn-block', type: 'button', id: 'join-queue', text: 'Post a partner request' }),
       accountHint()
     );
     return;
@@ -2788,7 +2792,7 @@ function renderJoinPanel(membership) {
   });
   note.value = membership ? membership.note : '';
   panel.replaceChildren(
-    el('h3', { text: membership ? 'Edit your place' : 'Join the queue' }),
+    el('h3', { text: membership ? 'Edit your place' : 'Post a partner request' }),
     dates,
     note,
     el('div', { id: 'join-logs' },
@@ -2796,7 +2800,7 @@ function renderJoinPanel(membership) {
       choices
     ),
     el('div', { class: 'join-actions' },
-      el('button', { class: 'primary', type: 'button', id: 'join-save', text: membership ? 'Save' : 'Join the queue' }),
+      el('button', { class: 'primary', type: 'button', id: 'join-save', text: membership ? 'Save' : 'Post a partner request' }),
       el('button', { class: 'secondary', type: 'button', id: 'join-cancel', text: 'Cancel' })
     ),
     accountHint()
@@ -2980,6 +2984,50 @@ function startPartnerFrom(id) {
   partnerReturn = 'plan';
   showObjective(objective);
 }
+
+function bindClimbRequest() {
+  var query = document.getElementById('climb-query');
+  var matches = document.getElementById('climb-matches');
+  var send = document.getElementById('climb-send');
+  if (!query || !matches || !send) return;
+  query.addEventListener('input', function () {
+    var q = query.value.trim().toLowerCase();
+    matches.replaceChildren();
+    if (q.length < 2) return;
+    var names = [];
+    function add(name) {
+      if (!name || names.indexOf(name) !== -1) return;
+      if (name.toLowerCase().indexOf(q) === -1) return;
+      names.push(name);
+    }
+    plannedItems().forEach(function (item) { add(item.name); });
+    objectiveCatalog.forEach(function (row) { add(row && row.name ? row.name : ''); });
+    names.slice(0, 6).forEach(function (name) {
+      var button = el('button', { type: 'button', text: name });
+      button.addEventListener('click', function () {
+        query.value = name;
+        matches.replaceChildren();
+      });
+      matches.appendChild(el('li', {}, button));
+    });
+  });
+  send.addEventListener('click', function () {
+    var name = query.value.trim();
+    var status = document.getElementById('climb-status');
+    if (!name) {
+      if (status) status.textContent = 'Choose a peak, route, or trek.';
+      return;
+    }
+    if (!window.SummitChat || !SummitChat.sendClimb) return;
+    SummitChat.sendClimb(null, {
+      name: name,
+      dates: (document.getElementById('climb-dates').value || '').trim(),
+      note: (document.getElementById('climb-note').value || '').trim()
+    });
+  });
+}
+
+bindClimbRequest();
 
 document.getElementById('objective-query').addEventListener('input', function () {
   suggestionIndex = -1;
@@ -4063,7 +4111,7 @@ function planPartnersNode(item, findButton) {
   var join = el('button', {
     class: 'secondary',
     type: 'button',
-    text: membership ? 'Edit your place' : 'Join the queue'
+    text: membership ? 'Edit your place' : 'Post a partner request'
   });
   join.addEventListener('click', function () {
     if (!objective) return;
@@ -5212,10 +5260,7 @@ function placeChatAboveKeyboard() {
     screen.style.height = '';
     return;
   }
-  var header = document.querySelector('#app > header');
-  var nav = document.querySelector('#app > nav');
-  var available = window.visualViewport.height - (header ? header.offsetHeight : 0) - (nav ? nav.offsetHeight : 0) - 8;
-  screen.style.height = Math.max(220, Math.round(available)) + 'px';
+  screen.style.height = Math.max(220, Math.round(window.visualViewport.height)) + 'px';
 }
 
 function focusFieldIntoView(target) {

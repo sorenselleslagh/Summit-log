@@ -999,6 +999,54 @@ p { margin: 0.25rem 0; }
   padding: 0.15rem 0 0.7rem;
   box-shadow: 0 10px 0 var(--bg);
 }
+.messages-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 4200;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+.messages-screen.hidden { display: none; }
+.messages-home, .messages-screen .chat-screen, .messages-screen #shared-plan-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.messages-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.55rem;
+  padding: max(0.65rem, env(safe-area-inset-top, 0px)) 0.85rem 0.55rem;
+}
+.messages-top h1 { margin: 0; font-size: 1.35rem; }
+.messages-back {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 1.4rem;
+}
+.messages-scroll {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 0.2rem 1rem 1.4rem;
+}
+.climb-card {
+  max-width: 100%;
+  padding: 0.75rem 0.85rem;
+  border-radius: 16px;
+  background: #f7f4ef;
+  color: #1c1915;
+  box-shadow: 0 8px 22px rgba(28, 25, 21, 0.12);
+}
+.climb-card h3 { margin: 0.15rem 0; font-family: Fraunces, Georgia, serif; }
+.climb-card .partner-actions { margin-top: 0.45rem; }
 .my-partners { margin: 0.2rem 0 1rem; }
 .my-partners h2 { font-size: 1.05rem; margin: 0 0 0.55rem; }
 .partner-requests-row {
@@ -2506,6 +2554,12 @@ html.explore-map.map-show-layers #layers-card {
   height: calc(100dvh - 8.75rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   min-height: 18rem;
 }
+.messages-screen .chat-screen:not(.hidden) {
+  height: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.5rem 1rem calc(0.9rem + env(safe-area-inset-bottom, 0px));
+}
 .chat-head { padding: 0.15rem 0 0.75rem; }
 .chat-head h2 {
   font-family: Fraunces, Georgia, serif;
@@ -2544,7 +2598,9 @@ html.explore-map.map-show-layers #layers-card {
 .bubble-row.theirs { align-self: flex-start; }
 .bubble-row .bubble,
 .bubble-row .date-card,
-.bubble-row .gear-card { max-width: calc(100% - 40px); align-self: auto; }
+.bubble-row .gear-card,
+.bubble-row .climb-card { max-width: calc(100% - 40px); align-self: auto; }
+.bubble-row:has(.climb-card) { align-items: flex-start; }
 .msg-avatar {
   width: 32px;
   height: 32px;

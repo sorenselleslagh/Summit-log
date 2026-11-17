@@ -128,8 +128,9 @@
         requestRow.textContent = '';
         requestsOpen = false;
       } else {
+        requestsOpen = true;
         requestRow.classList.remove('hidden');
-        requestRow.textContent = 'Partner requests (' + incoming.length + ')';
+        requestRow.textContent = 'Partner requests';
       }
     }
     if (requestList) {
@@ -192,11 +193,13 @@
 
   function openProfile(row) {
     if (!root.SummitProfile || !root.selectTab) return;
+    if (root.SummitChat && root.SummitChat.hideMessages) root.SummitChat.hideMessages();
     root.selectTab('profile');
     root.SummitProfile.openOther({
       userId: row.otherId,
       name: row.name,
-      avatarUrl: row.avatarUrl || ''
+      avatarUrl: row.avatarUrl || '',
+      fromMessages: true
     });
   }
 
@@ -441,7 +444,7 @@
     if (requests && !requests.dataset.bound) {
       requests.dataset.bound = '1';
       requests.addEventListener('click', function () {
-        requestsOpen = !requestsOpen;
+        requestsOpen = true;
         paint();
       });
     }
@@ -475,6 +478,11 @@
   if (mockMode()) load();
 
   return {
+    avatarFor: function (id) {
+      var found = null;
+      rows.forEach(function (row) { if (row.otherId === id) found = row; });
+      return found && found.avatarUrl || '';
+    },
     refresh: load,
     openAdd: openAdd,
     stateFor: stateFor,

@@ -137,7 +137,7 @@ assert.ok(harden.includes('revoke all on function public.touch_conversation() fr
 assert.ok(harden.includes('revoke all on function public.accept_partner_request(uuid) from public, anon'));
 assert.ok(harden.includes('grant execute on function public.accept_partner_request(uuid) to authenticated'));
 assert.ok(harden.includes('extensions.unaccent'));
-assert.ok(html.includes('id="messages-panel"'));
+assert.ok(html.includes('id="messages-screen"'));
 assert.ok(html.includes('id="magic-email"'));
 assert.ok(html.includes('id="magic-first"'));
 assert.ok(html.includes('id="magic-last"'));
