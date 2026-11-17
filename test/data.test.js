@@ -462,4 +462,28 @@ assert.strictEqual(osmPeaks.length, 1);
 assert.strictEqual(osmPeaks[0].elevation, 3000);
 assert.strictEqual(osmPeaks[0].kind, 'peak');
 
+var scoped = memoryStorage({
+  summititems: JSON.stringify([{ id: kept.id, name: 'Device peak', kind: 'peak', status: 'planned', createdAt: NOW, updatedAt: NOW }]),
+  summitlog_schema: '6',
+  summitlog_profile: JSON.stringify({ bio: 'device', homeBase: '', isPrivate: false })
+});
+var scopedRepo = storageApi.createRepository({
+  storage: scoped,
+  logic: logic,
+  now: function () { return NOW; },
+  mint: sequenceMint()
+});
+assert.strictEqual(scopedRepo.setOwner('user-a'), true);
+assert.strictEqual(scopedRepo.loadProfile().bio, 'device');
+scopedRepo.saveProfile({ bio: 'ada', homeBase: '', isPrivate: false });
+assert.strictEqual(scopedRepo.setOwner('user-b'), true);
+assert.strictEqual(scopedRepo.loadProfile().bio, '');
+scopedRepo.saveProfile({ bio: 'blair', homeBase: '', isPrivate: false });
+assert.strictEqual(scopedRepo.setOwner('user-a'), true);
+assert.strictEqual(scopedRepo.loadProfile().bio, 'ada');
+assert.strictEqual(scopedRepo.setOwner(''), true);
+assert.strictEqual(scopedRepo.loadProfile().bio, 'device');
+assert.ok(scoped.getItem('summitlog_profile:user-a').indexOf('ada') >= 0);
+assert.ok(scoped.getItem('summitlog_profile:user-b').indexOf('blair') >= 0);
+
 console.log('data tests ok');

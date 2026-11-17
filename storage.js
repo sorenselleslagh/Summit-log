@@ -37,6 +37,42 @@
     var clock = options.now || function () { return new Date().toISOString(); };
     var mint = options.mint || logic.mintId;
     var warned = false;
+    var owner = '';
+    var PERSONAL = {};
+    [LOG_KEY, BACKLOG_KEY, ITEM_KEY, POST_KEY, QUEUE_KEY, USER_KEY, LEVEL_KEY, OUTBOX_KEY, PROFILE_KEY, CREDENTIAL_KEY, FAVOURITE_KEY].forEach(function (key) {
+      PERSONAL[key] = true;
+    });
+
+    function keyFor(base) {
+      if (owner && PERSONAL[base]) return base + ':' + owner;
+      return base;
+    }
+
+    function setOwner(userId) {
+      var next = userId ? String(userId) : '';
+      if (next === owner) return false;
+      if (next) adoptDeviceOnce(next);
+      owner = next;
+      return true;
+    }
+
+    function adoptDeviceOnce(userId) {
+      var claim = 'summitlog_device_owner';
+      var claimed = '';
+      try { claimed = storage.getItem(claim) || ''; } catch (err) { claimed = ''; }
+      if (claimed && claimed !== userId) return;
+      Object.keys(PERSONAL).forEach(function (base) {
+        var scoped = base + ':' + userId;
+        try {
+          if (storage.getItem(scoped) == null && storage.getItem(base) != null) {
+            storage.setItem(scoped, storage.getItem(base));
+          }
+        } catch (err) { /* a full store must not block the switch */ }
+      });
+      if (!claimed) {
+        try { storage.setItem(claim, userId); } catch (err) { /* the scoped copy still stands */ }
+      }
+    }
 
     function context() {
       return { now: clock(), mint: mint };
@@ -52,7 +88,7 @@
 
     function write(key, value) {
       try {
-        storage.setItem(key, JSON.stringify(value));
+        storage.setItem(keyFor(key), JSON.stringify(value));
         return true;
       } catch (err) {
         return fail('Could not save on this device. Storage may be full or blocked.');
@@ -62,7 +98,7 @@
     function readArray(key) {
       var raw;
       try {
-        raw = storage.getItem(key);
+        raw = storage.getItem(keyFor(key));
       } catch (err) {
         return { state: 'unreadable', items: [] };
       }
@@ -236,7 +272,7 @@
     function getDisplayName() {
       var name;
       try {
-        name = storage.getItem(USER_KEY);
+        name = storage.getItem(keyFor(USER_KEY));
       } catch (err) {
         return '';
       }
@@ -248,7 +284,7 @@
       var clean = String(name || '').trim().slice(0, 80);
       if (!clean) return '';
       try {
-        storage.setItem(USER_KEY, clean);
+        storage.setItem(keyFor(USER_KEY), clean);
       } catch (err) {
         fail('Could not save the name on this device. Storage may be full or blocked.');
       }
@@ -257,7 +293,7 @@
 
     function clearDisplayName() {
       try {
-        storage.removeItem(USER_KEY);
+        storage.removeItem(keyFor(USER_KEY));
       } catch (err) {
         fail('Could not update the name stored on this device.');
       }
@@ -265,7 +301,7 @@
 
     function getLevel() {
       try {
-        var raw = storage.getItem(LEVEL_KEY);
+        var raw = storage.getItem(keyFor(LEVEL_KEY));
         if (!raw) return null;
         var data = JSON.parse(raw);
         return data && typeof data === 'object' ? data : null;
@@ -276,7 +312,7 @@
 
     function setLevel(level) {
       try {
-        storage.setItem(LEVEL_KEY, JSON.stringify(level));
+        storage.setItem(keyFor(LEVEL_KEY), JSON.stringify(level));
         return true;
       } catch (err) {
         fail('Could not save on this device. Storage may be full or blocked.');
@@ -294,7 +330,7 @@
 
     function loadProfile() {
       try {
-        var raw = storage.getItem(PROFILE_KEY);
+        var raw = storage.getItem(keyFor(PROFILE_KEY));
         if (!raw) return { bio: '', homeBase: '', isPrivate: false };
         var data = JSON.parse(raw);
         if (!data || typeof data !== 'object') return { bio: '', homeBase: '', isPrivate: false };
@@ -408,7 +444,9 @@
       loadCredentials: loadCredentials,
       saveCredentials: saveCredentials,
       loadFavourites: loadFavourites,
-      saveFavourites: saveFavourites
+      saveFavourites: saveFavourites,
+      setOwner: setOwner,
+      owner: function () { return owner; }
     };
   }
 

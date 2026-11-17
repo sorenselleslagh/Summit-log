@@ -401,7 +401,7 @@
         ((people && people.data) || []).forEach(function (row) { names[row.id] = fullName(row) || 'Climber'; });
         next.forEach(function (row) {
           row.name = names[row.otherId] || 'Climber';
-          row.avatarUrl = avatarUrl(row.otherId, row.otherId + '/avatar.jpg');
+          row.avatarUrl = '';
         });
         rows = next;
         paint();

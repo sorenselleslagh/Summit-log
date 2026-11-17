@@ -638,10 +638,16 @@
       }));
     }).then(function () {
       if (!pendingPhotoBlob) return null;
-      var path = id + '/avatar.jpg';
-      return db.storage.from('avatars').upload(path, pendingPhotoBlob, { upsert: true, contentType: 'image/jpeg' }).then(function (upload) {
+      var path = id + '/avatar-' + Date.now() + '.jpg';
+      return db.storage.from('avatars').upload(path, pendingPhotoBlob, { upsert: false, contentType: 'image/jpeg' }).then(function (upload) {
         if (upload.error) return null;
-        return db.from('profile_details').update({ avatar_path: path }).eq('profile_id', id);
+        return db.from('profiles').update({
+          avatar_path: path,
+          updated_at: new Date().toISOString()
+        }).eq('id', id).then(function (saved) {
+          if (!saved.error) return saved;
+          return db.from('profile_details').update({ avatar_path: path }).eq('profile_id', id);
+        });
       });
     }).catch(function () { return null; });
   }
@@ -723,6 +729,13 @@
           : el('p', { class: 'muted', text: 'No shared objectives.' })
       )
     );
+  }
+
+  function reload() {
+    pendingPhoto = null;
+    pendingPhotoBlob = null;
+    editing = false;
+    if (screenMode === 'own') paint();
   }
 
   function openOwn() {
@@ -837,6 +850,7 @@
     factChips: factChips,
     bind: bind,
     openOwn: openOwn,
+    reload: reload,
     openOther: openOther,
     openFromAvatar: openFromAvatar
   };
