@@ -659,14 +659,27 @@ function exploreSheetOn() {
   return FEATURES.exploreSheet === true;
 }
 
+function showAlps() {
+  if (!map) return;
+  map.fitBounds([[43.6, 5.0], [48.3, 16.5]], {
+    paddingTopLeft: [12, 112],
+    paddingBottomRight: [12, 88],
+    animate: false
+  });
+}
+
 function enterExploreMap() {
   document.documentElement.classList.toggle('explore-sheet-off', !exploreSheetOn());
   document.documentElement.classList.add('explore-map');
   initMap();
   setMapGestures(true);
   sizeExploreMap();
+  showAlps();
   renderExploreSheet();
-  setTimeout(sizeExploreMap, 80);
+  setTimeout(function () {
+    sizeExploreMap();
+    showAlps();
+  }, 80);
 }
 
 function leaveExploreMap() {
@@ -2153,7 +2166,7 @@ function initMap() {
         doubleClickZoom: false,
         boxZoom: false,
         keyboard: false
-      }).setView([46.5, 8.5], 6);
+      }).setView([46.3, 9.5], 5);
       mutedTiles().addTo(map);
       quietAttribution(map);
       map.on('locationerror', function () {
