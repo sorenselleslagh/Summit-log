@@ -90,6 +90,21 @@ function plannedItems() { return items.filter(function (item) { return item.stat
 
 var accountButtonBound = false;
 
+function reloadPersonal(userId) {
+  var next = userId || '';
+  var changed = Store.setOwner ? Store.setOwner(next) : false;
+  if (window.SummitPhotos && SummitPhotos.setOwner) SummitPhotos.setOwner(next);
+  if (!changed) return;
+  items = Store.loadItems();
+  partnerPosts = Store.loadPosts();
+  memberships = Store.loadMemberships();
+  currentUser = Store.getDisplayName();
+  if (window.SummitChat && SummitChat.clearAvatarCache) SummitChat.clearAvatarCache();
+  renderMine();
+  refreshAccountButton();
+  if (window.SummitProfile && SummitProfile.reload) SummitProfile.reload();
+}
+
 function refreshAccountButton() {
   var button = document.getElementById('logout-btn');
   var avatar = document.getElementById('profile-btn');
@@ -327,6 +342,7 @@ function bindAccountWatcher() {
   if (accountButtonBound || !window.SummitAccount || !SummitAccount.onChange) return;
   accountButtonBound = true;
   SummitAccount.onChange(function (sessionUser) {
+    reloadPersonal(sessionUser ? sessionUser.id : '');
     if (sessionUser && sessionUser.displayName && sessionUser.firstName && sessionUser.lastName) {
       currentUser = Store.setDisplayName(sessionUser.displayName);
     }

@@ -94,10 +94,10 @@
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   }
 
-  function publicAvatarUrl(userId) {
+  function publicAvatarUrl(path) {
     var client = db();
-    if (!client || !client.storage || !userId) return '';
-    var got = client.storage.from('avatars').getPublicUrl(userId + '/avatar.jpg');
+    if (!client || !client.storage || !path) return '';
+    var got = client.storage.from('avatars').getPublicUrl(path);
     return (got && got.data && got.data.publicUrl) || '';
   }
 
@@ -136,18 +136,27 @@
     if (!list.length || !ready()) return Promise.resolve();
     return Promise.all([
       loadProfileRows(list, false),
-      db().from('profile_details').select('profile_id, avatar_path').in('profile_id', list)
+      db().from('profiles').select('id, avatar_path').in('id', list).then(function (result) {
+        if (!result.error) return result;
+        return db().from('profile_details').select('profile_id, avatar_path').in('profile_id', list).then(function (legacy) {
+          return {
+            data: (legacy.data || []).map(function (row) {
+              return { id: row.profile_id, avatar_path: row.avatar_path };
+            })
+          };
+        });
+      })
     ]).then(function (parts) {
       var paths = {};
       ((parts[1] && parts[1].data) || []).forEach(function (row) {
-        paths[row.profile_id] = row.avatar_path || '';
+        paths[row.id || row.profile_id] = row.avatar_path || '';
       });
       ((parts[0] && parts[0].data) || []).forEach(function (row) {
         nameCache[row.id] = profileName(row);
       });
       list.forEach(function (id) {
         if (nameCache[id] == null) nameCache[id] = '';
-        if (avatarCache[id] == null) avatarCache[id] = paths[id] ? publicAvatarUrl(id) : '';
+        if (avatarCache[id] == null) avatarCache[id] = paths[id] ? publicAvatarUrl(paths[id]) : '';
       });
     }).catch(function () {
       list.forEach(function (id) {
@@ -1314,6 +1323,7 @@
     paintPreview: paintPreview,
     enablePush: enablePush,
     paintAvatar: paintAvatar,
+    clearAvatarCache: function () { avatarCache = {}; },
     forgetAvatar: function (userId) {
       if (!userId) return;
       delete nameCache[userId];
