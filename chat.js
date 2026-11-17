@@ -531,18 +531,28 @@
     setBadge(unread);
   }
 
+  function shortTime(iso) {
+    var date = new Date(iso || '');
+    if (isNaN(date.getTime())) return '';
+    var now = new Date();
+    if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  }
+
   function threadButton(thread) {
+    var who = thread.name || nameFor(thread.personId || thread.senderId) || thread.objective || 'Conversation';
     var copy = el('span', { class: 'thread-copy' },
       el('span', { class: 'thread-top' },
-        el('span', { class: 'thread-title', text: thread.objective || 'Conversation' }),
-        thread.unread ? el('span', { class: 'unread-dot', text: String(thread.unread) }) : null
+        el('span', { class: 'thread-title', text: who }),
+        el('span', { class: 'thread-time', text: shortTime(thread.updatedAt) })
       ),
-      el('span', { class: 'muted small', text: [thread.route, thread.dates, thread.stage].filter(Boolean).join(' · ') }),
-      el('span', { class: 'thread-preview', text: thread.preview })
+      el('span', { class: 'thread-preview', text: thread.preview || '' })
     );
+    var dot = thread.unread ? el('span', { class: 'ig-unread', 'aria-label': 'Unread' }) : null;
     var button = el('button', { class: 'thread', type: 'button', 'data-thread': thread.id },
       messageAvatar(thread.personId || thread.senderId, nameFor(thread.personId || thread.senderId)),
-      copy
+      copy,
+      dot
     );
     button.addEventListener('click', function () { openConversation(thread.id); });
     return button;
@@ -572,6 +582,8 @@
   if (panel) panel.classList.add('hidden');
   var find = byId('partner-find');
   if (find) find.classList.add('hidden');
+    var mine = byId('my-partners');
+    if (mine) mine.classList.add('hidden');
     if (shared) shared.classList.add('hidden');
     if (screen) screen.classList.remove('hidden');
   }
@@ -1016,6 +1028,8 @@
     if (panel) panel.classList.remove('hidden');
   var find = byId('partner-find');
   if (find) find.classList.remove('hidden');
+    var mine = byId('my-partners');
+    if (mine) mine.classList.remove('hidden');
     var home = byId('partner-home');
     var page = byId('objective-page');
     var profile = byId('partner-profile');
@@ -1205,6 +1219,31 @@
     if (hooks.openRequest) hooks.openRequest(name);
   }
 
+  function openOrCreateWith(userId) {
+    if (!ready() || !userId) {
+      if (hooks.signIn) hooks.signIn();
+      return Promise.resolve(false);
+    }
+    return openWithUser(userId).then(function (opened) {
+      if (opened) return true;
+      return db().rpc('open_partner_chat', { other_id: userId }).then(function (result) {
+        if (result.error || !result.data) return false;
+        if (typeof root.selectTab === 'function') root.selectTab('partners');
+        openConversation(result.data);
+        return true;
+      }).catch(function () { return false; });
+    });
+  }
+
+  function paintPreview(sample) {
+    (sample || []).forEach(function (thread) {
+      if (thread.personId && thread.name) nameCache[thread.personId] = thread.name;
+    });
+    var direct = byId('messages-direct');
+    if (!direct) return;
+    direct.replaceChildren.apply(direct, (sample || []).map(threadButton));
+  }
+
   function openWithUser(userId) {
     if (!ready()) {
       if (hooks.signIn) hooks.signIn();
@@ -1271,6 +1310,8 @@
     openInbox: openInbox,
     messageAbout: messageAbout,
     openWithUser: openWithUser,
+    openOrCreateWith: openOrCreateWith,
+    paintPreview: paintPreview,
     enablePush: enablePush,
     paintAvatar: paintAvatar,
     forgetAvatar: function (userId) {

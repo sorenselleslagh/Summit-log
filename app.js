@@ -2575,6 +2575,9 @@ function showPartnerSearch() {
   if (panel) panel.classList.remove('hidden');
   if (chat) chat.classList.add('hidden');
   if (shared) shared.classList.add('hidden');
+  if (window.SummitConnections) SummitConnections.refresh();
+  var mine = document.getElementById('my-partners');
+  if (mine) mine.classList.remove('hidden');
   if (window.SummitChat) {
     if (window.SummitAccount && SummitAccount.user()) SummitChat.refresh();
     else SummitChat.renderInbox();
@@ -2699,8 +2702,9 @@ function personRow(person, onCard) {
     onCard();
   });
   var extra = window.SummitChat && SummitChat.actionsForPerson ? SummitChat.actionsForPerson(person) : null;
-  if (!extra) return card;
-  return el('div', { class: 'queue-row' }, card, extra);
+  var addPartner = window.SummitConnections && person.userId ? SummitConnections.buttonFor(person.userId, person.name) : null;
+  if (!extra && !addPartner) return card;
+  return el('div', { class: 'queue-row' }, card, extra, addPartner);
 }
 
 function accountHint() {
@@ -2862,6 +2866,7 @@ function showPerson(person) {
     el('h3', { text: person.demo ? 'Logs they chose to share' : 'Logs you chose to share' }),
     el('div', { class: 'shared-logs' }, logsBox),
     window.SummitChat && SummitChat.actionsForPerson ? SummitChat.actionsForPerson(person) : null,
+    person.userId && window.SummitConnections ? SummitConnections.buttonFor(person.userId, person.name) : null,
     person.account && window.SummitProfile ? (function () {
       var view = el('button', { class: 'secondary', type: 'button', text: 'View profile' });
       view.addEventListener('click', function () {
