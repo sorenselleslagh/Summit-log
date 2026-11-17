@@ -1,6 +1,6 @@
 // App-shell cache plus on-demand map tiles. Paths are relative to this file
 // so the same worker works at / and under /Summit-log/ on GitHub Pages.
-var VERSION = 'v34';
+var VERSION = 'v35';
 var SHELL_CACHE = 'summitlog-shell-' + VERSION;
 var CDN_CACHE = 'summitlog-cdn-' + VERSION;
 var TILE_CACHE = 'summitlog-tiles-' + VERSION;
@@ -59,6 +59,7 @@ function scopeUrl(path) {
 }
 
 function isTile(url) {
+  if (url.hostname === 'server.arcgisonline.com' && /\/tile\//.test(url.pathname)) return true;
   if (/(^|\.)tile\.openstreetmap\.org$/.test(url.hostname) && /\.png$/i.test(url.pathname)) return true;
   return /(^|\.)tile\.opentopomap\.org$/.test(url.hostname) && /\.png$/i.test(url.pathname);
 }

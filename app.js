@@ -2139,6 +2139,7 @@ function initMap() {
         keyboard: false
       }).setView([46.5, 8.5], 6);
       mutedTiles().addTo(map);
+      quietAttribution(map);
       map.on('locationerror', function () {
         showMapStatus('Location is unavailable on this device.');
       });
@@ -2175,12 +2176,15 @@ function initMap() {
 }
 
 function mutedTiles() {
-  return L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap, &copy; OpenTopoMap (CC-BY-SA)',
-    subdomains: 'abc',
-    maxZoom: 17,
+  return L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri, OSM',
+    maxZoom: 16,
     errorTileUrl: 'icons/tile-offline.svg'
   });
+}
+
+function quietAttribution(leafletMap) {
+  if (leafletMap && leafletMap.attributionControl) leafletMap.attributionControl.setPrefix('');
 }
 
 function addCircle(item, color, popup) {
@@ -2392,8 +2396,8 @@ function markerSpecs() {
         icon: L.divIcon({
           className: 'pin-cluster' + (clusterDone ? ' is-done' : ''),
           html: '<span>' + group.length + '</span>',
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
         }),
         onClick: function () {
           var bounds = L.latLngBounds(group.map(function (feature) { return [feature.lat, feature.lng]; }));
@@ -2408,18 +2412,7 @@ function markerSpecs() {
       specs.push(dotSpec(feature, feature.lat, feature.lng, 'dot:' + featureKey(feature)));
       return;
     }
-    specs.push({
-      key: 'photo:' + featureKey(feature),
-      lat: feature.lat,
-      lng: feature.lng,
-      icon: L.divIcon({
-        className: 'photo-pin' + markerClass(feature),
-        html: photoFace(feature),
-        iconSize: [44, 44],
-        iconAnchor: [22, 22]
-      }),
-      onClick: function () { openFeature(feature); }
-    });
+      specs.push(dotSpec(feature, feature.lat, feature.lng, 'dot:' + featureKey(feature)));
   });
   return specs;
 }
@@ -2432,8 +2425,8 @@ function dotSpec(feature, lat, lng, key) {
     icon: L.divIcon({
       className: 'pin-dot' + markerClass(feature),
       html: '<span></span>',
-      iconSize: [16, 16],
-      iconAnchor: [8, 8]
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
     }),
     onClick: function () { openFeature(feature); }
   };
@@ -3063,7 +3056,8 @@ bindExploreSheet();
 document.getElementById('map-locate').addEventListener('click', function () {
   if (map) map.locate({ setView: true, maxZoom: 12 });
 });
-document.getElementById('map-layers-btn').addEventListener('click', function () {
+var layersBtn = document.getElementById('map-layers-btn');
+if (layersBtn) layersBtn.addEventListener('click', function () {
   if (document.documentElement.classList.contains('map-show-layers')) showMapSheet('');
   else showMapSheet('layers');
 });
@@ -3249,14 +3243,6 @@ function showPeakDetail(peak) {
   var box = document.getElementById('peak-detail');
   if (!box) return;
   document.documentElement.classList.remove('map-sheet-tall');
-  var level = Col.estimateLevel(doneItems(), collectionData.peaks, Store.getLevel());
-  var plan = Col.suggestBuildUp(peak, collectionData.peaks, level);
-  var summited = el('button', { class: 'primary', type: 'button', text: Col.isSummited(peak, doneItems()) ? 'Summited' : 'Mark summited' });
-  summited.addEventListener('click', function () {
-    if (Col.isSummited(peak, doneItems())) clearSummited(peak);
-    else markSummited(peak);
-    showPeakDetail(peak);
-  });
   var backlogBtn = el('button', { class: 'primary', type: 'button', text: alreadyPlanned(peak.name) ? 'In your plan' : 'Add to plan' });
   backlogBtn.addEventListener('click', function () {
     if (alreadyPlanned(peak.name)) {
@@ -3264,33 +3250,9 @@ function showPeakDetail(peak) {
       return;
     }
     confirmPlan(placeForPeak(peak));
+    showPeakDetail(peak);
   });
-  var steps = plan.steps.map(function (step) {
-    var button = el('button', { class: 'linkish', type: 'button', text: step.name });
-    button.addEventListener('click', function () { showPeakDetail(step); });
-    return el('div', { class: 'build-step' },
-      button,
-      el('p', { class: 'entry-meta', text: peakLine(step) })
-    );
-  });
-  var progressHost = progressHostFor(peak);
-  var progress = progressHost ? Col.progress(progressHost.peaks, doneItems()) : null;
-  var grab = el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' });
-  var partnersBtn = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
-  partnersBtn.addEventListener('click', function () {
-    var existing = null;
-    plannedItems().forEach(function (item) {
-      if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
-    });
-    if (!existing) {
-      confirmPlan(placeForPeak(peak));
-      plannedItems().forEach(function (item) {
-        if (item.name.toLowerCase() === peak.name.toLowerCase()) existing = item;
-      });
-    }
-    if (existing) startPartnerFrom(existing.id);
-  });
-  var hero = summitHero(peak);
+  var hero = summitHero(peak, true);
   hero.classList.add('sheet-open');
   hero.addEventListener('click', function (event) {
     if (event.target.closest && event.target.closest('a')) return;
@@ -3298,36 +3260,17 @@ function showPeakDetail(peak) {
   });
   var sheetTitle = el('button', { class: 'summit-name sheet-title', type: 'button', text: peak.name });
   sheetTitle.addEventListener('click', function () { openPeakPage(peak, 'map'); });
-  var copy = [
-    sheetTitle,
-    el('p', { class: 'sheet-meta' },
-      el('span', { text: peak.elevation + ' m' }),
-      el('span', { text: peak.subrange || 'Alps' }),
-      el('span', { text: Col.countryLabel(peak) })
-    ),
-    el('p', null,
-      el('span', { text: peak.normalRoute ? 'Normal route ' + peak.normalRoute : 'No sourced normal route' }),
-      peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
-    ),
-    progress ? el('p', { class: 'muted', text: progress.done + ' of ' + progress.total + ' · ' + progressHost.name }) : null,
-    el('div', { class: 'log-actions' }, backlogBtn, partnersBtn),
-    el('div', { class: 'reference-data' },
-      el('p', { class: 'field-label', text: 'Known route' }),
-      el('p', { text: peak.normalRoute ? peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') : 'No sourced route is stored for this summit.' }),
-      el('p', { class: 'muted', text: 'The grade, when there is one, belongs to that route. Adding the mountain does not add the route.' }),
-      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: peak.normalRoute ? 'Route source' : 'Source' }) : null,
-      peak.normalRoute ? useRouteButton(peak) : null
-    ),
-    el('div', { class: 'log-actions' }, summited),
-    el('h3', { text: 'Build up to this peak' }),
-    el('p', { text: plan.note })
-  ];
-  if (!plan.steps.length) copy.push(el('p', { class: 'muted', text: 'No lower summit in this list fits those fields.' }));
   box.replaceChildren(
-    grab,
+    el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' }),
     sheetCloseButton(),
-    hero,
-    el.apply(null, ['div', { class: 'detail-copy' }].concat(copy).concat([steps]))
+    el('div', { class: 'peak-sheet' },
+      hero,
+      el('div', { class: 'peak-sheet-copy' },
+        sheetTitle,
+        el('p', { class: 'sheet-meta', text: peak.elevation + ' m · ' + (peak.subrange || 'Alps') })
+      )
+    ),
+    el('div', { class: 'peak-sheet-actions' }, backlogBtn)
   );
   box.classList.remove('hidden');
   if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
@@ -3410,7 +3353,7 @@ function bindSheetDismiss() {
   });
 }
 
-function summitHero(peak) {
+function summitHero(peak, compact) {
   var photo = photoRecord(peak);
   var frame = el('div', { class: 'summit-hero' });
   var src = safePhotoUrl(photo && photo.thumb);
@@ -3423,7 +3366,7 @@ function summitHero(peak) {
     img.replaceWith(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
   });
   frame.appendChild(img);
-  if (photo.page) {
+  if (photo.page && !compact) {
     frame.appendChild(el('a', {
       class: 'photo-credit',
       href: photo.page,
@@ -3458,22 +3401,20 @@ function showTrailSheet(place) {
       img.replaceWith(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
     });
     hero.appendChild(img);
-    if (photo.page) hero.appendChild(el('a', { class: 'photo-credit', href: photo.page, target: '_blank', rel: 'noopener noreferrer', text: photo.license || 'Photo' }));
   } else {
     hero.appendChild(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Illustrated placeholder' }));
   }
   box.replaceChildren(
     grab,
     sheetCloseButton(),
-    hero,
-    el('div', { class: 'detail-copy' },
-      el('h3', { class: 'summit-name', text: place.name }),
-      el('p', { class: 'sheet-meta' },
-        el('span', { text: place.area || 'Trail' }),
-        el('span', { text: place.note || 'Stages vary' })
-      ),
-      el('div', { class: 'log-actions' }, add)
-    )
+    el('div', { class: 'peak-sheet' },
+      hero,
+      el('div', { class: 'peak-sheet-copy' },
+        el('h3', { class: 'summit-name', text: place.name }),
+        el('p', { class: 'sheet-meta', text: place.area || 'Trail' })
+      )
+    ),
+    el('div', { class: 'peak-sheet-actions' }, add)
   );
   box.classList.remove('hidden');
   if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
@@ -4776,6 +4717,7 @@ function mountMiniMap(peak) {
     attributionControl: true
   }).setView([peak.lat, peak.lng], 12);
   mutedTiles().addTo(peakMini);
+  quietAttribution(peakMini);
   L.circleMarker([peak.lat, peak.lng], { radius: 7, color: '#1f6b45', fillColor: '#1f6b45', fillOpacity: 0.9 }).addTo(peakMini);
   setTimeout(function () { if (peakMini) peakMini.invalidateSize(); }, 60);
 }
@@ -5051,6 +4993,7 @@ function renderLogbookMap(done) {
   if (!logbookMap) {
     logbookMap = L.map(box, { zoomControl: false }).setView([46.5, 8.5], 5);
     mutedTiles().addTo(logbookMap);
+    quietAttribution(logbookMap);
   }
   logbookMarkers.forEach(function (marker) { logbookMap.removeLayer(marker); });
   logbookMarkers = [];
