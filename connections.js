@@ -71,8 +71,8 @@
 
   var MOCK = {
     accepted: [
-      { id: 'c-ada', otherId: '11111111-1111-4111-8111-111111111111', name: 'Ada Lovelace', avatarUrl: 'icons/icon-192.png', credential: 'IFMGA guide' },
-      { id: 'c-blair', otherId: '22222222-2222-4222-8222-222222222222', name: 'Blair Tremblay', avatarUrl: '', credential: 'First aid' }
+      { id: 'c-blair', otherId: '22222222-2222-4222-8222-222222222222', name: 'Blair Tremblay', avatarUrl: '', credential: 'First aid' },
+      { id: 'c-ada', otherId: '11111111-1111-4111-8111-111111111111', name: 'Ada Lovelace', avatarUrl: 'icons/icon-192.png', credential: 'IFMGA guide' }
     ],
     incoming: [
       { id: 'c-camille', otherId: '33333333-3333-4333-8333-333333333333', name: 'Camille Rossi', avatarUrl: '' }
@@ -122,6 +122,7 @@
     if (!host) return;
     var incoming = rows.filter(function (row) { return row.direction === 'in' && row.status === 'pending'; });
     var accepted = rows.filter(function (row) { return row.status === 'accepted'; });
+    accepted.sort(function (a, b) { return togetherAt(b.otherId) - togetherAt(a.otherId); });
     if (requestRow) {
       if (!incoming.length) {
         requestRow.classList.add('hidden');
@@ -151,8 +152,20 @@
     host.replaceChildren.apply(host, [add].concat(stories));
     if (unavailable) note('Partner connections are not on this account yet. The rest of Partners still works.');
     else if (!ready() && !mockMode()) note('Sign in to add partners and message them.');
-    else if (!accepted.length && !incoming.length) note('People you partner with show up here.');
+    else if (!accepted.length && !incoming.length) note('Your rope team shows up here.');
     else note('');
+  }
+
+  function togetherAt(userId) {
+    var api = root.SummitChat;
+    if (!api || !api.lastWith || !userId) return 0;
+    return api.lastWith(userId) || 0;
+  }
+
+  function acceptedPeople() {
+    return rows.filter(function (row) { return row.status === 'accepted'; }).map(function (row) {
+      return { id: row.otherId, name: row.name, avatarUrl: row.avatarUrl || '' };
+    }).sort(function (a, b) { return togetherAt(b.id) - togetherAt(a.id); });
   }
 
   function storyButton(row) {
@@ -469,7 +482,7 @@
   function previewInbox() {
     if (!mockMode()) return null;
     return [
-      { id: 'thread-ada', personId: '11111111-1111-4111-8111-111111111111', name: 'Ada Lovelace', preview: 'Saturday still works for me.', updatedAt: new Date().toISOString(), unread: 1 },
+      { id: 'thread-ada', personId: '11111111-1111-4111-8111-111111111111', name: 'Ada Lovelace', preview: 'Climb request · Matterhorn', chip: 'Matterhorn', updatedAt: new Date().toISOString(), unread: 1 },
       { id: 'thread-blair', personId: '22222222-2222-4222-8222-222222222222', name: 'Blair Tremblay', preview: 'I can bring the rope.', updatedAt: new Date(Date.now() - 86400000).toISOString(), unread: 0 }
     ];
   }
@@ -483,6 +496,7 @@
       rows.forEach(function (row) { if (row.otherId === id) found = row; });
       return found && found.avatarUrl || '';
     },
+    accepted: acceptedPeople,
     refresh: load,
     openAdd: openAdd,
     stateFor: stateFor,

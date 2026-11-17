@@ -155,7 +155,8 @@
         <h1>Messages</h1>
       </header>
       <div class="messages-scroll">
-        <section id="my-partners" class="my-partners" aria-label="My partners">
+        <section id="my-partners" class="my-partners" aria-label="Your rope team">
+          <h2>Your rope team</h2>
           <div id="partner-row" class="partner-row"></div>
           <p id="partner-requests-row" class="partner-requests-row hidden"></p>
           <div id="partner-requests-list" class="partner-requests-list hidden"></div>
@@ -171,6 +172,17 @@
     </div>
     <div id="chat-screen" class="chat-screen hidden"></div>
     <div id="shared-plan-view" class="hidden"></div>
+  </div>
+
+  <div id="share-sheet" class="add-partner-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="share-title">
+    <div class="add-partner-card">
+      <div class="add-partner-bar">
+        <h2 id="share-title">Share in chat</h2>
+        <button type="button" id="share-close" class="sheet-close" aria-label="Close">×</button>
+      </div>
+      <p id="share-summary" class="muted small"></p>
+      <div id="share-people"></div>
+    </div>
   </div>
 
   <div id="climb-sheet" class="add-partner-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="climb-title">

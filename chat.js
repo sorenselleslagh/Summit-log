@@ -10,6 +10,7 @@
   var queueCache = {};
   var requestCache = { incoming: [], outgoing: [] };
   var threads = [];
+  var activity = {};
   var active = null;
   var started = false;
   var pollTimer = null;
@@ -443,7 +444,7 @@
           threads = [];
           return threads;
         }
-        return db().from('messages').select('id, conversation_id, sender_id, body, kind, created_at')
+        return db().from('messages').select('id, conversation_id, sender_id, body, kind, payload, created_at')
           .in('conversation_id', ids)
           .order('created_at', { ascending: false })
           .limit(200)
@@ -472,7 +473,8 @@
                 stage: conversation.stage || '',
                 muted: !!muted,
                 unread: unread,
-                preview: latest ? latest.body : 'No messages yet',
+                preview: latest ? previewLine(latest) : 'No messages yet',
+                chip: latest && latest.kind === 'climb_request' && latest.payload ? (latest.payload.name || '') : '',
                 senderId: latest ? latest.sender_id : '',
                 updatedAt: latest ? latest.created_at : conversation.updated_at
               };
@@ -486,7 +488,10 @@
               var idsToName = [];
               threads.forEach(function (thread) {
                 thread.personId = other[thread.id] || thread.senderId || '';
-                if (thread.personId) idsToName.push(thread.personId);
+                if (thread.personId) {
+                  idsToName.push(thread.personId);
+                  noteActivity(thread.personId, thread.updatedAt);
+                }
                 if (thread.senderId) idsToName.push(thread.senderId);
               });
               return rememberProfiles(idsToName).then(function () {
@@ -511,7 +516,7 @@
     }
     if (!api.user()) {
       setStatus('Sign in to send partner requests and messages. A chat opens only after a request is accepted.');
-      direct.replaceChildren(el('p', { class: 'muted', text: 'No direct messages yet.' }));
+      direct.replaceChildren(el('p', { class: 'muted', text: 'No conversations yet. Find a partner for your next objective.' }));
       requests.replaceChildren();
       setBadge(0);
       return;
@@ -531,7 +536,7 @@
     requests.replaceChildren.apply(requests, pendingNodes);
     var directThreads = threads.filter(function (thread) { return thread.type !== 'team'; });
     var teamThreads = threads.filter(function (thread) { return thread.type === 'team'; });
-    if (!directThreads.length) direct.replaceChildren(el('p', { class: 'muted', text: 'No direct messages yet.' }));
+    if (!directThreads.length) direct.replaceChildren(el('p', { class: 'muted', text: 'No conversations yet. Find a partner for your next objective.' }));
     else direct.replaceChildren.apply(direct, directThreads.map(threadButton));
     if (teams) {
       if (!teamThreads.length) {
@@ -545,6 +550,37 @@
     var unread = requestCache.incoming.length;
     threads.forEach(function (thread) { unread += thread.unread; });
     setBadge(unread);
+  }
+
+  function noteActivity(userId, iso) {
+    var when = Date.parse(iso || '');
+    if (!userId || !when) return;
+    if (!activity[userId] || when > activity[userId]) activity[userId] = when;
+  }
+
+  function lastWith(userId) {
+    return activity[userId] || 0;
+  }
+
+  function previewLine(message) {
+    if (!message) return '';
+    if (message.kind === 'climb_request') {
+      var name = message.payload && message.payload.name;
+      return name ? 'Climb request · ' + name : (message.body || 'Climb request');
+    }
+    if (message.kind === 'share') {
+      var shared = message.payload && message.payload.name;
+      return shared ? 'Shared · ' + shared : (message.body || 'Shared a peak');
+    }
+    return message.body || '';
+  }
+
+  function defaultChecklist() {
+    return [
+      { id: 'gear', text: 'Gear', done: false },
+      { id: 'point', text: 'Meeting point', done: false },
+      { id: 'time', text: 'Meeting time', done: false }
+    ];
   }
 
   function shortTime(iso) {
@@ -562,7 +598,8 @@
         el('span', { class: 'thread-title', text: who }),
         el('span', { class: 'thread-time', text: shortTime(thread.updatedAt) })
       ),
-      el('span', { class: 'thread-preview', text: thread.preview || '' })
+      el('span', { class: 'thread-preview', text: thread.preview || '' }),
+      thread.chip ? el('span', { class: 'badge thread-chip', text: thread.chip }) : null
     );
     var dot = thread.unread ? el('span', { class: 'ig-unread', 'aria-label': 'Unread' }) : null;
     var button = el('button', { class: 'thread', type: 'button', 'data-thread': thread.id },
@@ -671,7 +708,12 @@
     var plan = el('button', { class: 'secondary', type: 'button', text: 'Shared plan' });
     plan.addEventListener('click', function () { openSharedPlan(conversation); });
     var log = el('div', { class: 'chat-log', id: 'chat-log' });
-    active.messages.forEach(function (message) { log.appendChild(messageNode(message)); });
+    var trip = null;
+    (active.messages || []).forEach(function (message) {
+      if (message.kind === 'climb_request' && message.payload && message.payload.status === 'accepted') trip = message;
+      log.appendChild(messageNode(message));
+    });
+    if (trip && hooks.adoptTrip) hooks.adoptTrip(trip, otherName);
     var input = el('input', { type: 'text', id: 'chat-input', maxlength: '4000', placeholder: 'Message', 'aria-label': 'Message' });
     var send = el('button', { class: 'primary', type: 'button', id: 'chat-send', text: 'Send' });
     var propose = el('button', { class: 'secondary', type: 'button', text: 'Propose a date' });
@@ -720,22 +762,20 @@
     var previous = byId('chat-input');
     var draft = previous ? previous.value : '';
     var wasFocused = previous && document.activeElement === previous;
-    screen.replaceChildren(
-      el('div', { class: 'chat-head' },
-        back,
-        el('div', { class: 'chat-head-row' },
-          messageAvatar(active.otherId, otherName),
-          el('div', { class: 'chat-head-copy' },
-            el('h2', { text: otherName || conversation.objective_name || 'Conversation' }),
-            el('p', { class: 'chat-objective', text: headerLine(conversation) || conversation.objective_name || '' })
-          )
-        ),
-        plan
+    var head = el('div', { class: 'chat-head' },
+      back,
+      el('div', { class: 'chat-head-row' },
+        messageAvatar(active.otherId, otherName),
+        el('div', { class: 'chat-head-copy' },
+          el('h2', { text: otherName || conversation.objective_name || 'Conversation' }),
+          el('p', { class: 'chat-objective', text: headerLine(conversation) || conversation.objective_name || '' })
+        )
       ),
-      log,
-      composer,
-      safety
+      plan
     );
+    var pieces = [head, log, composer, safety];
+    if (trip) pieces.splice(1, 0, tripPin(trip));
+    screen.replaceChildren.apply(screen, pieces);
     var nextInput = byId('chat-input');
     if (nextInput && draft) nextInput.value = draft;
     if (wasFocused && nextInput) nextInput.focus();
@@ -747,6 +787,7 @@
     var failed = message.failed ? el('span', { class: 'bubble-failed', text: 'Not sent yet. It will retry.' }) : null;
     var body;
     if (message.kind === 'climb_request') body = climbCard(message, mine);
+    else if (message.kind === 'share') body = shareCard(message);
     else if (message.kind === 'date_proposal') body = dateCard(message, mine);
     else if (message.kind === 'gear_checklist') {
       var items = (message.payload && message.payload.items) || [];
@@ -774,7 +815,7 @@
   function climbCard(message, mine) {
     var payload = message.payload || {};
     var status = payload.status || 'pending';
-    var lines = [payload.dates || '', payload.note || ''].filter(Boolean).join(' · ');
+    var lines = [payload.route || '', payload.elevation ? payload.elevation + ' m' : '', payload.dates || '', payload.note || ''].filter(Boolean).join(' · ');
     var actions = null;
     if (!mine && status === 'pending') {
       var accept = el('button', { class: 'primary', type: 'button', text: 'Accept' });
@@ -801,7 +842,9 @@
       actions = el('div', { class: 'partner-actions' }, take, no);
     }
     var state = status === 'pending' ? 'Waiting for an answer' : status === 'accepted' ? 'Accepted' : status === 'suggested' ? 'Suggested ' + (payload.suggestion || 'another date') : 'Declined';
-    return el('article', { class: 'climb-card' },
+    var photo = safePhoto(payload.photo);
+    return el('article', { class: 'card climb-card' },
+      photo ? el('img', { class: 'peak-photo', alt: '', src: photo }) : null,
       el('p', { class: 'field-label', text: 'Climb request' }),
       el('h3', { text: payload.name || message.body || 'Objective' }),
       lines ? el('p', { text: lines }) : null,
@@ -810,23 +853,91 @@
     );
   }
 
+  function safePhoto(url) {
+    return typeof url === 'string' && /^https:\/\/(thumb|upload)\.wikimedia\.org\//.test(url) ? url : '';
+  }
+
+  function shareCard(message) {
+    var payload = message.payload || {};
+    var kind = payload.share === 'log' ? 'From the logbook' : payload.share === 'route' ? 'Route' : 'Peak';
+    var meta = [payload.elevation ? payload.elevation + ' m' : '', payload.route || '', payload.date || '', payload.grade || ''].filter(Boolean).join(' · ');
+    var photo = safePhoto(payload.photo);
+    return el('article', { class: 'card share-card' },
+      photo ? el('img', { class: 'peak-photo', alt: '', src: photo }) : el('div', { class: 'peak-photo peak-photo-empty', role: 'img', 'aria-label': 'Illustrated placeholder' }),
+      el('p', { class: 'field-label', text: kind }),
+      el('h3', { text: payload.name || 'Objective' }),
+      meta ? el('p', { class: 'entry-meta', text: meta }) : null,
+      payload.note ? el('p', { text: payload.note }) : null
+    );
+  }
+
+  function tripPin(message) {
+    var payload = message.payload || {};
+    var list = Array.isArray(payload.checklist) && payload.checklist.length ? payload.checklist : defaultChecklist();
+    var rows = list.map(function (step, index) {
+      var box = el('input', { type: 'checkbox', 'aria-label': 'Done: ' + (step.text || 'Step') });
+      if (step.done) box.checked = true;
+      var field = el('input', { type: 'text', maxlength: '80', value: step.text || '', 'aria-label': 'Checklist item' });
+      function commit() {
+        var next = list.map(function (item, itemIndex) {
+          return {
+            id: item.id || ('step-' + (itemIndex + 1)),
+            text: itemIndex === index ? field.value.trim().slice(0, 80) : item.text,
+            done: itemIndex === index ? box.checked : item.done === true
+          };
+        }).filter(function (item) { return item.text; });
+        if (!next.length) next = defaultChecklist();
+        saveTrip(message, { checklist: next });
+      }
+      box.addEventListener('change', commit);
+      field.addEventListener('change', commit);
+      return el('label', { class: 'trip-check' }, box, field);
+    });
+    return el('article', { class: 'card trip-pin' },
+      el('p', { class: 'field-label', text: 'Shared trip' }),
+      el('h3', { text: payload.name || 'Objective' }),
+      el('p', { text: [payload.route, payload.dates].filter(Boolean).join(' · ') || 'Date not set' }),
+      el('div', {}, rows)
+    );
+  }
+
+  function saveTrip(message, patch) {
+    if (!message) return;
+    message.payload = Object.assign({}, message.payload || {}, patch || {});
+    if (!message.id || String(message.id).indexOf('preview') === 0) {
+      if (hooks.adoptTrip) hooks.adoptTrip(message, nameFor(active && active.otherId));
+      paintChat();
+      return;
+    }
+    db().from('messages').update({ payload: message.payload }).eq('id', message.id).then(function (result) {
+      if (result.error) {
+        setStatus(result.error.message || 'The shared trip could not be saved. Apply the shared trip update, then try again.');
+        return;
+      }
+      if (hooks.adoptTrip) hooks.adoptTrip(message, nameFor(active && active.otherId));
+      paintChat();
+    });
+  }
+
   function respondClimb(message, status, suggestion) {
+    var payload = Object.assign({}, message && message.payload || {}, { status: status });
+    if (suggestion) payload.suggestion = suggestion;
+    if (status === 'accepted' && (!payload.checklist || !payload.checklist.length)) payload.checklist = defaultChecklist();
     if (!message || !message.id || String(message.id).indexOf('preview') === 0) {
-      if (message && message.payload) {
-        message.payload.status = status;
-        if (suggestion) message.payload.suggestion = suggestion;
+      if (message) {
+        message.payload = payload;
+        if (status === 'accepted' && hooks.adoptTrip) hooks.adoptTrip(message, nameFor(active && active.otherId));
         paintChat();
       }
       return;
     }
-    var payload = Object.assign({}, message.payload || {}, { status: status });
-    if (suggestion) payload.suggestion = suggestion;
     db().from('messages').update({ payload: payload }).eq('id', message.id).then(function (result) {
       if (result.error) {
         setStatus(result.error.message || 'The climb request could not be updated. Apply the climb request update, then try again.');
         return;
       }
       message.payload = payload;
+      if (status === 'accepted' && hooks.adoptTrip) hooks.adoptTrip(message, nameFor(active && active.otherId));
       paintChat();
     });
   }
@@ -1275,13 +1386,14 @@
       paintPreview(sample);
       setBadge(sample.filter(function (thread) { return thread.unread; }).length);
       setStatus('');
+      if (root.SummitConnections && root.SummitConnections.refresh) root.SummitConnections.refresh();
       return;
     }
     if (!ready()) {
       setStatus('Sign in to message your partners.');
       var direct = byId('messages-direct');
       if (direct && !(root.SummitConnections && root.SummitConnections.mockMode && root.SummitConnections.mockMode())) {
-        direct.replaceChildren(el('p', { class: 'muted', text: 'No direct messages yet.' }));
+        direct.replaceChildren(el('p', { class: 'muted', text: 'No conversations yet. Find a partner for your next objective.' }));
       }
       return;
     }
@@ -1322,14 +1434,7 @@
       return sendMessage({
         kind: 'climb_request',
         body: 'Climb request: ' + fields.name + (fields.dates ? ' · ' + fields.dates : ''),
-        payload: {
-          name: fields.name,
-          kind: fields.kind || 'peak',
-          dates: fields.dates || '',
-          note: fields.note || '',
-          status: 'pending',
-          suggestion: ''
-        }
+        payload: climbPayload(fields)
       }).then(function () { return true; }, function (err) {
         setStatus((err && err.message) || 'The climb request could not be sent. Apply the climb request update, then try again.');
         return false;
@@ -1337,36 +1442,115 @@
     });
   }
 
+  function climbPayload(fields) {
+    return {
+      name: fields.name,
+      kind: fields.kind || 'peak',
+      route: fields.route || '',
+      elevation: fields.elevation == null ? null : fields.elevation,
+      photo: fields.photo || '',
+      dates: fields.dates || '',
+      note: fields.note || '',
+      status: 'pending',
+      suggestion: '',
+      checklist: []
+    };
+  }
+
   function showClimbPreview(person, fields) {
-    showMessagesScreen();
-    var home = byId('messages-home');
-    if (home) home.classList.add('hidden');
-    var screen = byId('chat-screen');
-    if (!screen) return;
-    screen.classList.remove('hidden');
-    var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
-    back.addEventListener('click', function () {
-      screen.classList.add('hidden');
-      if (home) home.classList.remove('hidden');
-    });
+    var otherId = (person && (person.id || person.userId)) || '';
     var message = {
       id: 'preview-climb',
-      sender_id: (person && (person.id || person.userId)) || 'partner',
+      sender_id: otherId || 'partner',
       created_at: new Date().toISOString(),
       kind: 'climb_request',
       body: 'Climb request: ' + fields.name,
-      payload: {
-        name: fields.name,
-        dates: fields.dates || '',
-        note: fields.note || '',
-        status: 'pending',
-        suggestion: ''
-      }
+      payload: climbPayload(fields)
     };
-    screen.replaceChildren(
-      el('div', { class: 'chat-head' }, back, el('h2', { text: (person && person.name) || 'Partner' })),
-      el('div', { class: 'chat-log' }, messageNode(message))
-    );
+    active = {
+      id: 'preview',
+      otherId: otherId,
+      conversation: { objective_name: fields.name, route_name: fields.route || '', dates: fields.dates || '' },
+      messages: [message],
+      blocked: false
+    };
+    if (otherId && person && person.name) nameCache[otherId] = person.name;
+    showChatShell();
+    paintChat();
+  }
+
+  var shareDraft = null;
+
+  function openShare(card) {
+    shareDraft = card || null;
+    var sheet = byId('share-sheet');
+    var summary = byId('share-summary');
+    var people = byId('share-people');
+    if (summary) summary.textContent = card && card.name ? card.name : '';
+    if (people) {
+      var list = root.SummitConnections && root.SummitConnections.accepted ? root.SummitConnections.accepted() : [];
+      if (!list.length) people.replaceChildren(el('p', { class: 'muted', text: 'Add someone to your rope team before sharing.' }));
+      else people.replaceChildren.apply(people, list.map(function (person) {
+        var button = el('button', { class: 'thread', type: 'button' },
+          messageAvatar(person.id, person.name),
+          el('span', { class: 'thread-title', text: person.name })
+        );
+        button.addEventListener('click', function () { sendShare(person); });
+        return button;
+      }));
+    }
+    if (sheet) sheet.classList.remove('hidden');
+  }
+
+  function closeShare() {
+    var sheet = byId('share-sheet');
+    if (sheet) sheet.classList.add('hidden');
+  }
+
+  function sendShare(person) {
+    var card = shareDraft;
+    closeShare();
+    if (!card || !person) return;
+    var payload = {
+      share: card.share || 'peak',
+      name: card.name || '',
+      route: card.route || '',
+      elevation: card.elevation == null ? null : card.elevation,
+      date: card.date || '',
+      grade: card.grade || '',
+      note: card.note || '',
+      photo: card.photo || ''
+    };
+    var label = payload.share === 'log' ? 'From the logbook: ' : payload.share === 'route' ? 'Route: ' : 'Peak: ';
+    var body = label + payload.name;
+    if (!ready()) {
+      active = {
+        id: 'preview',
+        otherId: person.id,
+        conversation: { objective_name: payload.name || '' },
+        messages: [{
+          id: 'preview-share',
+          sender_id: 'you',
+          created_at: new Date().toISOString(),
+          kind: 'share',
+          body: body,
+          payload: payload
+        }],
+        blocked: false
+      };
+      nameCache.you = 'You';
+      if (person.name) nameCache[person.id] = person.name;
+      showChatShell();
+      paintChat();
+      return;
+    }
+    openOrCreateWith(person.id).then(function (opened) {
+      if (!opened || !active) {
+        setStatus('Open a chat with this partner before sharing.');
+        return;
+      }
+      sendMessage({ kind: 'share', body: body, payload: payload });
+    });
   }
 
   function messageAbout(name) {
@@ -1404,6 +1588,7 @@
   function paintPreview(sample) {
     (sample || []).forEach(function (thread) {
       if (thread.personId && thread.name) nameCache[thread.personId] = thread.name;
+      noteActivity(thread.personId, thread.updatedAt);
     });
     var direct = byId('messages-direct');
     if (!direct) return;
@@ -1473,6 +1658,8 @@
     var cancel = byId('climb-cancel');
     if (close) close.addEventListener('click', closeSheet);
     if (cancel) cancel.addEventListener('click', closeSheet);
+    var shareClose = byId('share-close');
+    if (shareClose) shareClose.addEventListener('click', closeShare);
   }
 
   bindChrome();
@@ -1489,6 +1676,8 @@
     openConversation: openConversation,
     openInbox: openInbox,
     hideMessages: hideMessagesScreen,
+    lastWith: lastWith,
+    openShare: openShare,
     openClimbSheet: openClimbSheet,
     sendClimb: sendClimb,
     showClimbPreview: showClimbPreview,

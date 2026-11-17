@@ -876,6 +876,7 @@ function renderItemCard(item) {
     actions.unshift(el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'down', 'data-id': item.id, 'aria-label': 'Move down', text: '↓' }));
     actions.unshift(el('button', { class: 'secondary icon-btn', type: 'button', 'data-action': 'up', 'data-id': item.id, 'aria-label': 'Move up', text: '↑' }));
   } else {
+    actions.unshift(el('button', { class: 'secondary', type: 'button', 'data-action': 'share', 'data-id': item.id, text: 'Share in chat' }));
     actions.unshift(el('button', { class: 'secondary', type: 'button', 'data-action': 'memory', 'data-id': item.id, text: 'Memories' }));
   }
   var card = el('div', { class: 'card mine-card', draggable: planned ? 'true' : 'false', 'data-id': item.id },
@@ -1013,6 +1014,7 @@ function renderPlanCard(item) {
       el('p', { class: 'entry-meta', text: activityLabel(item) }),
       el('p', { text: item.routeName || 'Route TBD' }),
       el('p', { class: 'entry-meta', text: when }),
+      item.partnersWith ? el('p', { class: 'entry-meta', text: 'With ' + item.partnersWith }) : null,
       el('p', { class: 'plan-status', text: planStatusLine(item) })
     ),
     el('div', { class: 'log-actions' },
@@ -1108,6 +1110,7 @@ function onItemClick(event) {
   if (action === 'done') openDonePrompt(id);
   if (action === 'open') showPlanDetail(id);
   if (action === 'memory') showMemory(id);
+  if (action === 'share') shareLogInChat(id);
   if (action === 'partner') startPartnerFrom(id);
   if (action === 'up') movePlanned(id, -1);
   if (action === 'down') movePlanned(id, 1);
@@ -1511,6 +1514,40 @@ function addCatalogItem(place) {
   saveItems();
   renderMine();
   return entry;
+}
+
+function adoptSharedTrip(message, partnerName) {
+  if (!message || !message.payload || message.payload.status !== 'accepted' || !message.payload.name) return;
+  var tripId = String(message.id || '');
+  if (!tripId) return;
+  var checklist = Array.isArray(message.payload.checklist) ? message.payload.checklist : [];
+  var fields = {
+    name: message.payload.name,
+    kind: message.payload.kind === 'hike' || message.payload.kind === 'route' ? message.payload.kind : 'peak',
+    status: 'planned',
+    routeName: message.payload.route || '',
+    timeframe: message.payload.dates || '',
+    notes: message.payload.note || '',
+    elevation: typeof message.payload.elevation === 'number' ? message.payload.elevation : null,
+    partnersWith: partnerName || '',
+    checklist: checklist,
+    tripId: tripId,
+    visibility: 'private'
+  };
+  var existing = null;
+  items.forEach(function (item) { if (item.tripId === tripId) existing = item; });
+  if (existing) {
+    items = items.map(function (item) {
+      if (item.tripId !== tripId) return item;
+      return Lgc.updateLog(item, fields) || item;
+    });
+  } else {
+    var entry = Lgc.createLog(fields);
+    if (!entry) return;
+    items.push(entry);
+  }
+  saveItems();
+  renderMine();
 }
 
 var toastUndoId = '';
@@ -3019,10 +3056,33 @@ function bindClimbRequest() {
       return;
     }
     if (!window.SummitChat || !SummitChat.sendClimb) return;
+    var match = null;
+    objectiveCatalog.forEach(function (row) {
+      if (row && Partners.fold(row.name) === Partners.fold(name)) match = row;
+    });
+    var planned = null;
+    plannedItems().forEach(function (item) {
+      if (Partners.fold(item.name) === Partners.fold(name)) planned = item;
+    });
+    var route = (planned && planned.routeName) || '';
+    var elevation = match && typeof match.elevation === 'number' ? match.elevation : (planned ? planned.elevation : null);
+    var photo = '';
+    if (collectionData && collectionData.peaks) {
+      collectionData.peaks.forEach(function (peak) {
+        if (!Col || Col.normName(peak.name) !== Col.normName(name)) return;
+        if (!route && peak.normalRoute) route = peak.normalRoute;
+        if (elevation == null && typeof peak.elevation === 'number') elevation = peak.elevation;
+        photo = safePhotoUrl(photoRecord(peak) && photoRecord(peak).thumb);
+      });
+    }
     SummitChat.sendClimb(null, {
       name: name,
       dates: (document.getElementById('climb-dates').value || '').trim(),
-      note: (document.getElementById('climb-note').value || '').trim()
+      note: (document.getElementById('climb-note').value || '').trim(),
+      kind: (match && match.kind) || (planned && planned.kind) || 'peak',
+      route: route,
+      elevation: elevation,
+      photo: photo
     });
   });
 }
@@ -3332,6 +3392,52 @@ function useRouteButton(peak) {
   return button;
 }
 
+function sharePeakButton(peak) {
+  var button = el('button', { class: 'secondary', type: 'button', text: 'Share in chat' });
+  button.addEventListener('click', function () {
+    if (!window.SummitChat || !SummitChat.openShare) return;
+    var photo = photoRecord(peak);
+    SummitChat.openShare({
+      share: 'peak',
+      name: peak.name,
+      elevation: peak.elevation,
+      route: peak.normalRoute || '',
+      grade: peak.grade || '',
+      photo: safePhotoUrl(photo && photo.thumb)
+    });
+  });
+  return button;
+}
+
+function shareRouteButton(peak) {
+  var button = el('button', { class: 'secondary', type: 'button', text: 'Share this route' });
+  button.addEventListener('click', function () {
+    if (!window.SummitChat || !SummitChat.openShare || !peak.normalRoute) return;
+    SummitChat.openShare({
+      share: 'route',
+      name: peak.normalRoute,
+      route: peak.name,
+      grade: peak.grade || '',
+      elevation: peak.elevation
+    });
+  });
+  return button;
+}
+
+function shareLogInChat(id) {
+  var item = null;
+  items.forEach(function (entry) { if (entry.id === id) item = entry; });
+  if (!item || !window.SummitChat || !SummitChat.openShare) return;
+  SummitChat.openShare({
+    share: 'log',
+    name: item.name,
+    route: item.routeTaken || item.routeName || '',
+    elevation: item.elevation,
+    date: item.date || '',
+    note: ''
+  });
+}
+
 function showPeakDetail(peak) {
   var box = document.getElementById('peak-detail');
   if (!box) return;
@@ -3397,13 +3503,14 @@ function showPeakDetail(peak) {
       peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
     ),
     progress ? el('p', { class: 'muted', text: progress.done + ' of ' + progress.total + ' · ' + progressHost.name }) : null,
-    el('div', { class: 'log-actions' }, backlogBtn, partnersBtn),
+    el('div', { class: 'log-actions' }, backlogBtn, partnersBtn, sharePeakButton(peak)),
     el('div', { class: 'reference-data' },
       el('p', { class: 'field-label', text: 'Known route' }),
       el('p', { text: peak.normalRoute ? peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') : 'No sourced route is stored for this summit.' }),
       el('p', { class: 'muted', text: 'The grade, when there is one, belongs to that route. Adding the mountain does not add the route.' }),
       peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: peak.normalRoute ? 'Route source' : 'Source' }) : null,
-      peak.normalRoute ? useRouteButton(peak) : null
+      peak.normalRoute ? useRouteButton(peak) : null,
+      peak.normalRoute ? shareRouteButton(peak) : null
     ),
     el('div', { class: 'log-actions' }, summited),
     el('h3', { text: 'Build up to this peak' }),
@@ -5325,6 +5432,7 @@ if (window.SummitChat) {
       return found;
     },
     signIn: function () { showLogin(); },
+    adoptTrip: adoptSharedTrip,
     openRequest: function (name) {
       var item = null;
       items.forEach(function (entry) {
