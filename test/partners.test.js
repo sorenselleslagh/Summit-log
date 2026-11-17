@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v35'"));
+assert.ok(sw.includes("VERSION = 'v36'"));
 assert.ok(app.indexOf('L.control.zoom') < 0);
 assert.ok(app.indexOf('zoomControl: false') > 0);
 var planCard = app.slice(app.indexOf('function renderPlanCard'), app.indexOf('function renderMine'));
