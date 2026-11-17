@@ -854,35 +854,59 @@ html.map-cover .map-fabs button {
 
 .photo-pin, .pin-dot, .pin-cluster { background: transparent; border: none; }
 
-.pin-dot span {
+.pin-face {
+  position: relative;
   display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #e7e1d8 url("illustrations/peak-card.svg") center/cover no-repeat;
+  box-shadow: 0 0 0 3px #fff, 0 8px 18px rgba(28, 25, 21, 0.28);
+}
+
+.photo-pin.is-done .pin-face { box-shadow: 0 0 0 3px #1f6b45, 0 8px 18px rgba(28, 25, 21, 0.28); }
+.photo-pin.is-done .pin-face::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
   width: 14px;
   height: 14px;
-  margin: 2px;
   border-radius: 999px;
-  background: #1f6b45;
+  background: #1f6b45 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.2 6.2l2.4 2.4 5.2-5.2' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/10px no-repeat;
+  box-shadow: 0 0 0 2px #fff;
+}
+.photo-pin.is-planned .pin-face { box-shadow: 0 0 0 3px #c4841d, 0 8px 18px rgba(28, 25, 21, 0.28); }
+.photo-pin.is-trek .pin-face { box-shadow: 0 0 0 3px #3d6f8f, 0 8px 18px rgba(28, 25, 21, 0.28); }
+
+.pin-dot span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: 3px;
+  border-radius: 999px;
+  background: #243028;
   box-shadow: 0 0 0 2px #fff;
 }
 
-.pin-dot.is-planned span {
-  background: #fff;
-  box-shadow: 0 0 0 2px #1f6b45;
-}
+.pin-dot.is-done span { box-shadow: 0 0 0 2px #1f6b45; }
 
 .pin-cluster span {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
-  background: #1f6b45;
-  color: #fff;
+  background: #243028;
+  color: #f7f4ef;
   font-family: Inter, system-ui, sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 3px #fff, 0 8px 16px rgba(28, 25, 21, 0.22);
 }
+
+.pin-cluster.is-done span { box-shadow: 0 0 0 3px #1f6b45, 0 8px 16px rgba(28, 25, 21, 0.22); }
 
 .pin-face,
 .pin-dot span,
@@ -2259,14 +2283,10 @@ html.explore-map.explore-sheet-off.explore-peak #peak-detail {
   padding: 0;
 }
 
-html.explore-map.explore-sheet-off.explore-peak #peak-detail .peak-sheet .summit-hero,
-html.explore-map.explore-sheet-off.explore-peak #peak-detail .peak-sheet .summit-hero img,
-html.explore-map.explore-sheet-off.explore-peak #peak-detail .peak-sheet .summit-hero-fallback {
-  width: 72px;
-  height: 72px;
-  flex: 0 0 72px;
+html.explore-map.explore-sheet-off.explore-peak #peak-detail .summit-hero {
   margin: 0;
-  border-radius: 14px;
+  border-radius: 22px 22px 0 0;
+  overflow: hidden;
 }
 
 html.explore-map.explore-sheet-off.explore-peak #peak-detail > .sheet-grab {
