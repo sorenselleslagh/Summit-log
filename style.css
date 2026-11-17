@@ -424,20 +424,15 @@ html.map-cover .map-fabs button {
   border-radius: 999px;
 }
 
-html.map-cover .leaflet-control-zoom { opacity: 0; }
-
 html.map-settled .map-close,
-html.map-settled .map-fabs,
-html.map-settled .leaflet-control-zoom {
+html.map-settled .map-fabs {
   animation: map-control-in 240ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
 }
 
 html.map-settled .map-fabs { animation-delay: 70ms; }
-html.map-settled .leaflet-control-zoom { animation-delay: 40ms; }
 
 html.map-cover:not(.map-settled) .map-close,
-html.map-cover:not(.map-settled) .map-fabs,
-html.map-cover:not(.map-settled) .leaflet-control-zoom {
+html.map-cover:not(.map-settled) .map-fabs {
   opacity: 0;
   transition: opacity 140ms ease;
 }
@@ -866,15 +861,6 @@ html.map-cover .map-fabs button {
   box-shadow: 0 10px 24px rgba(28, 25, 21, 0.16);
 }
 
-html.map-cover .leaflet-control-zoom a {
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  border-radius: 12px;
-  background: rgba(255, 252, 248, 0.96);
-  color: #1c1915;
-}
-
 .photo-pin, .pin-dot, .pin-cluster { background: transparent; border: none; }
 
 .pin-face {
@@ -963,15 +949,13 @@ html.map-cover .leaflet-control-zoom a {
   #app > nav,
   #map-container,
   .map-close,
-  .map-fabs,
-  .leaflet-control-zoom {
+  .map-fabs {
     transition: opacity 180ms linear !important;
     animation: none !important;
   }
 
   html.map-settled .map-close,
-  html.map-settled .map-fabs,
-  html.map-settled .leaflet-control-zoom {
+  html.map-settled .map-fabs {
     opacity: 1 !important;
   }
 }

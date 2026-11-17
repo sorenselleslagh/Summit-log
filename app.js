@@ -2138,7 +2138,6 @@ function initMap() {
         boxZoom: false,
         keyboard: false
       }).setView([46.5, 8.5], 6);
-      L.control.zoom({ position: 'topright' }).addTo(map);
       mutedTiles().addTo(map);
       map.on('locationerror', function () {
         showMapStatus('Location is unavailable on this device.');
@@ -4772,8 +4771,6 @@ function mountMiniMap(peak) {
   peakMini = L.map(box, {
     zoomControl: false,
     dragging: false,
-    scrollWheelZoom: false,
-    doubleClickZoom: false,
     boxZoom: false,
     keyboard: false,
     attributionControl: true
