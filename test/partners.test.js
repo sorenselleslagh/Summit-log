@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v41'"));
+assert.ok(sw.includes("VERSION = 'v42'"));
 assert.ok(sw.includes('./connections.js'));
 assert.ok(html.includes('id="my-partners"'));
 assert.ok(html.includes('id="messages-screen"'));

@@ -324,6 +324,7 @@
       stages: cleanStages(raw.stages),
       routeTaken: cleanText(raw.routeTaken, 200),
       partnersWith: cleanText(raw.partnersWith, 200),
+      tripId: cleanText(raw.tripId, 80),
       conditions: cleanConditions(raw.conditions),
       duration: cleanText(raw.duration, 40),
       elevationGain: parseElevation(raw.elevationGain),
