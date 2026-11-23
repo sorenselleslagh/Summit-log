@@ -2533,6 +2533,118 @@ html.explore-map.map-show-layers #layers-card {
   html.explore-map .explore-sheet { transition: none !important; }
 }
 
+.discover-bubble {
+  position: absolute;
+  z-index: 1480;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f6b45;
+  box-shadow: 0 10px 24px rgba(28, 25, 21, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+.discover-bubble svg { width: 26px; height: 26px; }
+.discover-bubble.is-open { background: #1f6b45; color: #fff; }
+.discover-bubble.is-snapping { transition: left 180ms ease, top 180ms ease; }
+.discover-panel {
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: 5.4rem;
+  z-index: 1485;
+  max-width: 420px;
+  margin: 0 auto;
+  max-height: min(62vh, 440px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background: rgba(247, 244, 239, 0.94);
+  color: #1c1915;
+  box-shadow: 0 16px 40px rgba(28, 25, 21, 0.22);
+  backdrop-filter: blur(8px);
+  transform: scale(0.92);
+  opacity: 0;
+  transform-origin: 80% 100%;
+}
+.discover-panel.is-open { transform: none; opacity: 1; transition: transform 200ms ease, opacity 180ms ease; }
+.discover-panel[hidden] { display: none; }
+.discover-grab { height: 18px; cursor: grab; touch-action: none; }
+.discover-grab::before {
+  content: "";
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: #d5cfc6;
+}
+.discover-panel h2 { margin: 0 0.9rem 0.25rem; font-size: 1.2rem; }
+#discover-body { overflow: auto; padding: 0 0.75rem 0.4rem; }
+.discover-hint { margin: 0 0.9rem 0.45rem; color: #5c564e; font-size: 0.82rem; }
+.discover-crumbs { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0 0.75rem; }
+.discover-crumb, .discover-skip {
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f6b45;
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.75rem;
+}
+.discover-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.3rem 0;
+  padding: 0.7rem 0.75rem;
+  border: none;
+  border-radius: 14px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+}
+.discover-row-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.discover-row-copy span { color: #5c564e; font-size: 0.82rem; }
+.discover-chevron { color: #1f6b45; font-size: 1.3rem; }
+.discover-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem 0.75rem 0.75rem; }
+.discover-results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5.2rem;
+  z-index: 1475;
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding: 0.2rem 0.7rem 0.4rem;
+  scroll-snap-type: x mandatory;
+}
+.discover-results[hidden] { display: none; }
+.discover-card {
+  flex: 0 0 210px;
+  scroll-snap-align: start;
+  border: none;
+  border-radius: 16px;
+  background: #fff;
+  color: #1c1915;
+  text-align: left;
+  box-shadow: 0 8px 20px rgba(28, 25, 21, 0.14);
+  overflow: hidden;
+}
+.discover-card img, .discover-card .peak-photo-empty { height: 84px; }
+.discover-card div { padding: 0.45rem 0.6rem 0.6rem; }
+.discover-card strong { display: block; }
+.discover-card span { display: block; color: #5c564e; font-size: 0.78rem; }
+@media (prefers-reduced-motion: reduce) {
+  .discover-bubble.is-snapping, .discover-panel.is-open { transition: none; }
+}
+
 .messages-panel h3 { margin: 0.9rem 0 0.35rem; }
 .migration-note {
   margin-top: 0.75rem;

@@ -6,7 +6,7 @@ var Col = window.SummitCollections;
 var Partners = window.SummitPartners;
 var Photos = window.SummitPhotos;
 
-var FEATURES = { exploreSheet: true };
+var FEATURES = { exploreSheet: false };
 if (!FEATURES.exploreSheet) document.documentElement.classList.add('explore-sheet-off');
 
 var items = [];
@@ -103,6 +103,7 @@ function reloadPersonal(userId) {
   renderMine();
   refreshAccountButton();
   if (window.SummitProfile && SummitProfile.reload) SummitProfile.reload();
+  if (window.SummitDiscover && SummitDiscover.reload) SummitDiscover.reload();
 }
 
 function refreshAccountButton() {
@@ -678,6 +679,7 @@ function enterExploreMap() {
   sheetSnap = sheetSnap || 'peek';
   renderExploreSheet();
   applySheetSnap(false);
+  if (window.SummitDiscover && SummitDiscover.place) SummitDiscover.place();
   setTimeout(function () {
     sizeExploreMap();
     showAlps();
@@ -2336,7 +2338,14 @@ function mapFeatures() {
       list.push({ type: 'osm', name: place.name, lat: place.lat, lng: place.lng, place: place });
     });
   }
-  return list.filter(function (feature) { return Number.isFinite(feature.lat) && Number.isFinite(feature.lng); });
+  list = list.filter(function (feature) { return Number.isFinite(feature.lat) && Number.isFinite(feature.lng); });
+  if (window.discoverPeakIds) {
+    list = list.filter(function (feature) {
+      if (!feature.peak || !feature.peak.id) return feature.type !== 'peak';
+      return !!window.discoverPeakIds[feature.peak.id];
+    });
+  }
+  return list;
 }
 
 function featuresInView(features) {
@@ -3447,6 +3456,32 @@ function shareLogInChat(id) {
   });
 }
 
+function c2cRoute(peak) {
+  var doc = window.SummitC2C;
+  if (!doc || !doc.peaks || !peak) return null;
+  return doc.peaks[peak.id] || null;
+}
+function routeTitle(peak) {
+  var info = c2cRoute(peak);
+  var name = info && info.name ? info.name : peak.normalRoute;
+  return name ? 'Normal route ' + name : 'Normal route';
+}
+function routeGrade(peak) {
+  var info = c2cRoute(peak);
+  return info && info.grade ? info.grade : 'Grade unknown';
+}
+function routeGlacier(peak) {
+  var info = c2cRoute(peak);
+  if (!info || info.glacier == null) return '';
+  return info.glacier ? 'Glacier' : 'No glacier';
+}
+function routeLink(peak) {
+  var info = c2cRoute(peak);
+  var href = info && info.url ? info.url : '';
+  if (!href) return null;
+  return el('a', { href: href, target: '_blank', rel: 'noopener noreferrer', text: 'Route info: Camptocamp' });
+}
+
 function showPeakDetail(peak) {
   var box = document.getElementById('peak-detail');
   if (!box) return;
@@ -3508,8 +3543,9 @@ function showPeakDetail(peak) {
       el('span', { text: Col.countryLabel(peak) })
     ),
     el('p', null,
-      el('span', { text: peak.normalRoute ? 'Normal route ' + peak.normalRoute : 'No sourced normal route' }),
-      peak.grade ? el('span', { class: 'grade-badge', text: peak.grade }) : null
+      el('span', { text: routeTitle(peak) }),
+      el('span', { class: 'grade-badge', text: routeGrade(peak) }),
+      routeGlacier(peak) ? el('span', { text: routeGlacier(peak) }) : null
     ),
     progress ? el('p', { class: 'muted', text: progress.done + ' of ' + progress.total + ' · ' + progressHost.name }) : null,
     el('div', { class: 'log-actions' }, backlogBtn, partnersBtn, sharePeakButton(peak)),
@@ -3517,7 +3553,7 @@ function showPeakDetail(peak) {
       el('p', { class: 'field-label', text: 'Known route' }),
       el('p', { text: peak.normalRoute ? peak.normalRoute + (peak.grade ? ' · ' + peak.grade : '') : 'No sourced route is stored for this summit.' }),
       el('p', { class: 'muted', text: 'The grade, when there is one, belongs to that route. Adding the mountain does not add the route.' }),
-      peak.sourceUrl ? el('a', { href: peak.sourceUrl, target: '_blank', rel: 'noopener noreferrer', text: peak.normalRoute ? 'Route source' : 'Source' }) : null,
+      routeLink(peak),
       peak.normalRoute ? useRouteButton(peak) : null,
       peak.normalRoute ? shareRouteButton(peak) : null
     ),
@@ -5400,6 +5436,7 @@ document.getElementById('climb-pills').addEventListener('click', function (event
     if (!window.SummitLayers) return;
     SummitLayers.setGrade(document.getElementById('grade-min').value, document.getElementById('grade-max').value);
     updateMapMarkers();
+    if (window.SummitDiscover && SummitDiscover.refresh) SummitDiscover.refresh();
   });
 });
 document.getElementById('grade-reset').addEventListener('click', function () {
@@ -5409,6 +5446,7 @@ document.getElementById('grade-reset').addEventListener('click', function () {
   if (max) max.value = '';
   if (window.SummitLayers) SummitLayers.setGrade('', '');
   updateMapMarkers();
+  if (window.SummitDiscover && SummitDiscover.refresh) SummitDiscover.refresh();
 });
 ['filter-planned', 'filter-done'].forEach(function (id) {
   var box = document.getElementById(id);

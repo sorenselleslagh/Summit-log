@@ -29,6 +29,8 @@
   var PROFILE_KEY = 'summitlog_profile';
   var CREDENTIAL_KEY = 'summitlog_credentials';
   var FAVOURITE_KEY = 'summitlog_favourites';
+  var DISCOVER_KEY = 'summitlog_discover';
+  var EXPERIENCE_KEY = 'summitlog_experience';
 
   function createRepository(options) {
     var storage = options.storage;
@@ -39,7 +41,7 @@
     var warned = false;
     var owner = '';
     var PERSONAL = {};
-    [LOG_KEY, BACKLOG_KEY, ITEM_KEY, POST_KEY, QUEUE_KEY, USER_KEY, LEVEL_KEY, OUTBOX_KEY, PROFILE_KEY, CREDENTIAL_KEY, FAVOURITE_KEY].forEach(function (key) {
+    [LOG_KEY, BACKLOG_KEY, ITEM_KEY, POST_KEY, QUEUE_KEY, USER_KEY, LEVEL_KEY, OUTBOX_KEY, PROFILE_KEY, CREDENTIAL_KEY, FAVOURITE_KEY, DISCOVER_KEY, EXPERIENCE_KEY].forEach(function (key) {
       PERSONAL[key] = true;
     });
 
@@ -376,6 +378,47 @@
       return cleaned;
     }
 
+    function loadExperience() {
+      try {
+        var raw = storage.getItem(keyFor(EXPERIENCE_KEY));
+        if (!raw) return '';
+        var data = JSON.parse(raw);
+        var value = data && data.level;
+        if (value === 'beginner' || value === 'guide' || value === 'glacier') return value;
+        return '';
+      } catch (err) {
+        return '';
+      }
+    }
+
+    function saveExperience(level) {
+      var allowed = level === 'beginner' || level === 'guide' || level === 'glacier';
+      var next = { level: allowed ? level : '' };
+      write(EXPERIENCE_KEY, next);
+      return next.level;
+    }
+
+    function loadDiscover() {
+      try {
+        var raw = storage.getItem(keyFor(DISCOVER_KEY));
+        if (!raw) return null;
+        var data = JSON.parse(raw);
+        if (!data || (data.edge !== 'left' && data.edge !== 'right')) return null;
+        var y = Number(data.y);
+        if (!isFinite(y)) return null;
+        return { edge: data.edge, y: Math.max(0, Math.min(1, y)) };
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function saveDiscover(pos) {
+      if (!pos || (pos.edge !== 'left' && pos.edge !== 'right')) return null;
+      var next = { edge: pos.edge, y: Math.max(0, Math.min(1, Number(pos.y) || 0)) };
+      write(DISCOVER_KEY, next);
+      return next;
+    }
+
     function loadFavourites() {
       var read = readArray(FAVOURITE_KEY);
       if (read.state !== 'ok') return [];
@@ -445,6 +488,10 @@
       saveCredentials: saveCredentials,
       loadFavourites: loadFavourites,
       saveFavourites: saveFavourites,
+      loadDiscover: loadDiscover,
+      saveDiscover: saveDiscover,
+      loadExperience: loadExperience,
+      saveExperience: saveExperience,
       setOwner: setOwner,
       owner: function () { return owner; }
     };

@@ -1,0 +1,14 @@
+Camptocamp route extract
+========================
+
+This folder is derived from Camptocamp collaborative documents
+(waypoints and routes only). Those documents are licensed under
+Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0).
+
+https://creativecommons.org/licenses/by-sa/3.0/
+https://www.camptocamp.org
+
+Share adaptations under the same licence and credit Camptocamp.
+Personal content such as outings, user pages and photos is not included.
+Fields are null when a peak had no confident match or the source
+document did not contain that field.
