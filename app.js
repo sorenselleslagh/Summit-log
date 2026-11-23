@@ -3615,6 +3615,132 @@ function saveBoulder(problem, status) {
   saveItems();
   renderMine();
   showToast(status === 'done' ? 'Logged ' + problem.name : 'Added ' + problem.name);
+  if (status === 'done') showClimbProblem(problem);
+}
+
+var problemPhotoPreview = {};
+var PROBLEM_COLORS = {
+  yellow: '#d4a017', orange: '#e07a1f', blue: '#2f6fbf', red: '#d64545',
+  black: '#241f1a', white: '#f7f4ef', green: '#2f8f57', purple: '#7a4ea3'
+};
+
+function problemSnapshot(problem) {
+  var pad = 0.003;
+  var bbox = [problem.lng - pad, problem.lat - pad, problem.lng + pad, problem.lat + pad].join(',');
+  return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/export?bbox=' +
+    encodeURIComponent(bbox) + '&bboxSR=4326&size=800,420&format=jpg&f=image';
+}
+
+function problemHero(problem) {
+  var frame = el('div', { class: 'problem-hero summit-hero' });
+  var src = problemPhotoPreview[problem.id] || problem.photoUrl || problemSnapshot(problem);
+  var img = el('img', { alt: '', src: src });
+  img.addEventListener('error', function () {
+    img.replaceWith(el('div', { class: 'summit-hero-fallback', role: 'img', 'aria-label': 'Map of this problem' }));
+  });
+  frame.appendChild(img);
+  if (problem.circuitNumber) {
+    var badge = el('span', { class: 'problem-badge', text: String(problem.circuitNumber) });
+    badge.style.background = PROBLEM_COLORS[String(problem.circuitColor || '').toLowerCase()] || '#1f6b45';
+    if (String(problem.circuitColor || '').toLowerCase() === 'white') badge.style.color = '#1c1915';
+    frame.appendChild(badge);
+  }
+  return frame;
+}
+
+function problemInitials(name) {
+  var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+function paintProblemPeople(problem, host) {
+  var own = null;
+  items.forEach(function (item) {
+    if (item.collectionId === 'boolder-' + problem.id && item.status === 'done') own = item;
+  });
+  var row = el('div', { class: 'problem-people' });
+  function finish(extra) {
+    var nodes = [el('h3', { text: 'Climbed by' })];
+    if (own) nodes.push(el('p', { class: 'muted', text: 'You climbed this' + (own.date ? ' · ' + own.date : '') }));
+    if (extra && extra.length) nodes.push(row);
+    else nodes.push(el('p', { class: 'muted', text: 'No one you know has logged this yet' }));
+    host.replaceChildren.apply(host, nodes);
+  }
+  var account = window.SummitAccount;
+  if (!account || !account.user || !account.user() || !account.client) {
+    finish([]);
+    return;
+  }
+  account.client().from('problem_logs').select('user_id, climbed_on').eq('problem_id', String(problem.id)).then(function (result) {
+    if (result.error || !result.data) {
+      finish([]);
+      return;
+    }
+    var mine = account.user().id;
+    var people = result.data.filter(function (entry) { return entry.user_id !== mine; });
+    people.sort(function (a, b) {
+      var ap = window.SummitConnections && SummitConnections.stateFor && SummitConnections.stateFor(a.user_id) === 'accepted' ? 0 : 1;
+      var bp = window.SummitConnections && SummitConnections.stateFor && SummitConnections.stateFor(b.user_id) === 'accepted' ? 0 : 1;
+      return ap - bp;
+    });
+    people.forEach(function (entry) {
+      var face = el('button', { class: 'problem-face', type: 'button', 'aria-label': 'Profile' });
+      face.textContent = '?';
+      face.addEventListener('click', function () {
+        if (window.SummitProfile && SummitProfile.openOther && window.selectTab) {
+          selectTab('profile');
+          SummitProfile.openOther({ userId: entry.user_id, name: 'Climber' });
+        }
+      });
+      row.appendChild(face);
+      account.client().from('profiles').select('display_name, first_name, last_name, avatar_path').eq('id', entry.user_id).maybeSingle().then(function (profile) {
+        var data = profile.data || {};
+        var name = (data.first_name && data.last_name) ? (data.first_name + ' ' + data.last_name) : (data.display_name || 'Climber');
+        face.textContent = problemInitials(name);
+        face.setAttribute('aria-label', name);
+        if (!data.avatar_path) return;
+        var pub = account.client().storage.from('avatars').getPublicUrl(data.avatar_path);
+        var url = pub && pub.data && pub.data.publicUrl;
+        if (!url) return;
+        var img = el('img', { alt: '', src: url });
+        img.addEventListener('error', function () { img.remove(); });
+        face.textContent = '';
+        face.appendChild(img);
+      }).catch(function () {});
+    });
+    finish(people);
+  }).catch(function () { finish([]); });
+}
+
+function problemPhotoNote(text) {
+  var note = document.getElementById('problem-photo-status');
+  if (note) note.textContent = text;
+}
+
+function attachProblemPhoto(problem, file) {
+  if (!file) return;
+  problemPhotoPreview[problem.id] = URL.createObjectURL(file);
+  showClimbProblem(problem);
+  var account = window.SummitAccount;
+  if (!account || !account.user || !account.user() || !account.client) {
+    problemPhotoNote('Sign in to keep this photo on your account.');
+    return;
+  }
+  var user = account.user();
+  var path = user.id + '/' + problem.id + '-' + Date.now() + '.jpg';
+  account.client().storage.from('problem-photos').upload(path, file, { contentType: file.type || 'image/jpeg' }).then(function (upload) {
+    if (upload.error) {
+      problemPhotoNote('The photo is on this screen. Saving it needs the problem photo update.');
+      return;
+    }
+    return account.client().from('problem_photos').insert({ user_id: user.id, problem_id: String(problem.id), path: path }).then(function (saved) {
+      problemPhotoNote(saved.error ? 'The photo is on this screen. Saving it needs the problem photo update.' : 'Photo saved.');
+    });
+  }).catch(function () {
+    problemPhotoNote('The photo is on this screen. Saving it needs the problem photo update.');
+  });
 }
 
 function showClimbProblem(problem) {
@@ -3623,21 +3749,55 @@ function showClimbProblem(problem) {
   var circuit = [problem.circuitColor, problem.circuitNumber].filter(Boolean).join(' ');
   var add = el('button', { class: 'primary', type: 'button', text: 'Add to plan' });
   var log = el('button', { class: 'secondary', type: 'button', text: 'Log it' });
+  var partners = el('button', { class: 'secondary', type: 'button', text: 'Find partners' });
+  var photoBtn = el('button', { class: 'secondary', type: 'button', text: 'Add a photo' });
+  var photoInput = el('input', { type: 'file', id: 'problem-photo-input', accept: 'image/*', 'aria-label': 'Add a photo of this problem' });
+  var photoStatus = el('p', { class: 'muted', id: 'problem-photo-status' });
+  var people = el('div', { id: 'problem-people' });
   add.addEventListener('click', function () { saveBoulder(problem, 'planned'); });
   log.addEventListener('click', function () { saveBoulder(problem, 'done'); });
+  partners.addEventListener('click', function () {
+    saveBoulder(problem, 'planned');
+    var item = null;
+    plannedItems().forEach(function (entry) {
+      if (entry.collectionId === 'boolder-' + problem.id) item = entry;
+    });
+    if (item) startPartnerFrom(item.id);
+  });
+  photoBtn.addEventListener('click', function () { photoInput.click(); });
+  photoInput.addEventListener('change', function () {
+    var file = photoInput.files && photoInput.files[0];
+    attachProblemPhoto(problem, file);
+  });
+  var rows = [
+    el('p', { class: 'field-label', text: 'Boolder' }),
+    problem.grade ? el('p', { text: 'Font grade ' + problem.grade }) : null,
+    problem.area ? el('p', { text: problem.area }) : null,
+    circuit ? el('p', { text: 'Circuit ' + circuit }) : null,
+    problem.steepness ? el('p', { text: problem.steepness }) : null
+  ];
+  var directions = el('a', {
+    href: 'https://maps.google.com/maps?q=' + problem.lat + ',' + problem.lng,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    text: 'Directions'
+  });
   box.replaceChildren(
     el('button', { class: 'sheet-grab', type: 'button', 'aria-label': 'Drag down to close' }),
     sheetCloseButton(),
-    el('div', { class: 'detail-copy compact-card' },
-      el('p', { class: 'field-label', text: problem.area || 'Fontainebleau' }),
+    problemHero(problem),
+    el('div', { class: 'detail-copy' },
       el('h2', { class: 'summit-name', text: problem.name }),
-      el('p', { class: 'sheet-meta' },
-        problem.grade ? el('span', { class: 'grade-badge', text: problem.grade }) : null,
-        circuit ? el('span', { text: 'Circuit ' + circuit }) : null
-      ),
-      el('div', { class: 'log-actions' }, add, log)
+      el('div', { class: 'problem-facts' }, rows),
+      directions,
+      el('div', { class: 'log-actions' }, add, log, partners),
+      photoBtn,
+      photoInput,
+      photoStatus,
+      people
     )
   );
+  paintProblemPeople(problem, people);
   box.classList.remove('hidden');
   if (document.documentElement.classList.contains('explore-map')) openExplorePeak();
   else if (document.documentElement.classList.contains('map-expanded')) showMapSheet('peak');

@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v45'"));
+assert.ok(sw.includes("VERSION = 'v46'"));
 assert.ok(html.includes('data-activity="climbing"'));
 assert.ok(html.includes('id="discover-bubble"'));
 assert.ok(sw.includes('./data/map-search.json'));
