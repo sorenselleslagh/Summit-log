@@ -387,7 +387,7 @@
           <div class="map-chrome" id="map-chrome">
             <div class="map-top">
               <form class="map-search" id="map-search-form" role="search">
-                <input type="search" id="map-query" placeholder="Search peaks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks">
+                <input type="search" id="map-query" placeholder="Search peaks, areas, treks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks, areas, treks">
                 <button class="map-query-clear hidden" id="map-query-clear" type="button" aria-label="Clear search">×</button>
                 <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
               </form>
@@ -399,15 +399,31 @@
                 <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
               </div>
             </div>
-            <div class="map-chips" id="map-chips" role="group" aria-label="Map layers">
-              <button type="button" class="map-chip" data-layer="climbing" aria-pressed="false">Climbing</button>
-              <button type="button" class="map-chip active" data-layer="mountaineering" aria-pressed="true">Mountaineering</button>
-              <button type="button" class="map-chip" data-layer="hiking" aria-pressed="false">Hiking</button>
-              <button type="button" class="map-chip active" data-map-filter="all" aria-pressed="true">All</button>
-              <button type="button" class="map-chip" data-map-filter="4000" aria-pressed="false">4000ers</button>
-              <button type="button" class="map-chip" data-map-filter="treks" aria-pressed="false">Treks</button>
-              <button type="button" class="map-chip" data-map-filter="planned" aria-pressed="false">Planned</button>
-              <button type="button" class="map-chip" data-map-filter="done" aria-pressed="false">Done</button>
+            <div class="map-pills">
+              <div class="map-chips" id="map-chips" role="group" aria-label="Activity">
+                <button type="button" class="map-chip" data-activity="all" aria-pressed="false">All</button>
+                <button type="button" class="map-chip active" data-activity="mountaineering" aria-pressed="true">Mountaineering</button>
+                <button type="button" class="map-chip" data-activity="climbing" aria-pressed="false">Climbing</button>
+                <button type="button" class="map-chip" data-activity="hiking" aria-pressed="false">Hiking</button>
+                <button type="button" class="map-chip map-filter-btn" id="map-filter-btn" aria-expanded="false" aria-controls="map-filter-menu">Filter</button>
+              </div>
+              <div class="map-chips map-chips-sub" id="climb-pills" role="group" aria-label="Climbing" hidden>
+                <button type="button" class="map-chip active" data-climb="all" aria-pressed="true">All</button>
+                <button type="button" class="map-chip" data-climb="bouldering" aria-pressed="false">Bouldering</button>
+                <button type="button" class="map-chip" data-climb="sport" aria-pressed="false">Sport</button>
+                <button type="button" class="map-chip" data-climb="trad" aria-pressed="false">Trad</button>
+                <button type="button" class="map-chip" data-climb="multipitch" aria-pressed="false">Multipitch</button>
+              </div>
+              <div id="map-filter-menu" class="map-filter-menu hidden">
+                <p class="field-label" id="grade-scale-label">Font grades</p>
+                <label class="field-label" for="grade-min">From</label>
+                <select id="grade-min" aria-label="Minimum grade"></select>
+                <label class="field-label" for="grade-max">To</label>
+                <select id="grade-max" aria-label="Maximum grade"></select>
+                <button type="button" class="secondary" id="grade-reset">Reset grades</button>
+                <label class="check-row"><input type="checkbox" id="filter-planned"> <span>Planned</span></label>
+                <label class="check-row"><input type="checkbox" id="filter-done"> <span>Completed</span></label>
+              </div>
             </div>
             <p id="map-summary" class="map-summary" role="status"></p>
           </div>
@@ -420,7 +436,7 @@
           <p class="map-credits">© OpenStreetMap contributors (ODbL) · Boolder (CC BY 4.0) · Esri</p>
           <div id="explore-sheet" class="explore-sheet is-peek">
             <button class="sheet-grab" id="explore-grab" type="button" aria-label="Drag the collections sheet"></button>
-            <div id="explore-sheet-head"><p class="sheet-kicker">Find your next peak</p></div>
+            <div id="explore-sheet-head"><p class="sheet-kicker">Discover nearby</p></div>
             <div id="explore-sheet-body"></div>
             <div id="peak-detail" class="hidden"></div>
           </div>

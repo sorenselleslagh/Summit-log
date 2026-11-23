@@ -428,7 +428,7 @@ assert.ok(html.includes('data-tab="explore"'));
 assert.ok(html.includes('data-tab="logbook"'));
 assert.ok(html.includes('data-tab="partners"'));
 assert.ok(html.includes('>Plan</span>'));
-assert.ok(html.includes('Find your next peak'));
+assert.ok(html.includes('Discover nearby'));
 assert.ok(html.includes('<h2>Plan</h2>'));
 assert.ok(html.includes('<h2>My logbook</h2>'));
 assert.ok(!html.includes('My peaks'));
