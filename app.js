@@ -2222,20 +2222,37 @@ function initMap() {
         if (sheetMode === 'peak' || mapSheetOpen()) requestCloseSheet();
       });
       var mapTap = null;
+      var mapPointers = 0;
+      var mapPinch = false;
       var mapEl = document.getElementById('map-container');
       mapEl.addEventListener('pointerdown', function (event) {
+        mapPointers += 1;
+        if (mapPointers > 1) mapPinch = true;
         if (event.target.closest && event.target.closest('.leaflet-control, .leaflet-interactive, .leaflet-marker-icon, .photo-pin, .pin-dot, .pin-cluster')) return;
-        mapTap = { id: event.pointerId, x: event.clientX, y: event.clientY, t: Date.now() };
+        mapTap = { id: event.pointerId, x: event.clientX, y: event.clientY };
       });
       mapEl.addEventListener('pointerup', function (event) {
+        mapPointers = Math.max(0, mapPointers - 1);
+        var pinched = mapPinch;
+        if (!mapPointers) mapPinch = false;
         if (!mapTap || event.pointerId !== mapTap.id) return;
         var dx = event.clientX - mapTap.x;
         var dy = event.clientY - mapTap.y;
         mapTap = null;
-        if (dx * dx + dy * dy > 64) return;
+        if (pinched || dx * dx + dy * dy > 64) return;
+        if (window.SummitDiscover && SummitDiscover.close) SummitDiscover.close();
         if (sheetMode === 'peak' || mapSheetOpen()) requestCloseSheet();
       });
-      mapEl.addEventListener('pointercancel', function () { mapTap = null; });
+      mapEl.addEventListener('pointercancel', function (event) {
+        mapPointers = Math.max(0, mapPointers - 1);
+        if (!mapPointers) mapPinch = false;
+        if (mapTap && event.pointerId === mapTap.id) mapTap = null;
+      });
+      mapEl.addEventListener('click', function (event) {
+        var marker = event.target.closest && event.target.closest('.leaflet-marker-icon, .leaflet-interactive, .photo-pin, .pin-dot, .pin-cluster');
+        if (!marker || !window.SummitDiscover || !SummitDiscover.close) return;
+        SummitDiscover.close();
+      });
       syncAreas();
     }
     updateMapMarkers();

@@ -91,24 +91,53 @@
     render();
   }
 
+  function aimAtBubble(panel) {
+    var bubble = byId('discover-bubble');
+    if (!panel || !bubble) return;
+    panel.style.transform = 'none';
+    var panelBox = panel.getBoundingClientRect();
+    panel.style.transform = '';
+    var bubbleBox = bubble.getBoundingClientRect();
+    if (!panelBox.width || !bubbleBox.width) return;
+    var ox = bubbleBox.left + bubbleBox.width / 2 - panelBox.left;
+    var oy = bubbleBox.top + bubbleBox.height / 2 - panelBox.top;
+    panel.style.transformOrigin = ox + 'px ' + oy + 'px';
+  }
+
   function closePanel() {
     var panel = byId('discover-panel');
     var bubble = byId('discover-bubble');
-    if (panel) {
-      panel.classList.remove('is-open');
-      root.setTimeout(function () { panel.hidden = true; }, prefersReduced() ? 0 : 180);
-    }
     if (bubble) bubble.classList.remove('is-open');
+    if (!panel || panel.hidden) return;
+    aimAtBubble(panel);
+    panel.classList.remove('is-open');
+    var token = {};
+    panel._closeToken = token;
+    root.setTimeout(function () {
+      if (panel._closeToken !== token) return;
+      panel.hidden = true;
+    }, prefersReduced() ? 0 : 230);
   }
 
   function openPanel() {
     var panel = byId('discover-panel');
     var bubble = byId('discover-bubble');
     if (!panel) return;
+    panel._closeToken = {};
     panel.hidden = false;
     if (bubble) bubble.classList.add('is-open');
     render();
-    root.requestAnimationFrame(function () { panel.classList.add('is-open'); });
+    aimAtBubble(panel);
+    if (prefersReduced() || panel.classList.contains('is-open')) {
+      panel.classList.add('is-open');
+      return;
+    }
+    root.requestAnimationFrame(function () {
+      root.requestAnimationFrame(function () {
+        if (panel.hidden) return;
+        panel.classList.add('is-open');
+      });
+    });
   }
 
   function prefersReduced() {
@@ -731,5 +760,10 @@
   root.addEventListener('resize', place);
   place();
 
-  root.SummitDiscover = { reload: function () { loadPos(); place(); }, place: place, refresh: refresh };
+  root.SummitDiscover = {
+    reload: function () { loadPos(); place(); },
+    place: place,
+    refresh: refresh,
+    close: closePanel
+  };
 })(window);
