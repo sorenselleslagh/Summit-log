@@ -1,8 +1,9 @@
 -- Photos and logs for a Fontainebleau problem.
 -- Apply in the Supabase SQL editor. Do not apply this from the app.
 -- A person can write only their own rows. Others can read a photo or a
--- log when the owner's profile is public, or when the two people are
--- accepted partners. Authorization uses auth.uid(), never user_metadata.
+-- log when neither person has blocked the other, and the owner's profile
+-- is public or the two people are accepted partners. Authorization uses
+-- auth.uid(), never user_metadata.
 
 create or replace function private.shares_with_viewer(owner uuid)
 returns boolean
@@ -13,14 +14,19 @@ set search_path = ''
 as $$
   select auth.uid() is not null and (
     auth.uid() = owner
-    or private.avatar_is_public(owner::text)
-    or exists (
-      select 1 from public.partner_connections pc
-      where pc.status = 'accepted'
-        and (
-          (pc.requester_id = auth.uid() and pc.addressee_id = owner)
-          or (pc.addressee_id = auth.uid() and pc.requester_id = owner)
+    or (
+      not private.users_are_blocked(auth.uid(), owner)
+      and (
+        private.avatar_is_public(owner::text)
+        or exists (
+          select 1 from public.partner_connections pc
+          where pc.status = 'accepted'
+            and (
+              (pc.requester_id = auth.uid() and pc.addressee_id = owner)
+              or (pc.addressee_id = auth.uid() and pc.requester_id = owner)
+            )
         )
+      )
     )
   );
 $$;
@@ -96,6 +102,7 @@ begin
       for select to authenticated
       using (
         bucket_id = 'problem-photos'
+        and (storage.foldername(name))[1] ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         and private.shares_with_viewer(((storage.foldername(name))[1])::uuid)
       )
     $policy$;

@@ -3614,8 +3614,21 @@ function saveBoulder(problem, status) {
   }
   saveItems();
   renderMine();
+  if (status === 'done') saveProblemLog(problem);
   showToast(status === 'done' ? 'Logged ' + problem.name : 'Added ' + problem.name);
   if (status === 'done') showClimbProblem(problem);
+}
+
+function saveProblemLog(problem) {
+  var account = window.SummitAccount;
+  if (!problem || !account || !account.user || !account.user() || !account.client) return;
+  var id = String(problem.id || '');
+  if (!/^[0-9]{1,12}$/.test(id)) return;
+  account.client().from('problem_logs').upsert({
+    user_id: account.user().id,
+    problem_id: id,
+    climbed_on: Lgc.todayISO()
+  }, { onConflict: 'user_id,problem_id' }).then(function () {}, function () {});
 }
 
 var problemPhotoPreview = {};
