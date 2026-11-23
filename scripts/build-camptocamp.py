@@ -82,6 +82,21 @@ def titles(doc):
     return [item.get('title') or '' for item in doc.get('locales') or []]
 
 
+def preferred_title(doc):
+    locales = doc.get('locales') or []
+    picked = ''
+    for item in locales:
+        if item.get('lang') == 'en' and (item.get('title') or '').strip():
+            picked = item.get('title')
+            break
+    if not picked:
+        for item in locales:
+            if (item.get('title') or '').strip():
+                picked = item.get('title')
+                break
+    return re.sub(r'\s+', ' ', picked).strip()
+
+
 def activity_of(values):
     acts = set(values or [])
     snow = bool(acts & SNOW)
@@ -120,11 +135,7 @@ def blank():
 
 
 def from_route(route):
-    name = ''
-    for title in titles(route):
-        if title.strip():
-            name = title.strip()
-            break
+    name = preferred_title(route)
     point = point_of(route)
     return {
         'routeId': route.get('document_id'),

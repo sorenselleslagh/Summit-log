@@ -87,6 +87,7 @@
     if (min) min.value = '';
     if (max) max.value = '';
     if (typeof root.syncActivityPills === 'function') root.syncActivityPills();
+    root.discoverPeakIds = null;
     if (typeof root.updateMapMarkers === 'function') root.updateMapMarkers();
     render();
   }
@@ -285,8 +286,6 @@
   }
 
   function choosePeak(peak) {
-    var host = byId('discover-results');
-    if (host) host.hidden = true;
     if (typeof root.showPeakDetail === 'function') root.showPeakDetail(peak);
     closePanel();
   }
@@ -455,16 +454,12 @@
     return dayLabel(choice.day);
   }
 
-  function paintResults(matches) {
-    var host = byId('discover-results');
-    if (!host) return;
-    if (!matches.length) { host.hidden = true; host.replaceChildren(); return; }
-    host.hidden = false;
-    host.replaceChildren.apply(host, matches.slice(0, 12).map(function (peak) {
+  function resultCards(matches) {
+    return root.el('div', { class: 'discover-results' }, matches.slice(0, 12).map(function (peak) {
       var info = c2c(peak.id) || {};
       var photo = typeof root.photoRecord === 'function' ? root.photoRecord(peak) : null;
       var src = photo && typeof root.safePhotoUrl === 'function' ? root.safePhotoUrl(photo.thumb) : '';
-      var add = root.el('button', { type: 'button', text: 'Add to plan' });
+      var add = root.el('button', { class: 'primary', type: 'button', text: 'Add to plan' });
       add.addEventListener('click', function (event) {
         event.stopPropagation();
         if (typeof root.placeForPeak === 'function' && typeof root.confirmPlan === 'function') root.confirmPlan(root.placeForPeak(peak));
@@ -584,18 +579,17 @@
       return;
     }
     if (name === 'results') {
-      title.textContent = 'A few that fit';
+      title.textContent = 'Your matches';
       applyMountain();
       var matches = matchingPeaks();
-      paintResults(matches);
       var surprise = root.el('button', { class: 'primary', type: 'button', text: 'Surprise me' });
       surprise.addEventListener('click', function () {
         if (!matches.length) return;
         choosePeak(matches[Math.floor(Math.random() * matches.length)]);
       });
-      body.replaceChildren(
-        matches.length ? root.el('p', { class: 'muted', text: 'The matching summits are on the map. Cards sit above Discover.' }) : root.el('p', { class: 'muted', text: 'Nothing recorded for this combination.' }),
-        surprise
+      body.replaceChildren.apply(body, matches.length
+        ? [resultCards(matches), surprise]
+        : [root.el('p', { class: 'muted', text: 'Nothing recorded for this combination.' })]
       );
       return;
     }

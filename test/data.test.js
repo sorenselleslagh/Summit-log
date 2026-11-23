@@ -489,4 +489,8 @@ assert.strictEqual(scopedRepo.loadProfile().bio, 'device');
 assert.ok(scoped.getItem('summitlog_profile:user-a').indexOf('ada') >= 0);
 assert.ok(scoped.getItem('summitlog_profile:user-b').indexOf('blair') >= 0);
 
+var c2c = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/camptocamp/routes.json'), 'utf8'));
+assert.strictEqual(c2c.peaks['uiaa-4000-018'].name, 'NE Ridge (Normal Route) from the Mischabel Hut');
+assert.strictEqual(c2c.peaks['uiaa-4000-022'].name, 'Arête S');
+
 console.log('data tests ok');
