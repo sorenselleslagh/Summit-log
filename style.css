@@ -2646,20 +2646,15 @@ html.explore-map.explore-peak .discover-bubble { visibility: hidden; }
 .discover-chevron { color: #1f6b45; font-size: 1.3rem; }
 .discover-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem 0.75rem 0.75rem; }
 .discover-results {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5.2rem;
-  z-index: 1475;
   display: flex;
-  gap: 0.55rem;
+  gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.2rem 0.7rem 0.4rem;
+  margin: 0 0 0.45rem;
+  padding: 0.1rem 0.05rem 0.35rem;
   scroll-snap-type: x mandatory;
 }
-.discover-results[hidden] { display: none; }
 .discover-card {
-  flex: 0 0 210px;
+  flex: 0 0 168px;
   scroll-snap-align: start;
   border: none;
   border-radius: 16px;
@@ -2669,10 +2664,24 @@ html.explore-map.explore-peak .discover-bubble { visibility: hidden; }
   box-shadow: 0 8px 20px rgba(28, 25, 21, 0.14);
   overflow: hidden;
 }
-.discover-card img, .discover-card .peak-photo-empty { height: 84px; }
-.discover-card div { padding: 0.45rem 0.6rem 0.6rem; }
-.discover-card strong { display: block; }
-.discover-card span { display: block; color: #5c564e; font-size: 0.78rem; }
+.discover-card img, .discover-card .peak-photo-empty { height: 72px; }
+.discover-card div { padding: 0.4rem 0.55rem 0.55rem; }
+.discover-card strong { display: block; font-size: 0.92rem; }
+.discover-card span { display: block; color: #5c564e; font-size: 0.75rem; line-height: 1.3; }
+.discover-card .primary {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  margin-top: 0.4rem;
+  min-height: 36px;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.82rem;
+}
 @media (prefers-reduced-motion: reduce) {
   .discover-bubble.is-snapping, .discover-panel, .discover-panel.is-open { transition: none; }
 }

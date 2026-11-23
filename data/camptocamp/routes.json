@@ -2,7 +2,7 @@
   "license": "CC BY-SA 3.0",
   "source": "Camptocamp collaborative route and waypoint documents",
   "url": "https://www.camptocamp.org",
-  "note": "Fields are null when there is no confident match or the source document omits them.",
+  "note": "Route names prefer the English Camptocamp title (lang=en) and otherwise the title that is available. Other fields are null when there is no confident match or the source document omits them.",
   "peaks": {
     "uiaa-4000-001": {
       "routeId": 45967,
@@ -25,7 +25,7 @@
     "uiaa-4000-003": {
       "routeId": 46102,
       "url": "https://www.camptocamp.org/routes/46102",
-      "name": "Arête W (voie normale)",
+      "name": "W ridge (normal route)",
       "grade": "AD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -34,7 +34,7 @@
     "uiaa-4000-004": {
       "routeId": 45516,
       "url": "https://www.camptocamp.org/routes/45516",
-      "name": "Arête S (voie normale)",
+      "name": "Normal Route",
       "grade": "PD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -79,7 +79,7 @@
     "uiaa-4000-009": {
       "routeId": 55334,
       "url": "https://www.camptocamp.org/routes/55334",
-      "name": "Arête E",
+      "name": "E Ridge",
       "grade": "AD",
       "glacier": false,
       "activity": "snow-ice-mixed",
@@ -106,7 +106,7 @@
     "uiaa-4000-012": {
       "routeId": 57744,
       "url": "https://www.camptocamp.org/routes/57744",
-      "name": "Arête du Lion",
+      "name": "Lion ridge",
       "grade": "AD",
       "glacier": false,
       "activity": "snow-ice-mixed",
@@ -124,7 +124,7 @@
     "uiaa-4000-014": {
       "routeId": 54990,
       "url": "https://www.camptocamp.org/routes/54990",
-      "name": "Face N (Voie normale)",
+      "name": "N face, standard ascent (+ E ridge)",
       "grade": "PD+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -142,7 +142,7 @@
     "uiaa-4000-016": {
       "routeId": 54153,
       "url": "https://www.camptocamp.org/routes/54153",
-      "name": "Arête S ou Wandfluegrat (voie normale)",
+      "name": "S Ridge (Normal Route)",
       "grade": "AD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -160,7 +160,7 @@
     "uiaa-4000-018": {
       "routeId": 55241,
       "url": "https://www.camptocamp.org/routes/55241",
-      "name": "Arête NE depuis la Mischabelhütte (voie normale)",
+      "name": "NE Ridge (Normal Route) from the Mischabel Hut",
       "grade": "PD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -178,7 +178,7 @@
     "uiaa-4000-020": {
       "routeId": 55346,
       "url": "https://www.camptocamp.org/routes/55346",
-      "name": "Versant NW (voie normale)",
+      "name": "NW side (normal Route)",
       "grade": "AD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -205,7 +205,7 @@
     "uiaa-4000-023": {
       "routeId": 48211,
       "url": "https://www.camptocamp.org/routes/48211",
-      "name": "Versant SW",
+      "name": "SW face / N ridge",
       "grade": "PD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -214,7 +214,7 @@
     "uiaa-4000-024": {
       "routeId": 53896,
       "url": "https://www.camptocamp.org/routes/53896",
-      "name": "Face N (Voie Normale)",
+      "name": "N face (normal route)",
       "grade": "PD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -241,7 +241,7 @@
     "uiaa-4000-027": {
       "routeId": 56031,
       "url": "https://www.camptocamp.org/routes/56031",
-      "name": "Cresta SE - Via normale, dal rif. Quintino Sella",
+      "name": "SE ridge (Normal route from Felikjoch)",
       "grade": "PD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -313,7 +313,7 @@
     "uiaa-4000-035": {
       "routeId": 45512,
       "url": "https://www.camptocamp.org/routes/45512",
-      "name": "Arête WNW (Voie Normale) de Britanniahütte",
+      "name": "Normal route from the Britannia hut",
       "grade": "F",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -340,7 +340,7 @@
     "uiaa-4000-038": {
       "routeId": 46073,
       "url": "https://www.camptocamp.org/routes/46073",
-      "name": "arista SW",
+      "name": "SW Face and W ridge",
       "grade": "AD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -349,7 +349,7 @@
     "uiaa-4000-039": {
       "routeId": 53816,
       "url": "https://www.camptocamp.org/routes/53816",
-      "name": "Breithorn W via normale dal Piccolo Cervino o Testa Grigia",
+      "name": "Normal route from Klein Matterhorn",
       "grade": "F",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -358,7 +358,7 @@
     "uiaa-4000-040": {
       "routeId": 45560,
       "url": "https://www.camptocamp.org/routes/45560",
-      "name": "Arête SE par le Rottalsattel (Voie Normale)",
+      "name": "By the Rottalsattel and the SE Ridge (Normal Route)",
       "grade": "PD+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -376,7 +376,7 @@
     "uiaa-4000-042": {
       "routeId": 45969,
       "url": "https://www.camptocamp.org/routes/45969",
-      "name": "Versant NW (voie normale)",
+      "name": "Normal Route",
       "grade": "F",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -403,7 +403,7 @@
     "uiaa-4000-045": {
       "routeId": 56802,
       "url": "https://www.camptocamp.org/routes/56802",
-      "name": "Greben Moine",
+      "name": "Moine Ridge",
       "grade": "AD+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -412,7 +412,7 @@
     "uiaa-4000-046": {
       "routeId": 54098,
       "url": "https://www.camptocamp.org/routes/54098",
-      "name": "Arête du Diable",
+      "name": "Devils ridge (Arête du Diable)",
       "grade": "D+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -430,7 +430,7 @@
     "uiaa-4000-048": {
       "routeId": 54703,
       "url": "https://www.camptocamp.org/routes/54703",
-      "name": "Arête SE",
+      "name": "SE ridge",
       "grade": "PD+",
       "glacier": false,
       "activity": "snow-ice-mixed",
@@ -448,7 +448,7 @@
     "uiaa-4000-050": {
       "routeId": 54098,
       "url": "https://www.camptocamp.org/routes/54098",
-      "name": "Arête du Diable",
+      "name": "Devils ridge (Arête du Diable)",
       "grade": "D+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -475,7 +475,7 @@
     "uiaa-4000-053": {
       "routeId": 53811,
       "url": "https://www.camptocamp.org/routes/53811",
-      "name": "Versant N (voie normale)",
+      "name": "Voie normale par le versant NE",
       "grade": "F+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -484,7 +484,7 @@
     "uiaa-4000-054": {
       "routeId": 54098,
       "url": "https://www.camptocamp.org/routes/54098",
-      "name": "Arête du Diable",
+      "name": "Devils ridge (Arête du Diable)",
       "grade": "D+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -520,7 +520,7 @@
     "uiaa-4000-058": {
       "routeId": 54098,
       "url": "https://www.camptocamp.org/routes/54098",
-      "name": "Arête du Diable",
+      "name": "Devils ridge (Arête du Diable)",
       "grade": "D+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -547,7 +547,7 @@
     "uiaa-4000-061": {
       "routeId": 54098,
       "url": "https://www.camptocamp.org/routes/54098",
-      "name": "Arête du Diable",
+      "name": "Devils ridge (Arête du Diable)",
       "grade": "D+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -565,7 +565,7 @@
     "uiaa-4000-063": {
       "routeId": 53835,
       "url": "https://www.camptocamp.org/routes/53835",
-      "name": "Par le Glacier du Grand Paradis (voie normale)",
+      "name": "By the Glacier du Grand Paradis (normal route)",
       "grade": "F+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -583,7 +583,7 @@
     "uiaa-4000-065": {
       "routeId": 128778,
       "url": "https://www.camptocamp.org/routes/128778",
-      "name": "Versant SW par le Fieschersattel",
+      "name": "SW Face by the Fieschersattel",
       "grade": "PD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -592,7 +592,7 @@
     "uiaa-4000-066": {
       "routeId": 56670,
       "url": "https://www.camptocamp.org/routes/56670",
-      "name": "Arête S ou Spallagrat",
+      "name": "Spallagrat",
       "grade": "PD+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -601,7 +601,7 @@
     "uiaa-4000-067": {
       "routeId": 50967,
       "url": "https://www.camptocamp.org/routes/50967",
-      "name": "Par le glacier d'Indren (voie normale)",
+      "name": "from Punta Indren",
       "grade": "PD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -628,7 +628,7 @@
     "uiaa-4000-070": {
       "routeId": 55881,
       "url": "https://www.camptocamp.org/routes/55881",
-      "name": "Couloir S et arête SE",
+      "name": "S Gully and SE ridge",
       "grade": "AD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -637,7 +637,7 @@
     "uiaa-4000-071": {
       "routeId": 55897,
       "url": "https://www.camptocamp.org/routes/55897",
-      "name": "Greben Jardin",
+      "name": "Jardin ridge (E ridge)",
       "grade": "D-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -655,7 +655,7 @@
     "uiaa-4000-073": {
       "routeId": 45520,
       "url": "https://www.camptocamp.org/routes/45520",
-      "name": "Dalla Langfluh per il Feejoch",
+      "name": "Normal Route",
       "grade": "F",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -664,7 +664,7 @@
     "uiaa-4000-074": {
       "routeId": 128778,
       "url": "https://www.camptocamp.org/routes/128778",
-      "name": "Versant SW par le Fieschersattel",
+      "name": "SW Face by the Fieschersattel",
       "grade": "PD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -673,7 +673,7 @@
     "uiaa-4000-075": {
       "routeId": 56128,
       "url": "https://www.camptocamp.org/routes/56128",
-      "name": "Par l'Arête de Rochefort",
+      "name": "By the Rochefort Arete",
       "grade": "AD",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -682,7 +682,7 @@
     "uiaa-4000-076": {
       "routeId": 53811,
       "url": "https://www.camptocamp.org/routes/53811",
-      "name": "Versant N (voie normale)",
+      "name": "Voie normale par le versant NE",
       "grade": "F+",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -691,7 +691,7 @@
     "uiaa-4000-077": {
       "routeId": 45557,
       "url": "https://www.camptocamp.org/routes/45557",
-      "name": "Voie Normale (versant NW)",
+      "name": "Normal Route",
       "grade": "PD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -718,7 +718,7 @@
     "uiaa-4000-080": {
       "routeId": 53794,
       "url": "https://www.camptocamp.org/routes/53794",
-      "name": "Arête WSW (Voie Normale)",
+      "name": "WSW Ridge (Normal Route)",
       "grade": "PD-",
       "glacier": true,
       "activity": "snow-ice-mixed",
@@ -736,7 +736,7 @@
     "uiaa-4000-082": {
       "routeId": 54257,
       "url": "https://www.camptocamp.org/routes/54257",
-      "name": "Vzhodni steber (normalka)",
+      "name": "Standard ascent",
       "grade": "AD+",
       "glacier": true,
       "activity": "snow-ice-mixed",
