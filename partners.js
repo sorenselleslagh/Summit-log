@@ -506,6 +506,7 @@
   return {
     DEMOS: DEMOS,
     fold: fold,
+    scoreText: scoreText,
     nameKey: nameKey,
     scoreObjective: scoreObjective,
     searchObjectives: searchObjectives,
