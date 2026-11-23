@@ -1,0 +1,746 @@
+{
+  "license": "CC BY-SA 3.0",
+  "source": "Camptocamp collaborative route and waypoint documents",
+  "url": "https://www.camptocamp.org",
+  "note": "Fields are null when there is no confident match or the source document omits them.",
+  "peaks": {
+    "uiaa-4000-001": {
+      "routeId": 45967,
+      "url": "https://www.camptocamp.org/routes/45967",
+      "name": "Par les Grands Mulets - Itinéraire classique",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-002": {
+      "routeId": null,
+      "url": null,
+      "name": null,
+      "grade": null,
+      "glacier": null,
+      "activity": null,
+      "bestMonths": null
+    },
+    "uiaa-4000-003": {
+      "routeId": 46102,
+      "url": "https://www.camptocamp.org/routes/46102",
+      "name": "Arête W (voie normale)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-004": {
+      "routeId": 45516,
+      "url": "https://www.camptocamp.org/routes/45516",
+      "name": "Arête S (voie normale)",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-005": {
+      "routeId": 55889,
+      "url": "https://www.camptocamp.org/routes/55889",
+      "name": "Arête SE (voie normale)",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-006": {
+      "routeId": 49175,
+      "url": "https://www.camptocamp.org/routes/49175",
+      "name": "Par les glaciers de Lys et de Grenz (voie normale)",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-007": {
+      "routeId": 45290,
+      "url": "https://www.camptocamp.org/routes/45290",
+      "name": "Voie Normale",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-008": {
+      "routeId": 56702,
+      "url": "https://www.camptocamp.org/routes/56702",
+      "name": "Arête SW (voie normale)",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-009": {
+      "routeId": 55334,
+      "url": "https://www.camptocamp.org/routes/55334",
+      "name": "Arête E",
+      "grade": "AD",
+      "glacier": false,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-010": {
+      "routeId": 54586,
+      "url": "https://www.camptocamp.org/routes/54586",
+      "name": "Arête S (voie normale)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-011": {
+      "routeId": 56702,
+      "url": "https://www.camptocamp.org/routes/56702",
+      "name": "Arête SW (voie normale)",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-012": {
+      "routeId": 57744,
+      "url": "https://www.camptocamp.org/routes/57744",
+      "name": "Arête du Lion",
+      "grade": "AD",
+      "glacier": false,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-013": {
+      "routeId": 796500,
+      "url": "https://www.camptocamp.org/routes/796500",
+      "name": "Sortie depuis le sommet du Pilier Rouge du Brouillard",
+      "grade": "AD+",
+      "glacier": false,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-014": {
+      "routeId": 54990,
+      "url": "https://www.camptocamp.org/routes/54990",
+      "name": "Face N (Voie normale)",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-015": {
+      "routeId": 53047,
+      "url": "https://www.camptocamp.org/routes/53047",
+      "name": "Arête W (voie normale)",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-016": {
+      "routeId": 54153,
+      "url": "https://www.camptocamp.org/routes/54153",
+      "name": "Arête S ou Wandfluegrat (voie normale)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-017": {
+      "routeId": 51948,
+      "url": "https://www.camptocamp.org/routes/51948",
+      "name": "Versant S (voie normale)",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-018": {
+      "routeId": 55241,
+      "url": "https://www.camptocamp.org/routes/55241",
+      "name": "Arête NE depuis la Mischabelhütte (voie normale)",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-019": {
+      "routeId": 176760,
+      "url": "https://www.camptocamp.org/routes/176760",
+      "name": "Versant N (voie normale)",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-020": {
+      "routeId": 55346,
+      "url": "https://www.camptocamp.org/routes/55346",
+      "name": "Versant NW (voie normale)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-021": {
+      "routeId": 56732,
+      "url": "https://www.camptocamp.org/routes/56732",
+      "name": "Par l'Aiguille du Goûter",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-022": {
+      "routeId": 459504,
+      "url": "https://www.camptocamp.org/routes/459504",
+      "name": "Arête S",
+      "grade": "AD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-023": {
+      "routeId": 48211,
+      "url": "https://www.camptocamp.org/routes/48211",
+      "name": "Versant SW",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-024": {
+      "routeId": 53896,
+      "url": "https://www.camptocamp.org/routes/53896",
+      "name": "Face N (Voie Normale)",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-025": {
+      "routeId": 365967,
+      "url": "https://www.camptocamp.org/routes/365967",
+      "name": "Arête de Peuterey depuis bivouac Eccles",
+      "grade": "D",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-026": {
+      "routeId": 229568,
+      "url": "https://www.camptocamp.org/routes/229568",
+      "name": "Nadelgrat bajando por el Galenjoch",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-027": {
+      "routeId": 56031,
+      "url": "https://www.camptocamp.org/routes/56031",
+      "name": "Cresta SE - Via normale, dal rif. Quintino Sella",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-028": {
+      "routeId": 55292,
+      "url": "https://www.camptocamp.org/routes/55292",
+      "name": "Arête SE puis SW par la Gabel (voie normale depuis la Rothornhütte)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-029": {
+      "routeId": 452101,
+      "url": "https://www.camptocamp.org/routes/452101",
+      "name": "por la Dirrugat y la vertiente NW",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-030": {
+      "routeId": 196523,
+      "url": "https://www.camptocamp.org/routes/196523",
+      "name": "Versant NW (voie normale)",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-031": {
+      "routeId": 53890,
+      "url": "https://www.camptocamp.org/routes/53890",
+      "name": "Standard ascent",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-032": {
+      "routeId": 45559,
+      "url": "https://www.camptocamp.org/routes/45559",
+      "name": "Versant E depuis Langfluh",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-033": {
+      "routeId": 56178,
+      "url": "https://www.camptocamp.org/routes/56178",
+      "name": "Voie normale par la Berghaus Flue",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-034": {
+      "routeId": 56751,
+      "url": "https://www.camptocamp.org/routes/56751",
+      "name": "Arête NE",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-035": {
+      "routeId": 45512,
+      "url": "https://www.camptocamp.org/routes/45512",
+      "name": "Arête WNW (Voie Normale) de Britanniahütte",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-036": {
+      "routeId": null,
+      "url": null,
+      "name": null,
+      "grade": null,
+      "glacier": null,
+      "activity": null,
+      "bestMonths": null
+    },
+    "uiaa-4000-037": {
+      "routeId": 53890,
+      "url": "https://www.camptocamp.org/routes/53890",
+      "name": "Standard ascent",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-038": {
+      "routeId": 46073,
+      "url": "https://www.camptocamp.org/routes/46073",
+      "name": "arista SW",
+      "grade": "AD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-039": {
+      "routeId": 53816,
+      "url": "https://www.camptocamp.org/routes/53816",
+      "name": "Breithorn W via normale dal Piccolo Cervino o Testa Grigia",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-040": {
+      "routeId": 45560,
+      "url": "https://www.camptocamp.org/routes/45560",
+      "name": "Arête SE par le Rottalsattel (Voie Normale)",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-041": {
+      "routeId": 187953,
+      "url": "https://www.camptocamp.org/routes/187953",
+      "name": "Versant SW (voie normale)",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-042": {
+      "routeId": 45969,
+      "url": "https://www.camptocamp.org/routes/45969",
+      "name": "Versant NW (voie normale)",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-043": {
+      "routeId": 187191,
+      "url": "https://www.camptocamp.org/routes/187191",
+      "name": "Traversée W → E",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-044": {
+      "routeId": 1545622,
+      "url": "https://www.camptocamp.org/routes/1545622",
+      "name": "A dos de Mulets",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-045": {
+      "routeId": 56802,
+      "url": "https://www.camptocamp.org/routes/56802",
+      "name": "Greben Moine",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-046": {
+      "routeId": 54098,
+      "url": "https://www.camptocamp.org/routes/54098",
+      "name": "Arête du Diable",
+      "grade": "D+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-047": {
+      "routeId": 664017,
+      "url": "https://www.camptocamp.org/routes/664017",
+      "name": "N ridge from Eccles hut",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-048": {
+      "routeId": 54703,
+      "url": "https://www.camptocamp.org/routes/54703",
+      "name": "Arête SE",
+      "grade": "PD+",
+      "glacier": false,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-049": {
+      "routeId": 195437,
+      "url": "https://www.camptocamp.org/routes/195437",
+      "name": "Traversée Grandes Jorasses → Rochefort",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-050": {
+      "routeId": 54098,
+      "url": "https://www.camptocamp.org/routes/54098",
+      "name": "Arête du Diable",
+      "grade": "D+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-051": {
+      "routeId": 187191,
+      "url": "https://www.camptocamp.org/routes/187191",
+      "name": "Traversée W → E",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-052": {
+      "routeId": 132284,
+      "url": "https://www.camptocamp.org/routes/132284",
+      "name": "Pilier S",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-053": {
+      "routeId": 53811,
+      "url": "https://www.camptocamp.org/routes/53811",
+      "name": "Versant N (voie normale)",
+      "grade": "F+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-054": {
+      "routeId": 54098,
+      "url": "https://www.camptocamp.org/routes/54098",
+      "name": "Arête du Diable",
+      "grade": "D+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-055": {
+      "routeId": 54631,
+      "url": "https://www.camptocamp.org/routes/54631",
+      "name": "Arête SW (voie normale)",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-056": {
+      "routeId": 137805,
+      "url": "https://www.camptocamp.org/routes/137805",
+      "name": "Traversée Lauteraarhorn - Schreckhorn",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-057": {
+      "routeId": 55195,
+      "url": "https://www.camptocamp.org/routes/55195",
+      "name": "Roccia Nera : Versant SW",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-058": {
+      "routeId": 54098,
+      "url": "https://www.camptocamp.org/routes/54098",
+      "name": "Arête du Diable",
+      "grade": "D+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-059": {
+      "routeId": 175866,
+      "url": "https://www.camptocamp.org/routes/175866",
+      "name": "Arête du Brouillard",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-060": {
+      "routeId": 195437,
+      "url": "https://www.camptocamp.org/routes/195437",
+      "name": "Traversée Grandes Jorasses → Rochefort",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-061": {
+      "routeId": 54098,
+      "url": "https://www.camptocamp.org/routes/54098",
+      "name": "Arête du Diable",
+      "grade": "D+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-062": {
+      "routeId": 176641,
+      "url": "https://www.camptocamp.org/routes/176641",
+      "name": "Arête WSW (Arbengrat)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-063": {
+      "routeId": 53835,
+      "url": "https://www.camptocamp.org/routes/53835",
+      "name": "Par le Glacier du Grand Paradis (voie normale)",
+      "grade": "F+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-064": {
+      "routeId": 696380,
+      "url": "https://www.camptocamp.org/routes/696380",
+      "name": "Arête S",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-065": {
+      "routeId": 128778,
+      "url": "https://www.camptocamp.org/routes/128778",
+      "name": "Versant SW par le Fieschersattel",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-066": {
+      "routeId": 56670,
+      "url": "https://www.camptocamp.org/routes/56670",
+      "name": "Arête S ou Spallagrat",
+      "grade": "PD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-067": {
+      "routeId": 50967,
+      "url": "https://www.camptocamp.org/routes/50967",
+      "name": "Par le glacier d'Indren (voie normale)",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-068": {
+      "routeId": 195437,
+      "url": "https://www.camptocamp.org/routes/195437",
+      "name": "Traversée Grandes Jorasses → Rochefort",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-069": {
+      "routeId": 1107218,
+      "url": "https://www.camptocamp.org/routes/1107218",
+      "name": "Traversée E → W, de Münster à Faflerlalp",
+      "grade": "PD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-070": {
+      "routeId": 55881,
+      "url": "https://www.camptocamp.org/routes/55881",
+      "name": "Couloir S et arête SE",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-071": {
+      "routeId": 55897,
+      "url": "https://www.camptocamp.org/routes/55897",
+      "name": "Greben Jardin",
+      "grade": "D-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-072": {
+      "routeId": 443666,
+      "url": "https://www.camptocamp.org/routes/443666",
+      "name": "Par la cabane Bordier (Voie normale)",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-073": {
+      "routeId": 45520,
+      "url": "https://www.camptocamp.org/routes/45520",
+      "name": "Dalla Langfluh per il Feejoch",
+      "grade": "F",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-074": {
+      "routeId": 128778,
+      "url": "https://www.camptocamp.org/routes/128778",
+      "name": "Versant SW par le Fieschersattel",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-075": {
+      "routeId": 56128,
+      "url": "https://www.camptocamp.org/routes/56128",
+      "name": "Par l'Arête de Rochefort",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-076": {
+      "routeId": 53811,
+      "url": "https://www.camptocamp.org/routes/53811",
+      "name": "Versant N (voie normale)",
+      "grade": "F+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-077": {
+      "routeId": 45557,
+      "url": "https://www.camptocamp.org/routes/45557",
+      "name": "Voie Normale (versant NW)",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-078": {
+      "routeId": 54431,
+      "url": "https://www.camptocamp.org/routes/54431",
+      "name": "SW Face by the Burgener Slabs",
+      "grade": "D-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-079": {
+      "routeId": 175866,
+      "url": "https://www.camptocamp.org/routes/175866",
+      "name": "Arête du Brouillard",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-080": {
+      "routeId": 53794,
+      "url": "https://www.camptocamp.org/routes/53794",
+      "name": "Arête WSW (Voie Normale)",
+      "grade": "PD-",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-081": {
+      "routeId": 1494350,
+      "url": "https://www.camptocamp.org/routes/1494350",
+      "name": "Couloir Eccles",
+      "grade": "AD",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    },
+    "uiaa-4000-082": {
+      "routeId": 54257,
+      "url": "https://www.camptocamp.org/routes/54257",
+      "name": "Vzhodni steber (normalka)",
+      "grade": "AD+",
+      "glacier": true,
+      "activity": "snow-ice-mixed",
+      "bestMonths": null
+    }
+  }
+}
