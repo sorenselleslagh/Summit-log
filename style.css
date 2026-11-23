@@ -2533,6 +2533,36 @@ html.explore-map.map-show-layers #layers-card {
   html.explore-map .explore-sheet { transition: none !important; }
 }
 
+.problem-hero { position: relative; }
+.problem-hero img, .problem-hero .summit-hero-fallback { display: block; width: 100%; height: 168px; object-fit: cover; }
+.problem-badge {
+  position: absolute;
+  left: 0.7rem;
+  bottom: 0.7rem;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  border: 2px solid #fff;
+  color: #fff;
+  font-weight: 700;
+  line-height: 24px;
+  text-align: center;
+}
+.problem-facts p { margin: 0.15rem 0; }
+.problem-people { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem; }
+.problem-face {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: #1f6b45;
+  color: #fff;
+  overflow: hidden;
+  padding: 0;
+}
+.problem-face img { width: 100%; height: 100%; object-fit: cover; }
+#problem-photo-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .discover-bubble {
   position: absolute;
   z-index: 1480;
@@ -2550,6 +2580,7 @@ html.explore-map.map-show-layers #layers-card {
 }
 .discover-bubble svg { width: 26px; height: 26px; }
 .discover-bubble.is-open { background: #1f6b45; color: #fff; }
+html.explore-map.explore-peak .discover-bubble { visibility: hidden; }
 .discover-bubble.is-snapping { transition: left 180ms ease, top 180ms ease; }
 .discover-panel {
   position: absolute;
