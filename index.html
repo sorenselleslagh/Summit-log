@@ -386,49 +386,43 @@
           </div>
           <div class="map-chrome" id="map-chrome">
             <div class="map-top">
-              <div class="search-dock" id="search-dock">
-                <form class="map-search" id="map-search-form" role="search">
-                  <span class="search-mark" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path class="ridge" d="M3 16c2.2-3 4-3.2 6.2-.4 1.6 2 3.2 2.2 5-.2 1.8-2.4 3.4-2.6 5.4 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="17.2" cy="7.2" r="2.1" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-                  </span>
-                  <input type="search" id="map-query" placeholder="Search peaks, areas, treks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks, areas, treks">
-                  <span class="search-chip" id="search-chip">
-                    <button type="button" id="search-chip-open" class="search-chip-open">Mountaineering</button>
-                    <button type="button" id="search-chip-clear" class="search-chip-clear" aria-label="Show every activity">✕</button>
-                  </span>
-                  <button class="map-query-clear hidden" id="map-query-clear" type="button" aria-label="Clear search">×</button>
-                  <button type="button" class="map-filter-btn" id="map-filter-btn" aria-expanded="false" aria-controls="map-filter-menu">Filter</button>
-                </form>
-                <div id="map-filter-menu" class="map-filter-menu hidden">
-                  <p class="field-label" id="grade-scale-label">Font grades</p>
-                  <label class="field-label" for="grade-min">From</label>
-                  <select id="grade-min" aria-label="Minimum grade"></select>
-                  <label class="field-label" for="grade-max">To</label>
-                  <select id="grade-max" aria-label="Maximum grade"></select>
-                  <button type="button" class="secondary" id="grade-reset">Reset grades</button>
-                  <label class="check-row"><input type="checkbox" id="filter-planned"> <span>Planned</span></label>
-                  <label class="check-row"><input type="checkbox" id="filter-done"> <span>Completed</span></label>
-                </div>
-                <div id="discover-panel" class="discover-panel" hidden>
-                  <div id="discover-guide">
-                    <div id="discover-crumbs" class="discover-crumbs"></div>
-                    <h2 id="discover-title">What are you looking for?</h2>
-                    <div id="discover-body"></div>
-                    <div class="discover-actions">
-                      <button type="button" class="secondary" id="discover-back">Back</button>
-                      <button type="button" class="secondary" id="discover-show">Show on map</button>
-                      <button type="button" class="secondary" id="discover-reset">Reset</button>
-                    </div>
-                  </div>
-                  <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox" hidden></ul>
-                </div>
-              </div>
+              <form class="map-search" id="map-search-form" role="search">
+                <input type="search" id="map-query" placeholder="Search peaks, areas, treks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks, areas, treks">
+                <button class="map-query-clear hidden" id="map-query-clear" type="button" aria-label="Clear search">×</button>
+                <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
+              </form>
               <div class="map-tools">
                 <button type="button" id="map-chat" class="chat-launch map-chat" aria-label="Messages">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 19 17H9l-4 3v-3H5a1.5 1.5 0 0 1-1.5-1.5V8A1.5 1.5 0 0 1 5 6.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
                   <span id="map-chat-unread" class="nav-badge hidden"></span>
                 </button>
                 <button type="button" id="map-profile" class="avatar-btn map-avatar" aria-label="Profile">You</button>
+              </div>
+            </div>
+            <div class="map-pills">
+              <div class="map-chips" id="map-chips" role="group" aria-label="Activity">
+                <button type="button" class="map-chip" data-activity="all" aria-pressed="false">All</button>
+                <button type="button" class="map-chip active" data-activity="mountaineering" aria-pressed="true">Mountaineering</button>
+                <button type="button" class="map-chip" data-activity="climbing" aria-pressed="false">Climbing</button>
+                <button type="button" class="map-chip" data-activity="hiking" aria-pressed="false">Hiking</button>
+                <button type="button" class="map-chip map-filter-btn" id="map-filter-btn" aria-expanded="false" aria-controls="map-filter-menu">Filter</button>
+              </div>
+              <div class="map-chips map-chips-sub" id="climb-pills" role="group" aria-label="Climbing" hidden>
+                <button type="button" class="map-chip active" data-climb="all" aria-pressed="true">All</button>
+                <button type="button" class="map-chip" data-climb="bouldering" aria-pressed="false">Bouldering</button>
+                <button type="button" class="map-chip" data-climb="sport" aria-pressed="false">Sport</button>
+                <button type="button" class="map-chip" data-climb="trad" aria-pressed="false">Trad</button>
+                <button type="button" class="map-chip" data-climb="multipitch" aria-pressed="false">Multipitch</button>
+              </div>
+              <div id="map-filter-menu" class="map-filter-menu hidden">
+                <p class="field-label" id="grade-scale-label">Font grades</p>
+                <label class="field-label" for="grade-min">From</label>
+                <select id="grade-min" aria-label="Minimum grade"></select>
+                <label class="field-label" for="grade-max">To</label>
+                <select id="grade-max" aria-label="Maximum grade"></select>
+                <button type="button" class="secondary" id="grade-reset">Reset grades</button>
+                <label class="check-row"><input type="checkbox" id="filter-planned"> <span>Planned</span></label>
+                <label class="check-row"><input type="checkbox" id="filter-done"> <span>Completed</span></label>
               </div>
             </div>
             <p id="map-summary" class="map-summary" role="status"></p>
@@ -440,6 +434,20 @@
           </div>
           <p id="map-status" class="map-status hidden" role="status"></p>
           <p class="map-credits">© OpenStreetMap contributors (ODbL) · Boolder (CC BY 4.0) · Camptocamp (CC BY-SA) · Esri</p>
+          <button type="button" id="discover-bubble" class="discover-bubble" aria-label="Discover">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 4.5v2.2M12 17.3v2.2M4.5 12h2.2M17.3 12h2.2M7.2 7.2l1.5 1.5M15.3 15.3l1.5 1.5M16.8 7.2l-1.5 1.5M8.7 15.3l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+          <div id="discover-panel" class="discover-panel" hidden>
+            <div class="discover-grab" id="discover-grab" aria-hidden="true"></div>
+            <div id="discover-crumbs" class="discover-crumbs"></div>
+            <h2 id="discover-title">What are you looking for?</h2>
+            <div id="discover-body"></div>
+            <div class="discover-actions">
+              <button type="button" class="secondary" id="discover-back">Back</button>
+              <button type="button" class="secondary" id="discover-show">Show on map</button>
+              <button type="button" class="secondary" id="discover-reset">Reset</button>
+            </div>
+          </div>
           <div id="explore-sheet" class="explore-sheet is-peek">
             <button class="sheet-grab" id="explore-grab" type="button" aria-label="Drag the collections sheet"></button>
             <div id="explore-sheet-head"><p class="sheet-kicker">Discover nearby</p></div>

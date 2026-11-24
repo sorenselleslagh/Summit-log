@@ -7,8 +7,6 @@
   var moved = false;
   var path = ['intent'];
   var choice = { intent: '', region: '', style: '', areaId: 0, trekId: 0 };
-  var slide = 'forward';
-  var focusStep = '';
   var catalog = null;
   var hikes = null;
   var routes = null;
@@ -67,32 +65,16 @@
     root.setTimeout(function () { if (bubble) bubble.classList.remove('is-snapping'); }, 200);
   }
 
-  function step() { return focusStep || path[path.length - 1]; }
+  function step() { return path[path.length - 1]; }
 
-  function push(name) {
-    focusStep = '';
-    slide = 'forward';
-    path.push(name);
+  function push(name) { path.push(name); render(); }
+
+  function goBack() {
+    if (path.length > 1) path.pop();
     render();
   }
 
-  function goBack() {
-    if (focusStep) {
-      focusStep = '';
-      slide = 'back';
-      render();
-      return;
-    }
-    if (path.length > 1) {
-      slide = 'back';
-      path.pop();
-      render();
-    }
-  }
-
   function reset() {
-    focusStep = '';
-    slide = 'forward';
     path = ['intent'];
     choice = { intent: '', region: '', style: '', areaId: 0, trekId: 0 };
     if (root.SummitLayers) {
@@ -110,74 +92,53 @@
     render();
   }
 
-  function aimAtSearch(panel) {
-    var bar = byId('map-search-form');
-    if (!panel || !bar) return;
+  function aimAtBubble(panel) {
+    var bubble = byId('discover-bubble');
+    if (!panel || !bubble) return;
     panel.style.transform = 'none';
     var panelBox = panel.getBoundingClientRect();
     panel.style.transform = '';
-    var barBox = bar.getBoundingClientRect();
-    if (!panelBox.width || !barBox.width) return;
-    var ox = barBox.left + barBox.width / 2 - panelBox.left;
-    var oy = barBox.top + barBox.height / 2 - panelBox.top;
+    var bubbleBox = bubble.getBoundingClientRect();
+    if (!panelBox.width || !bubbleBox.width) return;
+    var ox = bubbleBox.left + bubbleBox.width / 2 - panelBox.left;
+    var oy = bubbleBox.top + bubbleBox.height / 2 - panelBox.top;
     panel.style.transformOrigin = ox + 'px ' + oy + 'px';
-  }
-
-  function markDock(open) {
-    var dock = byId('search-dock');
-    if (dock) dock.classList.toggle('is-open', !!open);
   }
 
   function closePanel() {
     var panel = byId('discover-panel');
-    focusStep = '';
-    markDock(false);
+    var bubble = byId('discover-bubble');
+    if (bubble) bubble.classList.remove('is-open');
     if (!panel || panel.hidden) return;
-    aimAtSearch(panel);
+    aimAtBubble(panel);
     panel.classList.remove('is-open');
     var token = {};
     panel._closeToken = token;
     root.setTimeout(function () {
       if (panel._closeToken !== token) return;
       panel.hidden = true;
-    }, prefersReduced() ? 0 : 280);
+    }, prefersReduced() ? 0 : 230);
   }
 
   function openPanel() {
     var panel = byId('discover-panel');
+    var bubble = byId('discover-bubble');
     if (!panel) return;
     panel._closeToken = {};
     panel.hidden = false;
-    markDock(true);
+    if (bubble) bubble.classList.add('is-open');
     render();
-    aimAtSearch(panel);
-    applyQueryMode();
+    aimAtBubble(panel);
     if (prefersReduced() || panel.classList.contains('is-open')) {
       panel.classList.add('is-open');
       return;
     }
-    panel.classList.remove('is-open');
     root.requestAnimationFrame(function () {
       root.requestAnimationFrame(function () {
         if (panel.hidden) return;
         panel.classList.add('is-open');
       });
     });
-  }
-
-  function applyQueryMode() {
-    var typing = !!(root.mapQuery && String(root.mapQuery).trim());
-    var dock = byId('search-dock');
-    var list = byId('map-suggestions');
-    if (dock) dock.classList.toggle('is-results', typing);
-    if (list) list.hidden = !typing;
-  }
-
-  function syncQuery() {
-    applyQueryMode();
-    var typing = !!(root.mapQuery && String(root.mapQuery).trim());
-    var input = byId('map-query');
-    if (typing && input && document.activeElement === input) openPanel();
   }
 
   function prefersReduced() {
@@ -239,11 +200,7 @@
       ),
       root.el('span', { class: 'discover-chevron', 'aria-hidden': 'true', text: '›' })
     );
-    button.addEventListener('click', function () {
-      if (prefersReduced()) { onClick(); return; }
-      button.classList.add('is-pulse');
-      root.setTimeout(onClick, 140);
-    });
+    button.addEventListener('click', onClick);
     return button;
   }
 
@@ -288,26 +245,16 @@
 
   function chooseIntent(intent) {
     choice.intent = intent;
-    focusStep = '';
     if (intent === 'mountains') {
       useActivity('mountaineering');
       push('where');
     } else if (intent === 'climbing') {
       useActivity('climbing');
-      push('kind');
+      push('places');
     } else {
       useActivity('hiking');
       push('treks');
     }
-  }
-
-  function chooseKind(kind) {
-    choice.style = kind;
-    if (root.SummitLayers) SummitLayers.setClimbKind(kind === 'all' ? 'all' : kind);
-    if (typeof root.syncActivityPills === 'function') root.syncActivityPills();
-    if (typeof root.updateMapMarkers === 'function') root.updateMapMarkers();
-    if (kind === 'sport' || kind === 'trad' || kind === 'multipitch') push('empty');
-    else push('places');
   }
 
   function chooseRegion(name) {
@@ -346,7 +293,7 @@
   function chooseBleau() {
     var areas = catalog && catalog.areas ? catalog.areas : [];
     fly(areas.map(function (area) { return [area.lat, area.lng]; }), 11);
-    push('grade');
+    push('style');
   }
 
   function chooseStyle(style) {
@@ -548,7 +495,6 @@
       return 'Hiking and trekking';
     }
     if (name === 'style') return 'Fontainebleau';
-    if (name === 'kind') return choice.style === 'bouldering' ? 'Bouldering' : 'Style';
     if (name === 'grade') return choice.style === 'bouldering' ? 'Bouldering' : 'Style';
     if (name === 'areas') return 'Grade';
     if (name === 'circuits') return 'Area';
@@ -578,12 +524,7 @@
     var body = byId('discover-body');
     var back = byId('discover-back');
     if (!title || !body) return;
-    if (back) back.disabled = !focusStep && path.length < 2;
-    body.classList.remove('is-forward', 'is-back');
-    if (!prefersReduced()) {
-      void body.offsetWidth;
-      body.classList.add(slide === 'back' ? 'is-back' : 'is-forward');
-    }
+    if (back) back.disabled = path.length < 2;
     renderCrumbs();
     var name = step();
     if (name === 'intent') {
@@ -641,27 +582,14 @@
       title.textContent = 'Your matches';
       applyMountain();
       var matches = matchingPeaks();
-      var surprise = root.el('button', { class: 'primary discover-surprise', type: 'button', text: 'Surprise me' });
+      var surprise = root.el('button', { class: 'primary', type: 'button', text: 'Surprise me' });
       surprise.addEventListener('click', function () {
         if (!matches.length) return;
-        var reveal = function () { choosePeak(matches[Math.floor(Math.random() * matches.length)]); };
-        if (prefersReduced()) { reveal(); return; }
-        surprise.classList.add('is-shuffling');
-        root.setTimeout(reveal, 280);
+        choosePeak(matches[Math.floor(Math.random() * matches.length)]);
       });
       body.replaceChildren.apply(body, matches.length
         ? [resultCards(matches), surprise]
         : [root.el('p', { class: 'muted', text: 'Nothing recorded for this combination.' })]
-      );
-      return;
-    }
-    if (name === 'kind') {
-      title.textContent = 'Which style?';
-      body.replaceChildren(
-        row('Bouldering', 'Fontainebleau problems', function () { chooseKind('bouldering'); }),
-        row('Sport', 'No areas yet', function () { chooseKind('sport'); }),
-        row('Trad', 'No areas yet', function () { chooseKind('trad'); }),
-        row('Multipitch', 'No areas yet', function () { chooseKind('multipitch'); })
       );
       return;
     }
@@ -755,65 +683,81 @@
     }
   }
 
-  function bindSearch() {
-    var input = byId('map-query');
-    var chip = byId('search-chip-open');
-    var clearChip = byId('search-chip-clear');
-    var form = byId('map-search-form');
-    if (form && !form.dataset.discoverBound) {
-      form.dataset.discoverBound = '1';
-      form.addEventListener('click', function (event) {
-        if (event.target.closest && event.target.closest('#map-filter-btn, #search-chip-clear')) return;
-        openPanel();
-      });
+  function bindBubble() {
+    var bubble = byId('discover-bubble');
+    if (!bubble || bubble.dataset.bound) return;
+    bubble.dataset.bound = '1';
+    bubble.addEventListener('pointerdown', function (event) {
+      if (event.button != null && event.button !== 0) return;
+      var box = bubble.getBoundingClientRect();
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY, left: box.left, top: box.top };
+      moved = false;
+      bubble.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    bubble.addEventListener('pointermove', function (event) {
+      if (!drag || event.pointerId !== drag.id) return;
+      var dx = event.clientX - drag.x;
+      var dy = event.clientY - drag.y;
+      if (dx * dx + dy * dy > 36) moved = true;
+      if (!moved) return;
+      var frame = byId('map-frame').getBoundingClientRect();
+      bubble.classList.remove('is-snapping');
+      bubble.style.left = (drag.left - frame.left + dx) + 'px';
+      bubble.style.top = (drag.top - frame.top + dy) + 'px';
+    });
+    function end(event) {
+      if (!drag || event.pointerId !== drag.id) return;
+      drag = null;
+      if (moved) snap(event.clientX, event.clientY);
+      else openPanel();
     }
-    if (input && !input.dataset.discoverBound) {
-      input.dataset.discoverBound = '1';
-      input.addEventListener('focus', function () { openPanel(); });
-    }
-    if (chip && !chip.dataset.bound) {
-      chip.dataset.bound = '1';
-      chip.addEventListener('click', function () {
-        focusStep = 'intent';
-        slide = 'forward';
-        openPanel();
-      });
-    }
-    if (clearChip && !clearChip.dataset.bound) {
-      clearChip.dataset.bound = '1';
-      clearChip.addEventListener('click', function (event) {
-        event.stopPropagation();
-        if (root.SummitLayers) {
-          SummitLayers.setActivity('all');
-          SummitLayers.setClimbKind('all');
-        }
-        if (typeof root.syncActivityPills === 'function') root.syncActivityPills();
-        if (typeof root.updateMapMarkers === 'function') root.updateMapMarkers();
-      });
-    }
+    bubble.addEventListener('click', function () {
+      if (moved) { moved = false; return; }
+      openPanel();
+    });
+    bubble.addEventListener('pointerup', end);
+    bubble.addEventListener('pointercancel', end);
   }
 
   function bindPanel() {
-    var back = byId('discover-back');
-    if (!back || back.dataset.bound) return;
-    back.dataset.bound = '1';
-    back.addEventListener('click', goBack);
+    var panel = byId('discover-panel');
+    var grab = byId('discover-grab');
+    if (!panel || !grab || panel.dataset.bound) return;
+    panel.dataset.bound = '1';
+    grab.addEventListener('pointerdown', function (event) {
+      var box = panel.getBoundingClientRect();
+      var frame = byId('map-frame').getBoundingClientRect();
+      panelDrag = { id: event.pointerId, y: event.clientY, top: box.top - frame.top };
+      grab.setPointerCapture(event.pointerId);
+    });
+    grab.addEventListener('pointermove', function (event) {
+      if (!panelDrag || event.pointerId !== panelDrag.id) return;
+      var frame = byId('map-frame').getBoundingClientRect();
+      var next = panelDrag.top + (event.clientY - panelDrag.y);
+      next = Math.max(120, Math.min(frame.height - 160, next));
+      panel.style.top = next + 'px';
+      panel.style.bottom = 'auto';
+    });
+    grab.addEventListener('pointerup', function () { panelDrag = null; });
+    byId('discover-back').addEventListener('click', goBack);
     byId('discover-show').addEventListener('click', closePanel);
     byId('discover-reset').addEventListener('click', reset);
   }
 
   function refresh() { if (byId('discover-panel') && !byId('discover-panel').hidden) render(); }
 
-  bindSearch();
+  loadPos();
+  bindBubble();
   bindPanel();
   ensureData(function () { if (byId('discover-panel') && !byId('discover-panel').hidden) render(); });
+  root.addEventListener('resize', place);
+  place();
 
   root.SummitDiscover = {
-    reload: function () {},
-    place: function () {},
+    reload: function () { loadPos(); place(); },
+    place: place,
     refresh: refresh,
-    close: closePanel,
-    open: openPanel,
-    syncQuery: syncQuery
+    close: closePanel
   };
 })(window);
