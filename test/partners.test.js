@@ -159,7 +159,7 @@ assert.ok(app.includes("text: person.demo ? 'Demo'"));
 assert.ok(!app.includes('innerHTML'));
 assert.ok(!app.includes('localStorage'));
 assert.ok(sw.includes('./partners.js'));
-assert.ok(sw.includes("VERSION = 'v49'"));
+assert.ok(sw.includes("VERSION = 'v51'"));
 var discover = fs.readFileSync(path.join(root, 'discover.js'), 'utf8');
 assert.ok(discover.includes('close: closePanel'));
 assert.ok(discover.includes('transformOrigin'));
