@@ -388,6 +388,10 @@
             <div class="map-top">
               <form class="map-search" id="map-search-form" role="search">
                 <input type="search" id="map-query" placeholder="Search peaks, areas, treks" maxlength="80" autocomplete="off" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="map-suggestions" aria-label="Search peaks, areas, treks">
+                <span class="search-chip" id="search-chip">
+                  <button type="button" id="search-chip-open" class="search-chip-open">Mountaineering</button>
+                  <button type="button" id="search-chip-clear" class="search-chip-clear" aria-label="Show every activity">✕</button>
+                </span>
                 <button class="map-query-clear hidden" id="map-query-clear" type="button" aria-label="Clear search">×</button>
                 <ul id="map-suggestions" class="objective-suggestions map-suggestions" role="listbox"></ul>
               </form>
@@ -400,20 +404,7 @@
               </div>
             </div>
             <div class="map-pills">
-              <div class="map-chips" id="map-chips" role="group" aria-label="Activity">
-                <button type="button" class="map-chip" data-activity="all" aria-pressed="false">All</button>
-                <button type="button" class="map-chip active" data-activity="mountaineering" aria-pressed="true">Mountaineering</button>
-                <button type="button" class="map-chip" data-activity="climbing" aria-pressed="false">Climbing</button>
-                <button type="button" class="map-chip" data-activity="hiking" aria-pressed="false">Hiking</button>
-                <button type="button" class="map-chip map-filter-btn" id="map-filter-btn" aria-expanded="false" aria-controls="map-filter-menu">Filter</button>
-              </div>
-              <div class="map-chips map-chips-sub" id="climb-pills" role="group" aria-label="Climbing" hidden>
-                <button type="button" class="map-chip active" data-climb="all" aria-pressed="true">All</button>
-                <button type="button" class="map-chip" data-climb="bouldering" aria-pressed="false">Bouldering</button>
-                <button type="button" class="map-chip" data-climb="sport" aria-pressed="false">Sport</button>
-                <button type="button" class="map-chip" data-climb="trad" aria-pressed="false">Trad</button>
-                <button type="button" class="map-chip" data-climb="multipitch" aria-pressed="false">Multipitch</button>
-              </div>
+              <button type="button" class="map-chip map-filter-btn" id="map-filter-btn" aria-expanded="false" aria-controls="map-filter-menu">Filter</button>
               <div id="map-filter-menu" class="map-filter-menu hidden">
                 <p class="field-label" id="grade-scale-label">Font grades</p>
                 <label class="field-label" for="grade-min">From</label>
@@ -434,9 +425,10 @@
           </div>
           <p id="map-status" class="map-status hidden" role="status"></p>
           <p class="map-credits">© OpenStreetMap contributors (ODbL) · Boolder (CC BY 4.0) · Camptocamp (CC BY-SA) · Esri</p>
-          <button type="button" id="discover-bubble" class="discover-bubble" aria-label="Discover">
+          <button type="button" id="discover-bubble" class="discover-bubble needs-hint" aria-label="Discover">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 4.5v2.2M12 17.3v2.2M4.5 12h2.2M17.3 12h2.2M7.2 7.2l1.5 1.5M15.3 15.3l1.5 1.5M16.8 7.2l-1.5 1.5M8.7 15.3l-1.5 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           </button>
+          <p id="discover-nudge" class="discover-nudge">Not sure where to go? Tap me</p>
           <div id="discover-panel" class="discover-panel" hidden>
             <div class="discover-grab" id="discover-grab" aria-hidden="true"></div>
             <div id="discover-crumbs" class="discover-crumbs"></div>

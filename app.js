@@ -5570,23 +5570,19 @@ document.getElementById('plan-quick-add').addEventListener('click', function () 
 document.getElementById('plan-quick-skip').addEventListener('click', function () { finishQuickPlan(false); });
 function syncActivityPills() {
   var current = window.SummitLayers ? SummitLayers.activity() : 'mountaineering';
-  document.querySelectorAll('#map-chips [data-activity]').forEach(function (chip) {
-    var on = chip.getAttribute('data-activity') === current;
-    chip.classList.toggle('active', on);
-    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-  var sub = document.getElementById('climb-pills');
-  if (sub) {
-    var show = current === 'climbing';
-    sub.hidden = !show;
-    document.documentElement.classList.toggle('climb-pills', show);
-  }
   var kind = window.SummitLayers ? SummitLayers.climbKind() : 'all';
-  document.querySelectorAll('#climb-pills [data-climb]').forEach(function (chip) {
-    var on = chip.getAttribute('data-climb') === kind;
-    chip.classList.toggle('active', on);
-    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  var chip = document.getElementById('search-chip');
+  var label = document.getElementById('search-chip-open');
+  if (chip && label) {
+    var text = '';
+    if (current === 'climbing') {
+      var names = { all: 'Climbing', bouldering: 'Climbing · Bouldering', sport: 'Climbing · Sport', trad: 'Climbing · Trad', multipitch: 'Climbing · Multipitch' };
+      text = names[kind] || 'Climbing';
+    } else if (current === 'hiking') text = 'Hiking';
+    else if (current === 'mountaineering') text = 'Mountaineering';
+    label.textContent = text;
+    chip.hidden = !text;
+  }
   var scale = document.getElementById('grade-scale-label');
   if (scale) scale.textContent = kind === 'sport' || kind === 'trad' || kind === 'multipitch' ? 'French grades' : 'Font grades';
 }
@@ -5602,29 +5598,34 @@ function fillGradeSelects() {
   });
 }
 
-document.getElementById('map-chips').addEventListener('click', function (event) {
-  var button = event.target.closest ? event.target.closest('[data-activity]') : null;
-  if (button && window.SummitLayers) {
-    SummitLayers.setActivity(button.getAttribute('data-activity'));
-    syncActivityPills();
-    updateMapMarkers();
-    return;
-  }
-  if (event.target.closest && event.target.closest('#map-filter-btn')) {
+var filterBtn = document.getElementById('map-filter-btn');
+if (filterBtn) {
+  filterBtn.addEventListener('click', function () {
     fillGradeSelects();
     var menu = document.getElementById('map-filter-menu');
     if (!menu) return;
-    var open = menu.classList.toggle('hidden');
-    event.target.closest('#map-filter-btn').setAttribute('aria-expanded', open ? 'false' : 'true');
-  }
-});
-document.getElementById('climb-pills').addEventListener('click', function (event) {
-  var button = event.target.closest ? event.target.closest('[data-climb]') : null;
-  if (!button || !window.SummitLayers) return;
-  SummitLayers.setClimbKind(button.getAttribute('data-climb'));
-  syncActivityPills();
-  updateMapMarkers();
-});
+    var closed = menu.classList.toggle('hidden');
+    filterBtn.setAttribute('aria-expanded', closed ? 'false' : 'true');
+  });
+}
+var chipOpen = document.getElementById('search-chip-open');
+if (chipOpen) {
+  chipOpen.addEventListener('click', function () {
+    if (window.SummitDiscover && SummitDiscover.openCategory) SummitDiscover.openCategory();
+  });
+}
+var chipClear = document.getElementById('search-chip-clear');
+if (chipClear) {
+  chipClear.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (window.SummitLayers) {
+      SummitLayers.setActivity('all');
+      SummitLayers.setClimbKind('all');
+    }
+    syncActivityPills();
+    if (typeof updateMapMarkers === 'function') updateMapMarkers();
+  });
+}
 ['grade-min', 'grade-max'].forEach(function (id) {
   var select = document.getElementById(id);
   if (!select) return;
