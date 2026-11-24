@@ -31,6 +31,7 @@
   var FAVOURITE_KEY = 'summitlog_favourites';
   var DISCOVER_KEY = 'summitlog_discover';
   var EXPERIENCE_KEY = 'summitlog_experience';
+  var HINT_KEY = 'summitlog_discover_hint';
 
   function createRepository(options) {
     var storage = options.storage;
@@ -41,7 +42,7 @@
     var warned = false;
     var owner = '';
     var PERSONAL = {};
-    [LOG_KEY, BACKLOG_KEY, ITEM_KEY, POST_KEY, QUEUE_KEY, USER_KEY, LEVEL_KEY, OUTBOX_KEY, PROFILE_KEY, CREDENTIAL_KEY, FAVOURITE_KEY, DISCOVER_KEY, EXPERIENCE_KEY].forEach(function (key) {
+    [LOG_KEY, BACKLOG_KEY, ITEM_KEY, POST_KEY, QUEUE_KEY, USER_KEY, LEVEL_KEY, OUTBOX_KEY, PROFILE_KEY, CREDENTIAL_KEY, FAVOURITE_KEY, DISCOVER_KEY, EXPERIENCE_KEY, HINT_KEY].forEach(function (key) {
       PERSONAL[key] = true;
     });
 
@@ -398,6 +399,14 @@
       return next.level;
     }
 
+    function discoverHintSeen() {
+      try { return storage.getItem(keyFor(HINT_KEY)) === '1'; } catch (err) { return false; }
+    }
+
+    function dismissDiscoverHint() {
+      try { storage.setItem(keyFor(HINT_KEY), '1'); } catch (err) {}
+    }
+
     function loadDiscover() {
       try {
         var raw = storage.getItem(keyFor(DISCOVER_KEY));
@@ -492,6 +501,8 @@
       saveDiscover: saveDiscover,
       loadExperience: loadExperience,
       saveExperience: saveExperience,
+      discoverHintSeen: discoverHintSeen,
+      dismissDiscoverHint: dismissDiscoverHint,
       setOwner: setOwner,
       owner: function () { return owner; }
     };

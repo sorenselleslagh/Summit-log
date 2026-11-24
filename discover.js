@@ -47,6 +47,39 @@
     var x = pos.edge === 'left' ? box.pad : box.rect.width - box.size - box.pad;
     bubble.style.left = x + 'px';
     bubble.style.top = y + 'px';
+    placeHint();
+  }
+
+  function hintSeen() {
+    var store = root.SummitLogStorage;
+    return !!(store && store.discoverHintSeen && store.discoverHintSeen());
+  }
+
+  function dismissHint() {
+    var store = root.SummitLogStorage;
+    if (store && store.dismissDiscoverHint) store.dismissDiscoverHint();
+    var bubble = byId('discover-bubble');
+    var nudge = byId('discover-nudge');
+    if (bubble) bubble.classList.remove('needs-hint');
+    if (nudge) nudge.hidden = true;
+  }
+
+  function placeHint() {
+    var nudge = byId('discover-nudge');
+    var bubble = byId('discover-bubble');
+    var frame = byId('map-frame');
+    if (!nudge || !bubble || !frame) return;
+    if (hintSeen()) {
+      nudge.hidden = true;
+      if (bubble) bubble.classList.remove('needs-hint');
+      return;
+    }
+    var box = bubble.getBoundingClientRect();
+    var host = frame.getBoundingClientRect();
+    var left = pos.edge === 'left' ? (box.right - host.left + 10) : (box.left - host.left - 178);
+    nudge.hidden = false;
+    nudge.style.left = Math.max(8, Math.min(host.width - 190, left)) + 'px';
+    nudge.style.top = (box.top - host.top + 6) + 'px';
   }
 
   function snap(clientX, clientY) {
@@ -65,16 +98,24 @@
     root.setTimeout(function () { if (bubble) bubble.classList.remove('is-snapping'); }, 200);
   }
 
-  function step() { return path[path.length - 1]; }
+  var focusStep = '';
 
-  function push(name) { path.push(name); render(); }
+  function step() { return focusStep || path[path.length - 1]; }
+
+  function push(name) { focusStep = ''; path.push(name); render(); }
 
   function goBack() {
+    if (focusStep) {
+      focusStep = '';
+      render();
+      return;
+    }
     if (path.length > 1) path.pop();
     render();
   }
 
   function reset() {
+    focusStep = '';
     path = ['intent'];
     choice = { intent: '', region: '', style: '', areaId: 0, trekId: 0 };
     if (root.SummitLayers) {
@@ -108,6 +149,7 @@
   function closePanel() {
     var panel = byId('discover-panel');
     var bubble = byId('discover-bubble');
+    focusStep = '';
     if (bubble) bubble.classList.remove('is-open');
     if (!panel || panel.hidden) return;
     aimAtBubble(panel);
@@ -124,6 +166,7 @@
     var panel = byId('discover-panel');
     var bubble = byId('discover-bubble');
     if (!panel) return;
+    dismissHint();
     panel._closeToken = {};
     panel.hidden = false;
     if (bubble) bubble.classList.add('is-open');
@@ -204,6 +247,13 @@
     return button;
   }
 
+  function regionLabel(name) {
+    return String(name || '')
+      .replace(/\s*\([^)]*\d[^)]*\)/g, '')
+      .replace(/\s+\d{3,5}\s*m\b/ig, '')
+      .trim();
+  }
+
   function regions() {
     var peaks = root.collectionData && collectionData.peaks ? collectionData.peaks : [];
     var names = [];
@@ -245,16 +295,26 @@
 
   function chooseIntent(intent) {
     choice.intent = intent;
+    focusStep = '';
     if (intent === 'mountains') {
       useActivity('mountaineering');
       push('where');
     } else if (intent === 'climbing') {
       useActivity('climbing');
-      push('places');
+      push('kind');
     } else {
       useActivity('hiking');
       push('treks');
     }
+  }
+
+  function chooseKind(kind) {
+    choice.style = kind;
+    if (root.SummitLayers) SummitLayers.setClimbKind(kind);
+    if (typeof root.syncActivityPills === 'function') root.syncActivityPills();
+    if (typeof root.updateMapMarkers === 'function') root.updateMapMarkers();
+    if (kind === 'sport' || kind === 'trad' || kind === 'multipitch') push('empty');
+    else push('places');
   }
 
   function chooseRegion(name) {
@@ -293,7 +353,7 @@
   function chooseBleau() {
     var areas = catalog && catalog.areas ? catalog.areas : [];
     fly(areas.map(function (area) { return [area.lat, area.lng]; }), 11);
-    push('style');
+    push('grade');
   }
 
   function chooseStyle(style) {
@@ -486,7 +546,7 @@
       if (choice.intent === 'hiking') return 'Hiking and trekking';
       return 'Start';
     }
-    if (name === 'where') return choice.near ? 'Near me' : (choice.region || 'Where');
+    if (name === 'where') return choice.near ? 'Near me' : (regionLabel(choice.region) || 'Where');
     if (name === 'day') return dayLabel(choice.day);
     if (name === 'experience') return experienceLabel(choice.experience);
     if (name === 'when') return whenLabel(choice.when);
@@ -494,6 +554,7 @@
       if (choice.intent === 'climbing') return 'Climbing areas';
       return 'Hiking and trekking';
     }
+    if (name === 'kind') return choice.style ? (choice.style.charAt(0).toUpperCase() + choice.style.slice(1)) : 'Style';
     if (name === 'style') return 'Fontainebleau';
     if (name === 'grade') return choice.style === 'bouldering' ? 'Bouldering' : 'Style';
     if (name === 'areas') return 'Grade';
@@ -524,7 +585,7 @@
     var body = byId('discover-body');
     var back = byId('discover-back');
     if (!title || !body) return;
-    if (back) back.disabled = path.length < 2;
+    if (back) back.disabled = !focusStep && path.length < 2;
     renderCrumbs();
     var name = step();
     if (name === 'intent') {
@@ -539,12 +600,14 @@
     if (name === 'where') {
       title.textContent = 'Where do you want to go?';
       var list = regions();
-      var nodes = list.map(function (region) { return row(region, 'Alpine 4000ers', function () { chooseRegion(region); }); });
+      var nodes = list.map(function (region) {
+        return row(regionLabel(region), '', function () { chooseRegion(region); });
+      });
       nodes.push(row('Near me', 'Uses this device’s location', chooseNear));
       nodes.push(skip('where'));
       if (choice.nearNote) nodes.push(root.el('p', { class: 'muted', text: choice.nearNote }));
       body.replaceChildren.apply(body, nodes);
-      hint('A region from the Alpine 4000ers, or where you are now.');
+      hint('Pick a region, or where you are now.');
       return;
     }
     if (name === 'day') {
@@ -590,6 +653,16 @@
       body.replaceChildren.apply(body, matches.length
         ? [resultCards(matches), surprise]
         : [root.el('p', { class: 'muted', text: 'Nothing recorded for this combination.' })]
+      );
+      return;
+    }
+    if (name === 'kind') {
+      title.textContent = 'Which style?';
+      body.replaceChildren(
+        row('Bouldering', 'Fontainebleau problems', function () { chooseKind('bouldering'); }),
+        row('Sport', 'No areas yet', function () { chooseKind('sport'); }),
+        row('Trad', 'No areas yet', function () { chooseKind('trad'); }),
+        row('Multipitch', 'No areas yet', function () { chooseKind('multipitch'); })
       );
       return;
     }
@@ -753,11 +826,19 @@
   ensureData(function () { if (byId('discover-panel') && !byId('discover-panel').hidden) render(); });
   root.addEventListener('resize', place);
   place();
+  if (hintSeen()) {
+    var bubble = byId('discover-bubble');
+    if (bubble) bubble.classList.remove('needs-hint');
+  }
 
   root.SummitDiscover = {
     reload: function () { loadPos(); place(); },
     place: place,
     refresh: refresh,
-    close: closePanel
+    close: closePanel,
+    openCategory: function () {
+      focusStep = 'intent';
+      openPanel();
+    }
   };
 })(window);

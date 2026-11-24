@@ -735,6 +735,32 @@ html.map-settled .map-chrome {
   align-self: center;
 }
 
+.search-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #1f6b45;
+  color: #fff;
+}
+.search-chip[hidden] { display: none; }
+.search-chip-open,
+.search-chip-clear {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  min-height: 28px;
+  padding: 0 0.2rem;
+}
+.search-chip-open {
+  padding-left: 0.55rem;
+  white-space: nowrap;
+}
+.search-chip-clear { padding-right: 0.45rem; font-size: 0.85rem; }
+
 .map-fabs svg { width: 18px; height: 18px; }
 
 .map-query-clear {
@@ -805,7 +831,7 @@ html.climb-pills .map-chips-sub {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
 }
-.map-filter-btn { background: #fff; color: #1f6b45; }
+.map-filter-btn { align-self: flex-start; margin-left: 0.8rem; background: #fff; color: #1f6b45; }
 .map-filter-menu {
   margin: 0 0.8rem;
   padding: 0.75rem;
@@ -2580,6 +2606,26 @@ html.explore-map.map-show-layers #layers-card {
 .discover-bubble.is-open { background: #1f6b45; color: #fff; }
 html.explore-map.explore-peak .discover-bubble { visibility: hidden; }
 .discover-bubble.is-snapping { transition: left 180ms ease, top 180ms ease; }
+.discover-bubble.needs-hint { animation: bubble-glow 1.8s ease-in-out infinite; }
+@keyframes bubble-glow {
+  0%, 100% { box-shadow: 0 10px 24px rgba(28, 25, 21, 0.18); }
+  50% { box-shadow: 0 0 0 8px rgba(31, 107, 69, 0.2), 0 10px 24px rgba(28, 25, 21, 0.18); }
+}
+.discover-nudge {
+  position: absolute;
+  z-index: 1481;
+  max-width: 168px;
+  margin: 0;
+  padding: 0.35rem 0.55rem;
+  border-radius: 12px;
+  background: #1f6b45;
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  box-shadow: 0 8px 18px rgba(28, 25, 21, 0.16);
+  pointer-events: none;
+}
+.discover-nudge[hidden] { display: none; }
 .discover-panel {
   position: absolute;
   left: 0.7rem;
@@ -2681,7 +2727,8 @@ html.explore-map.explore-peak .discover-bubble { visibility: hidden; }
   font-size: 0.82rem;
 }
 @media (prefers-reduced-motion: reduce) {
-  .discover-bubble.is-snapping, .discover-panel, .discover-panel.is-open { transition: none; }
+  .discover-bubble.is-snapping, .discover-panel, .discover-panel.is-open,
+  .discover-bubble.needs-hint { animation: none; transition: none; }
 }
 
 .messages-panel h3 { margin: 0.9rem 0 0.35rem; }
