@@ -13,6 +13,8 @@
   var activity = {};
   var active = null;
   var started = false;
+  var historyLevel = '';
+  var historyQuiet = false;
   var pollTimer = null;
   var primed = false;
   var threadState = {};
@@ -625,6 +627,25 @@
     return db().rpc('decline_partner_request', { request_id: id }).then(function () { return refresh(); });
   }
 
+  function messagesState(level) {
+    var prev = {};
+    try { prev = history.state || {}; } catch (err) { prev = {}; }
+    var next = {};
+    Object.keys(prev).forEach(function (key) { next[key] = prev[key]; });
+    next.summitlogMessages = level;
+    return next;
+  }
+
+  function pushMessagesHistory(level) {
+    if (historyLevel === level) return;
+    try {
+      history.pushState(messagesState(level), '');
+      historyLevel = level;
+    } catch (err) {
+      historyLevel = level;
+    }
+  }
+
   function showMessagesScreen() {
     var screen = byId('messages-screen');
     if (screen) screen.classList.remove('hidden');
@@ -634,13 +655,34 @@
     if (chat) chat.classList.add('hidden');
     var shared = byId('shared-plan-view');
     if (shared) shared.classList.add('hidden');
+    if (!historyLevel) pushMessagesHistory('inbox');
     if (root.SummitConnections) root.SummitConnections.refresh();
   }
 
-  function hideMessagesScreen() {
+  function hideMessagesScreen(fromPop) {
     var screen = byId('messages-screen');
     if (screen) screen.classList.add('hidden');
     active = null;
+    var home = byId('messages-home');
+    if (home) home.classList.remove('hidden');
+    var chat = byId('chat-screen');
+    if (chat) chat.classList.add('hidden');
+    var shared = byId('shared-plan-view');
+    if (shared) shared.classList.add('hidden');
+    if (fromPop) {
+      historyLevel = '';
+      return;
+    }
+    if (!historyLevel) return;
+    var steps = historyLevel === 'thread' ? 2 : 1;
+    historyLevel = '';
+    historyQuiet = true;
+    try { history.go(-steps); } catch (err) { historyQuiet = false; }
+  }
+
+  function messagesOpen() {
+    var screen = byId('messages-screen');
+    return !!(screen && !screen.classList.contains('hidden'));
   }
 
   function showChatShell() {
@@ -651,12 +693,25 @@
     if (screen) screen.classList.remove('hidden');
   }
 
+  function threadBackButton() {
+    var back = el('button', { class: 'secondary messages-back', type: 'button', text: 'Back' });
+    back.addEventListener('click', function () { closeChat(false); });
+    return back;
+  }
+
   function openConversation(id) {
-    if (!id || !ready()) return;
+    if (!id) return;
     active = { id: id, messages: [], blocked: false, muted: false };
     showChatShell();
+    if (historyLevel !== 'thread') pushMessagesHistory('thread');
     var screen = byId('chat-screen');
-    if (screen) screen.replaceChildren(el('p', { class: 'muted', text: 'Opening the conversation…' }));
+    if (screen) {
+      screen.replaceChildren(
+        el('div', { class: 'chat-head' }, threadBackButton()),
+        el('p', { class: 'muted', text: ready() ? 'Opening the conversation…' : 'Sign in to open this conversation.' })
+      );
+    }
+    if (!ready()) return;
     Promise.all([
       db().from('conversations').select('id, type, plan_id, objective_name, route_name, dates, stage').eq('id', id).maybeSingle(),
       db().from('conversation_members').select('user_id, muted_until, left_at').eq('conversation_id', id),
@@ -665,7 +720,7 @@
     ]).then(function (parts) {
       var conversation = parts[0].data;
       if (!conversation || parts[0].error) {
-        if (screen) screen.replaceChildren(el('p', { class: 'muted', text: 'This conversation is not available.' }));
+        if (screen) screen.replaceChildren(el('div', { class: 'chat-head' }, threadBackButton()), el('p', { class: 'muted', text: 'This conversation is not available.' }));
         return;
       }
       var members = parts[1].data || [];
@@ -690,7 +745,7 @@
         markRead();
       });
     }).catch(function () {
-      if (screen) screen.replaceChildren(el('p', { class: 'muted', text: 'This conversation could not be opened. Your log is still on this device.' }));
+      if (screen) screen.replaceChildren(el('div', { class: 'chat-head' }, threadBackButton()), el('p', { class: 'muted', text: 'This conversation could not be opened. Your log is still on this device.' }));
     });
   }
 
@@ -703,8 +758,7 @@
     if (!screen || !active || !active.conversation) return;
     var conversation = active.conversation;
     var otherName = nameFor(active.otherId);
-    var back = el('button', { class: 'secondary', type: 'button', text: 'Back' });
-    back.addEventListener('click', closeChat);
+    var back = threadBackButton();
     var plan = el('button', { class: 'secondary', type: 'button', text: 'Shared plan' });
     plan.addEventListener('click', function () { openSharedPlan(conversation); });
     var log = el('div', { class: 'chat-log', id: 'chat-log' });
@@ -1214,7 +1268,7 @@
     );
   }
 
-  function closeChat() {
+  function closeChat(fromPop) {
     active = null;
     var screen = byId('chat-screen');
     var shared = byId('shared-plan-view');
@@ -1223,6 +1277,12 @@
     if (shared) shared.classList.add('hidden');
     if (home) home.classList.remove('hidden');
     refresh();
+    if (fromPop) return;
+    if (historyLevel === 'thread') {
+      historyLevel = 'inbox';
+      historyQuiet = true;
+      try { history.back(); } catch (err) { historyQuiet = false; }
+    }
   }
 
   function refresh() {
@@ -1379,6 +1439,7 @@
   }
 
   function openInbox() {
+    if (historyLevel === 'thread') closeChat(false);
     active = null;
     showMessagesScreen();
     if (root.SummitConnections && root.SummitConnections.mockMode && root.SummitConnections.mockMode() && root.SummitConnections.previewInbox) {
@@ -1647,9 +1708,28 @@
     hooks = Object.assign(hooks, next || {});
   }
 
+  function onMessagesPop(event) {
+    if (historyQuiet) {
+      historyQuiet = false;
+      return;
+    }
+    var level = event.state && event.state.summitlogMessages;
+    if (historyLevel === 'thread') {
+      closeChat(true);
+      historyLevel = level === 'inbox' ? 'inbox' : '';
+      if (!historyLevel) hideMessagesScreen(true);
+      return;
+    }
+    if (historyLevel === 'inbox' && level !== 'inbox') {
+      historyLevel = '';
+      hideMessagesScreen(true);
+    }
+  }
+
   function bindChrome() {
     var back = byId('messages-back');
-    if (back) back.addEventListener('click', hideMessagesScreen);
+    if (back) back.addEventListener('click', function () { hideMessagesScreen(false); });
+    window.addEventListener('popstate', onMessagesPop);
     function closeSheet() {
       var sheet = byId('climb-sheet');
       if (sheet) sheet.classList.add('hidden');
@@ -1676,6 +1756,7 @@
     openConversation: openConversation,
     openInbox: openInbox,
     hideMessages: hideMessagesScreen,
+    isOpen: messagesOpen,
     lastWith: lastWith,
     openShare: openShare,
     openClimbSheet: openClimbSheet,

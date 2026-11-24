@@ -638,6 +638,12 @@ function watchChrome() {
 }
 
 function selectTab(name) {
+  var currentBtn = document.querySelector('#app > nav button.active');
+  var sameTab = currentBtn && currentBtn.dataset.tab === name;
+  if (window.SummitChat && SummitChat.isOpen && SummitChat.isOpen()) {
+    SummitChat.hideMessages();
+    if (sameTab) return;
+  }
   dismissPeakPage();
   if (name !== 'explore') leaveExploreMap();
   if (name !== 'plan' && name !== 'logbook' && form) form.classList.add('hidden');
